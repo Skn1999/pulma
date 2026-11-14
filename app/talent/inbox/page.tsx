@@ -2,7 +2,8 @@ import Link from "next/link";
 import { nowMs } from "@/lib/clock";
 import { Clock, Hourglass } from "lucide-react";
 import { getDB } from "@/lib/store";
-import { inviteStatus } from "@/lib/deadlines";
+import { goalOf, inviteStatus } from "@/lib/deadlines";
+import { MEET_MODE_LABEL } from "@/lib/types";
 import { shortDate } from "@/lib/next-steps";
 import { getTalentId } from "@/lib/persona";
 import { PageTitle } from "@/components/shell/page-title";
@@ -80,9 +81,12 @@ export default async function InboxPage() {
                     <Clock className="size-4" aria-hidden="true" /> Reply by {shortDate(inv.respondBy)}
                   </p>
                   <p className="mb-3 text-sm">
-                    They&apos;d like a 10-minute conversation. Accepting shares your name with {company?.name}.
+                    {card && goalOf(card, db).meetModes.length === 1 && goalOf(card, db).meetModes[0] === "event"
+                      ? "They'd like a 10-minute conversation at their table on the event day."
+                      : `They'd like a conversation. You pick the time: ${card ? goalOf(card, db).meetModes.map((m) => MEET_MODE_LABEL[m].toLowerCase()).join(", ") : ""}.`}{" "}
+                    Accepting shares your name with {company?.name}.
                   </p>
-                  <InviteActions shortlistId={s.id} companyName={company?.name ?? "the company"} />
+                  <InviteActions shortlistId={s.id} responseId={s.responseId} companyName={company?.name ?? "the company"} />
                 </div>
               )}
               {s.status === "accepted" && (

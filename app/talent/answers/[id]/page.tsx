@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { getDB } from "@/lib/store";
 import { requireAccount } from "@/lib/session";
+import { nowMs } from "@/lib/clock";
+import { StepBack } from "@/components/talent/step-back";
 import { PageTitle } from "@/components/shell/page-title";
 import { AnswerActions } from "@/components/talent/answer-actions";
 import { MatchThread } from "@/components/thread/match-thread";
@@ -20,7 +22,8 @@ export default async function AnswerPage({ params }: { params: Promise<{ id: str
   const company = db.companies.find((c) => c.id === card?.companyId);
   const sl = db.shortlists.find((s) => s.responseId === r.id);
   const closed = db.closures.some((c) => c.responseId === r.id);
-  const editable = !sl && !closed;
+  const editable = !sl && !closed && !r.steppedBack;
+  const minDate = new Date(nowMs() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
   return (
     <>
@@ -39,9 +42,10 @@ export default async function AnswerPage({ params }: { params: Promise<{ id: str
             Go to your invites
           </Link>
         )}
-        {editable ? <AnswerActions responseId={r.id} cardId={r.cardId} /> : closed ? <AnswerActions responseId={r.id} cardId={r.cardId} withdrawOnly /> : (
+        {editable ? <AnswerActions responseId={r.id} cardId={r.cardId} /> : closed || (r.steppedBack && !sl) ? <AnswerActions responseId={r.id} cardId={r.cardId} withdrawOnly /> : (
           <p className="text-sm text-muted-foreground">Locked — the company shortlisted this answer.</p>
         )}
+        <StepBack responseId={r.id} code={r.publicCode} companyName={company?.name ?? "The company"} minDate={minDate} steppedBack={r.steppedBack} />
       </div>
     </>
   );

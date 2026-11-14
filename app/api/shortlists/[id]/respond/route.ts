@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { applySchedule, getDB, mutate, newId } from "@/lib/store";
 import { apiAccount } from "@/lib/session";
 import { logActivity } from "@/lib/activity";
-import { inviteStatus } from "@/lib/deadlines";
+import { goalOf, inviteStatus } from "@/lib/deadlines";
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const acc = await apiAccount("talent");
@@ -30,7 +30,16 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       return { status: s.status };
     }
     s.status = "accepted";
-    const meeting = { id: newId("mtg"), cardId: s.cardId, responseId: s.responseId, slotStart: "", table: 0 };
+    const modes = card ? goalOf(card, db).meetModes : (["event"] as const);
+    const eventOnly = modes.length === 1 && modes[0] === "event";
+    if (!eventOnly) {
+      // Other ways to meet are offered: the talent picks a time next.
+      const pending = { id: newId("mtg"), cardId: s.cardId, responseId: s.responseId, slotStart: "", table: 0, status: "pending" as const };
+      db.meetings.push(pending);
+      logActivity(db, { kind: "invite_accepted", actor: "talent", ...ids });
+      return { status: s.status, needsSlot: true, meetingId: pending.id };
+    }
+    const meeting = { id: newId("mtg"), cardId: s.cardId, responseId: s.responseId, slotStart: "", table: 0, mode: "event" as const, status: "booked" as const, durationMin: db.event.slotMinutes };
     db.meetings.push(meeting);
     logActivity(db, { kind: "invite_accepted", actor: "talent", ...ids });
     applySchedule(db);

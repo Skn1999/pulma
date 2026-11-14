@@ -25,7 +25,7 @@ export function InviteMessage({ message, companyName }: { message: string; compa
   );
 }
 
-export function InviteActions({ shortlistId, companyName }: { shortlistId: string; companyName: string }) {
+export function InviteActions({ shortlistId, companyName, responseId }: { shortlistId: string; companyName: string; responseId: string }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -47,13 +47,18 @@ export function InviteActions({ shortlistId, companyName }: { shortlistId: strin
       if (res?.status === 409) router.refresh();
       return;
     }
-    const data = (await res.json().catch(() => ({}))) as { table?: number; slotStart?: string };
+    const data = (await res.json().catch(() => ({}))) as { table?: number; slotStart?: string; needsSlot?: boolean; meetingId?: string };
     setConfirm(false);
+    if (accept && data.needsSlot) {
+      toast.success("Pick a time");
+      router.push(`/talent/answers/${responseId}`);
+      return;
+    }
     if (accept) {
       toast.success(
         data.table && data.slotStart
           ? `Meeting booked — Table ${data.table} · ${slotLabel(data.slotStart)}`
-          : "Meeting booked — see My day for your time",
+          : "Meeting booked — see Meetings for your time",
       );
     } else toast("Invitation declined. Nothing was shared.");
     router.refresh();

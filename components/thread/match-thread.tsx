@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Check, Circle, Hourglass, Lock, LockOpen, MinusCircle, PauseCircle, Undo2 } from "lucide-react";
 import type { ThreadView } from "@/lib/thread";
-import { MEET_MODE_LABEL } from "@/lib/types";
 import { shortDate } from "@/lib/next-steps";
-import { goalLine, localSlotLabel, recordText } from "@/lib/promise-text";
+import { goalLine, recordText } from "@/lib/promise-text";
+import { MeetingPanel } from "@/components/meetings/meeting-panel";
 
 function fmt(iso: string) {
   return new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Helsinki" }).format(new Date(iso));
@@ -16,6 +16,7 @@ export function MatchThread({ responseId, viewer = "talent" }: { responseId: str
   const [error, setError] = useState("");
   const [announce, setAnnounce] = useState("");
   const seen = useRef<Set<string> | null>(null);
+  const loadRef = useRef<() => Promise<void>>(async () => {});
 
   useEffect(() => {
     let alive = true;
@@ -38,6 +39,7 @@ export function MatchThread({ responseId, viewer = "talent" }: { responseId: str
         if (alive) setError(e instanceof Error ? e.message : "Could not load the thread.");
       }
     }
+    loadRef.current = load;
     load();
     const id = setInterval(load, 5000);
     const onVis = () => { if (!document.hidden) load(); };
@@ -151,33 +153,8 @@ export function MatchThread({ responseId, viewer = "talent" }: { responseId: str
         </section>
       )}
 
-      {mt && mt.status === "booked" && mt.start && (
-        <section className="rounded-lg border border-primary/40 bg-accent p-3" aria-labelledby="thread-meeting">
-          <h3 id="thread-meeting" className="text-sm font-semibold">Meeting booked · {MEET_MODE_LABEL[mt.mode]}</h3>
-          <p className="mt-1 text-sm">
-            {mt.table ? `Table ${mt.table} · ` : ""}{localSlotLabel(mt.start)}
-            {t.counterpartName ? ` · with ${t.counterpartName}` : ""}
-          </p>
-          {mt.place && <p className="mt-0.5 text-sm">{mt.place}</p>}
-        </section>
-      )}
-      {mt && mt.status === "pending" && (
-        <section className="rounded-lg border bg-muted/60 p-3 text-sm" aria-labelledby="thread-meeting-p">
-          <h3 id="thread-meeting-p" className="font-semibold">Meeting accepted · time not picked yet</h3>
-          <p className="mt-1 text-muted-foreground">{viewer === "company" ? "They are choosing a time." : "Pick a time that works for you."}</p>
-        </section>
-      )}
-      {mt && mt.status === "reschedule" && (
-        <section className="rounded-lg border bg-muted/60 p-3 text-sm" aria-labelledby="thread-meeting-r">
-          <h3 id="thread-meeting-r" className="font-semibold">A new time is needed</h3>
-          <p className="mt-1 text-muted-foreground">{viewer === "company" ? "They are choosing a new time." : `${company} asked to move the meeting. Pick a new time.`}</p>
-        </section>
-      )}
-      {mt && mt.status === "cancelled" && (
-        <section className="rounded-lg border bg-muted/60 p-3 text-sm" aria-labelledby="thread-meeting-c">
-          <h3 id="thread-meeting-c" className="font-semibold">Meeting cancelled</h3>
-          {mt.lastChange && <p className="mt-1 text-muted-foreground">{mt.lastChange.reason}</p>}
-        </section>
+      {mt && (
+        <MeetingPanel meeting={mt} viewer={viewer} companyName={company} counterpartName={t.counterpartName} onChanged={() => loadRef.current()} />
       )}
 
       <section aria-labelledby="thread-privacy">

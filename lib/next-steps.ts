@@ -122,7 +122,7 @@ export function nextSteps(db: DB, account: Account, now: number): NextSteps {
       if (m) {
         const st = meetingStatus(m);
         if (st === "pending") you.push({ id: `pick-${m.id}`, text: `Pick a time to meet ${company}`, href });
-        else if (st === "reschedule") you.push({ id: `pick-${m.id}`, text: `${company} asked to move your meeting. Pick a new time.`, href, overdue: true });
+        else if (st === "reschedule") you.push({ id: `pick-${m.id}`, text: `${company} asked to move your meeting. Pick a new time.`, href });
         else if (meetingIsPast(db, m, now) && !db.feedback.some((f) => f.meetingId === m.id && f.side === "talent")) {
           you.push({ id: `followup-${m.id}`, text: `How did your meeting with ${company} go?`, href });
         }

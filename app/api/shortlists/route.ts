@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { apiAccount } from "@/lib/session";
 import { getDB, mutate, newId } from "@/lib/store";
 import { logActivity } from "@/lib/activity";
-import { addDays, goalOf } from "@/lib/deadlines";
+import { addDays, goalOf, isOpen } from "@/lib/deadlines";
 
 const MAX = 5;
 const MESSAGE_MAX = 200;
@@ -25,8 +25,10 @@ export async function POST(req: Request) {
   const card = db.cards.find((c) => c.id === b.cardId);
   if (!card) return NextResponse.json({ error: "Card not found" }, { status: 404 });
   if (card.companyId !== acc.companyId) return NextResponse.json({ error: "Not your card" }, { status: 403 });
-  if (!db.responses.some((r) => r.id === b.responseId && r.cardId === b.cardId))
-    return NextResponse.json({ error: "Response not found for this card" }, { status: 404 });
+  const target = db.responses.find((r) => r.id === b.responseId && r.cardId === b.cardId);
+  if (!target) return NextResponse.json({ error: "Response not found for this card" }, { status: 404 });
+  if (!isOpen(card)) return NextResponse.json({ error: "This problem isn't taking new invites right now" }, { status: 409 });
+  if (target.steppedBack) return NextResponse.json({ error: "This person has stepped back" }, { status: 409 });
   if (db.closures.some((c) => c.responseId === b.responseId))
     return NextResponse.json({ error: "Reopen this answer first" }, { status: 409 });
   if (db.shortlists.some((s) => s.responseId === b.responseId))

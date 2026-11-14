@@ -22,8 +22,20 @@ Each email is locked to one account type, which you can show on **Profile**.
 
    Press **Send**. **My answers** now shows *Sent*.
 3. **Kiertovolt** → Problems → the battery card. You'll see 8 anonymous answers in random order. #F1, #G8 and #H4 are the generic AI fluff. Use `j`/`k` to move and `s` to shortlist Olena's answer (translated from Ukrainian), #A7 and #B3.
-4. **Olena** → **Invites** → **Accept & share my name**, then open **My day** to show the staggered arrival time.
-5. **Event team** → Overview. Point out that needs arrived about 4 weeks before the event (typical: the day before) and the reply rate: every answer gets a reply.
+4. **Olena** → **Invites**: the invite shows "Reply by …". **Accept & share my name** takes her straight to **Pick a time**:
+   an office visit, a video call, or the event-day table. Pick one, then **Add to calendar**. Kiertovolt sees it under **Meetings**.
+5. **Event team** → Overview. Point out that needs arrived about 4 weeks before the event (typical: the day before), the reply rate,
+   and **Promises kept**: each company's record of replying within the time it promised.
+
+## No ghosting, changes, and meetings beyond the event day
+- **Karavaani** (hiring@karavaanifreight.example): its home opens on **Waiting on you**, with one answer past its 3-day reply promise
+  and one expired invite (press **Re-invite**). Nothing is rejected automatically.
+- **Petra** (petra.w@example.com): **Home** shows that Ledgerleaf asked to move her video call; she picks a new time in the thread.
+- **Pause or fill a problem**: on a problem page, **Problem status** → Pause… / Mark as filled…, with a reason everyone who answered is told.
+- **My situation changed** (talent **Home**): step back from all answers, optionally with a date. Companies see only
+  "#A7 stepped back" (and the date, if given). The reason is never stored.
+- **Goals**: each problem carries a public promise (decide-by date, reply within N days, ways to meet). A talent's goal on **Home**
+  is private: companies never see it, and it never changes who sees an answer.
 
 ## Seeing both sides interact (for testing)
 Open two browser windows next to each other: one at `http://localhost:3000` and the other at `http://127.0.0.1:3000`.

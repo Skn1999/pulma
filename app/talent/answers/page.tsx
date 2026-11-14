@@ -3,11 +3,12 @@ import { nowMs } from "@/lib/clock";
 import { ChevronRight, Lock } from "lucide-react";
 import { Hourglass } from "lucide-react";
 import { getDB } from "@/lib/store";
-import { replyStatus } from "@/lib/deadlines";
+import { isOpen, replyStatus } from "@/lib/deadlines";
 import { shortDate } from "@/lib/next-steps";
 import { getTalentId } from "@/lib/persona";
 import { PageTitle } from "@/components/shell/page-title";
 import { AnswerActions } from "@/components/talent/answer-actions";
+import { StepBack } from "@/components/talent/step-back";
 import { StatusTrack, type TrackStage } from "@/components/talent/status-track";
 
 export const dynamic = "force-dynamic";
@@ -16,6 +17,7 @@ export default async function AnswersPage() {
   const db = getDB();
   const talentId = await getTalentId();
   const now = nowMs();
+  const minDate = new Date(now + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
   const mine = db.responses.filter((r) => r.talentId === talentId).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
   return (
@@ -68,14 +70,21 @@ export default async function AnswersPage() {
                       {company?.name} is {promise.daysOver} {promise.daysOver === 1 ? "day" : "days"} past its reply date. You can keep waiting or withdraw.
                     </p>
                   )}
+                  {card && (card.state ?? "open") !== "open" && (
+                    <p className="mt-2 flex items-start gap-1.5 text-xs font-medium">
+                      <Hourglass className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
+                      {company?.name} {card.state === "filled" ? "closed" : "paused"} this problem{card.stateReason ? `: ${card.stateReason}` : ""}
+                    </p>
+                  )}
                   <StatusTrack stage={stage} declined={sl?.status === "declined"} closed={closed && !sl} />
                   {sl ? (
                     <p className="mt-3 inline-flex items-center gap-1.5 text-sm text-muted-foreground">
                       <Lock className="size-4" aria-hidden="true" /> Locked — the company shortlisted this answer
                     </p>
-                  ) : closed ? <AnswerActions responseId={r.id} cardId={r.cardId} withdrawOnly /> : (
+                  ) : closed || r.steppedBack || (card && !isOpen(card)) ? <AnswerActions responseId={r.id} cardId={r.cardId} withdrawOnly /> : (
                     <AnswerActions responseId={r.id} cardId={r.cardId} />
                   )}
+                  <StepBack responseId={r.id} code={r.publicCode} companyName={company?.name ?? "The company"} minDate={minDate} steppedBack={r.steppedBack} />
                 </li>
               );
             })}

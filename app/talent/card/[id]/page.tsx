@@ -3,10 +3,11 @@ import { nowMs } from "@/lib/clock";
 import { notFound } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { getDB } from "@/lib/store";
-import { companyRecord, goalOf } from "@/lib/deadlines";
+import { cardState, companyRecord, goalOf, isOpen } from "@/lib/deadlines";
 import { PromiseBlock } from "@/components/talent/promise";
 import { getTalentId } from "@/lib/persona";
 import { ProblemCardView } from "@/components/problem-card";
+import { CardStateBanner } from "@/components/talent/card-state-banner";
 import { AiLabel } from "@/components/ai-label";
 
 export const dynamic = "force-dynamic";
@@ -27,6 +28,7 @@ export default async function TalentCardPage({ params }: { params: Promise<{ id:
         <Link href="/talent" className="inline-flex min-h-11 items-center gap-1 text-sm text-primary">
           <ChevronLeft className="size-4" aria-hidden="true" /> Explore
         </Link>
+        <CardStateBanner state={cardState(card)} companyName={company?.name ?? "The company"} reason={card.stateReason} />
         <ProblemCardView card={card} company={company} />
         <PromiseBlock goal={goalOf(card, db)} record={companyRecord(db, card.companyId, nowMs())} />
         {mine && (
@@ -41,10 +43,12 @@ export default async function TalentCardPage({ params }: { params: Promise<{ id:
         )}
       </div>
       <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 border-t bg-background/95 p-3 backdrop-blur md:sticky md:bottom-0 md:mx-auto md:max-w-3xl md:border-t-0 md:bg-transparent">
-        {mine ? (
+        {!isOpen(card) && !mine ? (
+          <p className="rounded-xl border bg-muted/60 p-3 text-center text-sm font-medium">This problem isn&apos;t taking new answers right now.</p>
+        ) : mine ? (
           <div className="flex items-center gap-2 rounded-xl border border-primary/40 bg-accent p-2 pl-4 text-accent-foreground">
             <p className="min-w-0 flex-1 text-sm font-medium">You answered · #{mine.publicCode}</p>
-            {!locked && (
+            {!locked && isOpen(card) && !mine.steppedBack && (
               <Link
                 href={`/talent/card/${card.id}/answer`}
                 className="inline-flex min-h-11 items-center rounded-lg border border-primary/40 bg-background px-4 text-sm font-medium outline-none focus-visible:ring-3 focus-visible:ring-ring"

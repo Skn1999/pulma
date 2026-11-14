@@ -4,6 +4,7 @@
 
 import { newId } from "./store";
 import { meetingMode } from "./slots";
+import { shortDate } from "./next-steps";
 import { MEET_MODE_LABEL, type Account, type Activity, type ActivityView, type DB } from "./types";
 
 const slotFmt = new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "UTC" });
@@ -108,7 +109,7 @@ export function viewActivity(db: DB, account: Account, a: Activity): ActivityVie
         break;
       case "stepped_back": {
         const until = response.steppedBack?.until;
-        text = `${who} stepped back from "${card.title}"${until ? `. Available again from ${until}` : ""}`;
+        text = `${who} stepped back from "${card.title}"${until ? `. Available again from ${shortDate(until)}` : ""}`;
         break;
       }
       case "reschedule_requested":

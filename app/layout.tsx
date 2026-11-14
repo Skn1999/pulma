@@ -13,7 +13,7 @@ const fraunces = Fraunces({
 export const metadata: Metadata = {
   title: "Pulma — bring a problem, not a job ad",
   description:
-    "Companies bring a real problem. Talent answers in their own words. Blind first round, booked 10-minute conversations. Synthetic demo data.",
+    "Companies bring a real problem. Talent answers in their own words. Blind first round, kept promises, booked conversations. Synthetic demo data.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

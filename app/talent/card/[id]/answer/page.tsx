@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDB } from "@/lib/store";
 import { getTalentId } from "@/lib/persona";
+import { isOpen } from "@/lib/deadlines";
+import { CardStateBanner } from "@/components/talent/card-state-banner";
 import { ResponseForm } from "@/components/talent/response-form";
 
 export const dynamic = "force-dynamic";
@@ -28,6 +30,19 @@ export default async function AnswerPage({ params }: { params: Promise<{ id: str
   }
   const talent = db.talents.find((t) => t.id === talentId);
   const company = db.companies.find((c) => c.id === card.companyId);
+  if (!isOpen(card)) {
+    return (
+      <div className="mx-auto max-w-md px-4 py-10">
+        <CardStateBanner state={card.state ?? "open"} companyName={company?.name ?? "The company"} reason={card.stateReason} />
+        <p className="mt-4 text-center text-sm text-muted-foreground">This problem isn&apos;t taking new answers or edits right now.</p>
+        <div className="mt-4 text-center">
+          <Link href={`/talent/card/${card.id}`} className="inline-flex min-h-11 items-center rounded-lg bg-primary px-5 text-sm font-medium text-primary-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring">
+            Back to the problem
+          </Link>
+        </div>
+      </div>
+    );
+  }
   return (
     <ResponseForm
       cardId={card.id}

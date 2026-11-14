@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { apiAccount } from "@/lib/session";
 import { getDB } from "@/lib/store";
-import { inviteStatus, replyDueAt } from "@/lib/deadlines";
+import { inviteStatus, isOpen, replyDueAt } from "@/lib/deadlines";
 import type { BlindResponse } from "@/lib/types";
 
 function mulberry32(a: number) {
@@ -49,7 +49,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
             })()
           : undefined,
         closed: cl ? { id: cl.id, reason: cl.reason } : undefined,
-        replyDue: replyDueAt(db, r),
+        // A paused or filled problem already told everyone, so there is no reply date left to show.
+        ...(isOpen(card) ? { replyDue: replyDueAt(db, r) } : {}),
         steppedBack: r.steppedBack ? { until: r.steppedBack.until } : undefined,
       };
     })

@@ -3,11 +3,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { ArrowLeft, CalendarDays, ChevronDown, Clock, Eye, FileText, Hourglass, Languages, RotateCcw, Sparkles, XCircle } from "lucide-react";
+import { ArrowLeft, CalendarDays, CirclePause, Undo2, ChevronDown, Clock, Eye, FileText, Hourglass, Languages, RotateCcw, Sparkles, XCircle } from "lucide-react";
 import { CLOSURE_REASONS, type BlindResponse, type Company, type HiringGoal, type ProblemCard } from "@/lib/types";
 import { shortDate } from "@/lib/next-steps";
 import { goalLine, replyPromise } from "@/lib/promise-text";
 import { EditGoal } from "./edit-goal";
+import { ProblemStatus } from "./problem-status";
 import { MatchThread } from "@/components/thread/match-thread";
 import { AiLabel } from "@/components/ai-label";
 import { ProblemCardView } from "@/components/problem-card";
@@ -52,6 +53,11 @@ function ReplyPromise({ r, now }: { r: BlindResponse; now: number }) {
       <Clock className="size-3" aria-hidden="true" /> {p.text}
     </span>
   );
+}
+
+/** "Stepped back · available from 12 Jan". Text plus icon; never shows a reason (none is ever sent). */
+function steppedBackText(sb: { until?: string }): string {
+  return sb.until ? `Stepped back · available from ${shortDate(sb.until)}` : "Stepped back";
 }
 
 export function TriageView({
@@ -100,6 +106,7 @@ export function TriageView({
     void load();
   }, [initialMeta, load]);
 
+  const cardOpenState = (card.state ?? "open") === "open";
   const count = items?.filter((i) => i.shortlist).length ?? 0;
   const full = count >= MAX;
   const accepted = items?.filter((i) => i.shortlist?.status === "accepted").length ?? 0;
@@ -140,7 +147,8 @@ export function TriageView({
             body: JSON.stringify({ cardId, responseId: r.id }),
           });
           if (res.status === 409) {
-            toast.error("You can shortlist at most 5 answers per problem. Remove one first.");
+            const msg = ((await res.json().catch(() => null)) as { error?: string } | null)?.error;
+            toast.error(msg && !msg.includes("at most") ? msg : "You can shortlist at most 5 answers per problem. Remove one first.");
             await load();
           } else if (!res.ok) toast.error("Couldn't shortlist. Try again.");
           else {
@@ -305,6 +313,14 @@ export function TriageView({
           toast.error("This answer is closed. Reopen it to shortlist.");
           return;
         }
+        if (!selected.shortlist && selected.steppedBack) {
+          toast.error("This person has stepped back.");
+          return;
+        }
+        if (!selected.shortlist && !cardOpenState) {
+          toast.error("This problem isn't open. Reopen it to shortlist.");
+          return;
+        }
         if (!selected.shortlist && full) {
           toast.error("You've shortlisted 5. Remove one to shortlist another.");
           return;
@@ -315,7 +331,7 @@ export function TriageView({
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [move, selected, busy, full, toggle]);
+  }, [move, selected, busy, full, toggle, cardOpenState]);
 
   const counts = { all: items?.length ?? 0, open: openCount, shortlisted: count, accepted, closed: closedCount };
   const tabs: { key: Tab; label: string }[] = [
@@ -346,6 +362,7 @@ export function TriageView({
           <p className="mt-0.5 text-xs text-muted-foreground">{goalLine(goal)}</p>
         </div>
         <div className="flex items-center gap-2">
+          <ProblemStatus cardId={card.id} state={card.state ?? "open"} reason={card.stateReason} />
           <EditGoal cardId={card.id} goal={goal} />
           <Button variant="outline" size="sm" onClick={() => setCardOpen(true)}>
             <FileText aria-hidden="true" /> View problem card
@@ -355,6 +372,16 @@ export function TriageView({
           </Link>
         </div>
       </header>
+
+      {!cardOpenState && (
+        <p role="status" className="flex items-center gap-2 border-b bg-muted/60 px-4 py-2 text-sm sm:px-6">
+          <CirclePause className="size-4 shrink-0" aria-hidden="true" />
+          <span>
+            <span className="font-medium">{card.state === "filled" ? "This problem is marked as filled" : "This problem is paused"}</span>
+            {card.stateReason ? `: ${card.stateReason}.` : "."} It takes no new answers or invites. Everyone who answered has been told.
+          </span>
+        </p>
+      )}
 
       <Dialog open={cardOpen} onOpenChange={setCardOpen}>
         <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl">
@@ -461,6 +488,11 @@ export function TriageView({
                       </span>
                       <span className="mt-1 line-clamp-2 block text-sm text-muted-foreground">{firstLine(r)}</span>
                       <span className="mt-1 block empty:hidden"><ReplyPromise r={r} now={now} /></span>
+                      {r.steppedBack && (
+                        <span className="mt-1 inline-flex items-center gap-1 text-xs font-medium">
+                          <Undo2 className="size-3" aria-hidden="true" /> {steppedBackText(r.steppedBack)}
+                        </span>
+                      )}
                     </button>
                   </li>
                 );
@@ -485,6 +517,7 @@ export function TriageView({
               r={selected}
               name={meta[selected.id]?.revealedName}
               full={full}
+              cardOpen={cardOpenState}
               busy={busy === selected.id}
               showOriginal={!!showOriginal[selected.id]}
               onShowOriginal={(v) => setShowOriginal((s) => ({ ...s, [selected.id]: v }))}
@@ -630,11 +663,12 @@ function MessageField({
 }
 
 function Reader({
-  r, name, full, busy, now, onReinvite, showOriginal, onShowOriginal, onToggle, onClose, onReopen, onSee, onNote, onMessage, onBack,
+  r, name, full, cardOpen, busy, now, onReinvite, showOriginal, onShowOriginal, onToggle, onClose, onReopen, onSee, onNote, onMessage, onBack,
 }: {
   r: BlindResponse;
   name?: string;
   full: boolean;
+  cardOpen: boolean;
   busy: boolean;
   now: number;
   onReinvite: () => void;
@@ -663,6 +697,11 @@ function Reader({
       </div>
       {locked && name && <p className="mt-2 text-sm font-medium">Identity shared: {name}</p>}
       <p className="mt-2 empty:hidden"><ReplyPromise r={r} now={now} /></p>
+      {r.steppedBack && (
+        <p className="mt-2 inline-flex items-center gap-1 text-sm font-medium">
+          <Undo2 className="size-4" aria-hidden="true" /> {steppedBackText(r.steppedBack)}
+        </p>
+      )}
 
       {r.translatedText ? (
         <>
@@ -693,7 +732,7 @@ function Reader({
         <Button
           variant={sl ? "default" : "outline"}
           aria-pressed={!!sl}
-          disabled={busy || locked || (!sl && (full || !!closed))}
+          disabled={busy || locked || (!sl && (full || !!closed || !!r.steppedBack || !cardOpen))}
           onClick={onToggle}
         >
           {sl ? "Remove from shortlist" : "Shortlist"}
@@ -721,6 +760,12 @@ function Reader({
             <XCircle className="size-4" aria-hidden="true" /> Closed · not this time. Reopen to shortlist.
           </span>
         )}
+        {!sl && r.steppedBack && (
+          <span className="inline-flex items-center gap-1 text-sm font-medium">
+            <Undo2 className="size-4" aria-hidden="true" /> {steppedBackText(r.steppedBack)}. They can&apos;t be shortlisted for now.
+          </span>
+        )}
+        {!sl && !closed && !r.steppedBack && !cardOpen && <span className="text-sm text-muted-foreground">This problem isn&apos;t open, so no new invites.</span>}
         {!sl && !closed && full && <span className="text-sm text-muted-foreground">Five already shortlisted. Remove one first.</span>}
         {locked && <span className="text-sm text-muted-foreground">Accepted, so it can&apos;t be removed.</span>}
       </div>

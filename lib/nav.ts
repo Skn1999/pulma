@@ -21,6 +21,7 @@ export function navFor(account: Account, db: DB): NavItem[] {
     return [
       withBadge({ href: "/company", label: "Problems", icon: "LayoutGrid" }, fresh),
       { href: "/company/intake", label: "New problem", icon: "SquarePlus" },
+      { href: "/company/meetings", label: "Meetings", icon: "CalendarClock" },
       { href: "/event", label: "Event day", icon: "CalendarDays" },
     ];
   }
@@ -32,7 +33,7 @@ export function navFor(account: Account, db: DB): NavItem[] {
       { href: "/talent", label: "Explore", icon: "Compass" },
       { href: "/talent/answers", label: "My answers", icon: "PenLine" },
       withBadge({ href: "/talent/inbox", label: "Invites", icon: "Inbox" }, invites),
-      { href: "/event", label: "My day", icon: "CalendarDays" },
+      { href: "/talent/meetings", label: "Meetings", icon: "CalendarDays" },
     ];
   }
   return [
