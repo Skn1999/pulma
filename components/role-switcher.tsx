@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import type { Role } from "@/lib/types";
 
@@ -12,13 +12,23 @@ const ROLES: { role: Role; label: string; href: string }[] = [
 
 export function RoleSwitcher({ role }: { role: Role }) {
   const router = useRouter();
-  const [current, setCurrent] = useState<Role>(role);
+  const pathname = usePathname();
+  const [picked, setPicked] = useState<Role | null>(null);
   const [busy, setBusy] = useState(false);
+  // The page you're on wins; the cookie role is the fallback (home, /event).
+  const fromPath: Role | null = pathname.startsWith("/company")
+    ? "company"
+    : pathname.startsWith("/talent")
+      ? "talent"
+      : pathname.startsWith("/organiser")
+        ? "organiser"
+        : null;
+  const current = busy && picked ? picked : (fromPath ?? role);
 
   async function choose(r: (typeof ROLES)[number]) {
     if (busy) return;
     setBusy(true);
-    setCurrent(r.role);
+    setPicked(r.role);
     try {
       await fetch("/api/persona", {
         method: "POST",

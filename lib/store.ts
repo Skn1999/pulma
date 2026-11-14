@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { seed } from "@/data/seed";
 import type { DB } from "./types";
+import { buildSchedule } from "./schedule";
 
 const FILE = path.join(process.cwd(), "data", "db.json");
 const memoryOnly = !!process.env.VERCEL;
@@ -31,7 +32,7 @@ export function getDB(): DB {
     }
   }
   if (!db) {
-    db = structuredClone(seed) as DB;
+    db = freshDB();
     persist(db);
   }
   g.__pulmaDB = db;
@@ -45,8 +46,30 @@ export function mutate<T>(fn: (db: DB) => T): T {
   return result;
 }
 
-export function resetDB(): void {
+/** Write slot times and tables from buildSchedule onto db.meetings. Never throws. */
+export function applySchedule(db: DB): void {
+  try {
+    const { slots } = buildSchedule(db);
+    for (const m of db.meetings) {
+      const slot = slots.find((x) => x.meetingId === m.id);
+      if (slot) {
+        m.slotStart = slot.start;
+        m.table = slot.table;
+      }
+    }
+  } catch {
+    // An unscheduled meeting is better than a crash during the demo.
+  }
+}
+
+function freshDB(): DB {
   const db = structuredClone(seed) as DB;
+  applySchedule(db);
+  return db;
+}
+
+export function resetDB(): void {
+  const db = freshDB();
   g.__pulmaDB = db;
   persist(db);
 }

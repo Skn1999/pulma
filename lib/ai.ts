@@ -1,6 +1,7 @@
 // Server-only AI helpers. Every function returns a fallback and never throws.
 // AI only helps people write; it never ranks, scores or filters people (CLAUDE.md hard rule 1).
 import Anthropic from "@anthropic-ai/sdk";
+import { cannedTranslation } from "@/lib/demo-fallbacks";
 import type { CardDraft, Format, IntakeAnswers } from "./types";
 import { CARD_SYSTEM, CLARITY_SYSTEM, cardUserMessage, translateSystem } from "./prompts";
 
@@ -118,7 +119,7 @@ function fallbackCard(a: IntakeAnswers): CardResult {
   const firstSentence = (text: string) => {
     const first = text.split(/[.!?\n]/)[0]?.trim() ?? "";
     if (!first) return "Untitled problem";
-    return first.length > 70 ? first.slice(0, 69).trimEnd() + "…" : first;
+    return first.length > 70 ? first.slice(0, 70).replace(/\s+\S*$/, "").replace(/[,;:]$/, "") + "…" : first;
   };
 
   const languages = KNOWN_LANGUAGES.filter((lang) =>
@@ -182,5 +183,6 @@ export async function translate(
   const input = typeof text === "string" ? text.trim() : "";
   if (!input) return { text: null, fallback: true };
   const out = await complete(translateSystem(from, to), input);
-  return out ? { text: out, fallback: false } : { text: null, fallback: true };
+  if (out) return { text: out, fallback: false };
+  return { text: cannedTranslation(input), fallback: true };
 }

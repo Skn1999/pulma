@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { getDB, mutate, newId } from "@/lib/store";
+import { applySchedule, getDB, mutate, newId } from "@/lib/store";
 import { getTalentId } from "@/lib/persona";
-import { buildSchedule } from "@/lib/schedule";
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -23,18 +22,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     }
     s.status = "accepted";
     db.meetings.push({ id: newId("mtg"), cardId: s.cardId, responseId: s.responseId, slotStart: "", table: 0 });
-    try {
-      const { slots } = buildSchedule(db);
-      for (const m of db.meetings) {
-        const slot = slots.find((x: { meetingId: string }) => x.meetingId === m.id);
-        if (slot) {
-          m.slotStart = slot.start;
-          m.table = slot.table;
-        }
-      }
-    } catch {
-      // Scheduling failure must not lose the acceptance; meeting stays unscheduled.
-    }
+    applySchedule(db);
     return { status: s.status };
   });
   return NextResponse.json(result);
