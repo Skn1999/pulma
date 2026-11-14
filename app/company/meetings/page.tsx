@@ -8,6 +8,7 @@ import { AvailabilityEditor } from "@/components/meetings/availability-editor";
 import { localNow, meetingEnd, meetingMode, meetingStatus } from "@/lib/slots";
 import { localSlotLabel } from "@/lib/promise-text";
 import { MEET_MODE_LABEL } from "@/lib/types";
+import { eventOfMeeting, tablePlace } from "@/lib/events";
 
 export const dynamic = "force-dynamic";
 
@@ -62,7 +63,9 @@ export default async function CompanyMeetingsPage() {
                     <span className="text-muted-foreground">
                       {MEET_MODE_LABEL[mode]} ·{" "}
                       {status === "booked" && m.slotStart
-                        ? `${m.table ? `Table ${m.table} · ` : ""}${localSlotLabel(m.slotStart)}–${meetingEnd(db, m).slice(11, 16)}`
+                        ? mode === "event" && m.table
+                          ? `${tablePlace(eventOfMeeting(db, m), m.table)} · ${m.slotStart.slice(11, 16)}–${meetingEnd(db, m).slice(11, 16)}`
+                          : `${localSlotLabel(m.slotStart)}–${meetingEnd(db, m).slice(11, 16)}`
                         : status === "reschedule"
                           ? "Waiting for them to pick a new time"
                           : "Waiting for them to pick a time"}

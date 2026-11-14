@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { apiAccount } from "@/lib/session";
 import { meetingAccess } from "@/lib/meeting-access";
+import { eventOfMeeting } from "@/lib/events";
 import { meetingEnd, meetingMode, meetingStatus } from "@/lib/slots";
 
 const stamp = (local: string) => local.replace(/[-:]/g, "").slice(0, 15); // 2026-11-18T14:00:00 → 20261118T140000
@@ -16,7 +17,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const { db, meeting: m } = a;
   if (meetingStatus(m) !== "booked" || !m.slotStart) return NextResponse.json({ error: "This meeting has no time yet" }, { status: 409 });
   const card = db.cards.find((c) => c.id === m.cardId);
-  const location = meetingMode(m) === "event" ? `Table ${m.table}, ${db.event.name}` : (m.place ?? "");
+  const location = meetingMode(m) === "event" ? `Table ${m.table}, ${eventOfMeeting(db, m).name}, ${eventOfMeeting(db, m).venue}` : (m.place ?? "");
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",

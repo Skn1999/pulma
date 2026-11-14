@@ -335,3 +335,113 @@ Local meeting times are wall-clock Helsinki strings "YYYY-MM-DDTHH:MM:00": forma
   "Cancel" (reason). Company reader: same booked details + "Ask to move" + "Cancel".
 - `/company/meetings` (nav "Meetings", icon "CalendarClock"): availability windows editor + upcoming meetings (all modes).
 - `/talent/meetings` (nav "Meetings" replaces "My day"): all meetings by date; event-day ones link to `/event`.
+
+---
+# v6 — Espoo events first (Steps A–D)
+Scope: Pulma focuses on recruitment events organised by the City of Espoo (fictional demo events). Office/video
+meetings stay as they are. All seed data stays fictional: fictional venues marked "(demo venue)".
+
+## Step A: Several events, each problem belongs to one
+Types (lib/types.ts):
+- `Event` gains `venue: string` (e.g. "Otaniemi Hall A (demo venue)"), `address?: string`, `focus?: string` (one line,
+  e.g. "Software, games, data and robotics"), `createdAt?: string`.
+- `DB.event` is REMOVED and replaced by `DB.events: Event[]`.
+- `ProblemCard.eventId?: string` — missing means `defaultEvent(db)`.
+- `Slot` (lib/schedule.ts) gains `eventId`.
+lib/events.ts (new, pure, no Next imports):
+- `eventById(db, id)`, `defaultEvent(db)` (earliest by date, ties by id), `eventOf(db, card)`,
+  `eventOfMeeting(db, meeting)` (via its card), `upcomingEvents(db, now)` (date ≥ Helsinki today, sorted by date),
+  `eventLabel(ev)` → "Espoo Tech Talent Day · Sat 5 Dec · Otaniemi Hall A (demo venue)".
+Replace every `db.event` use:
+- deadlines `defaultGoal(db, ev?)` → decideBy = that event's date; `goalOf(card, db)` passes `eventOf(db, card)`.
+- slots: `meetingEnd` and the event option in `slotOptions` use the meeting's/card's event.
+- next-steps `eventAhead`: the card's event.
+- stats: `daysBeforeEvent` uses the card's event; `buildStats(db, eventId?)` (or the existing entry point) can be
+  limited to one event's cards.
+- schedule: `buildSchedule(db, eventId)` schedules only booked event-day meetings whose card belongs to that event,
+  with that event's times/tables. Company table = (index among companies that have a card in that event) % tables + 1.
+  `applySchedule` (store) runs it for every event. Same greedy, deterministic rules as before.
+- respond/book routes: `durationMin` from the card's event. ics: location "Table N, <event name>, <venue>".
+Store: re-seed when `!Array.isArray(db.events)`.
+API: GET `/api/events` (anyone signed in) → events sorted by date. POST `/api/events` (organiser only)
+`{name, date, startTime, endTime, tables, venue, focus?}`: name 3–80 chars, date today or later, start<end, times on
+10-minute marks, tables 1–30, slotMinutes fixed 10. Log nothing about people.
+Cards: POST `/api/cards` takes `eventId` (must exist and be upcoming; default `defaultEvent`); the card editor/intake
+gets a required "Which event?" select of upcoming events (label via eventLabel). Company can change it while the card
+has no booked event meetings.
+Pages:
+- Organiser `/organiser`: event picker (`?event=`, default = next upcoming, else defaultEvent); subtitle, needs
+  timeline and counts are for that event. New page `/organiser/events` (nav item "Events", icon "CalendarDays" —
+  add the icon to nav-link's map if missing): list of events (name, date, hours, venue, tables, #problems, #meetings)
+  + "New event" form.
+- `/event`: event picker. Organiser sees all events; company/talent see only events they have problems/meetings in
+  (fallback: next upcoming). Timetable + "your day" per chosen event.
+- Explore (`/talent`): an "Event" filter chip group (`?event=`), and each card + card detail shows the event label.
+- Company home: each problem row shows its event name + date. Intake as above.
+- Invite (inbox), meeting panel, my-day, talent meetings: event-day meetings say "Table N at <event name>, <weekday
+  date>, <venue>" instead of only "Table N".
+Seed: `events` = [
+  ev-1 "Espoo Tech Talent Day", 2026-12-05 10:00–14:00, 6 tables, "Otaniemi Hall A (demo venue)", focus "Software, games, data and robotics";
+  ev-2 "Espoo Green Transition Jobs Morning", 2026-12-10 09:00–12:00, 4 tables, "Keilaniemi Pavilion (demo venue)", focus "Clean-tech, logistics and health tech";
+  ev-3 "Espoo International Talent Evening", 2027-01-21 16:00–19:00, 4 tables, "Espoo Centre Library Hall (demo venue)", focus "Any field; English-friendly teams" (no problems yet) ].
+  card-cleantech, card-logistics, card-medtech → ev-2; all other cards → ev-1. card-medtech goal decideBy → 2026-12-12.
+Tests: fixtures use `events: [...]`; add tests for defaultEvent/eventOf, buildSchedule per event (two events, the same
+company gets tables in both without clashing) and slotOptions using the card's event.
+
+## Step B: Skills from the CV — for the candidate only
+Purpose: help a candidate find problems that use their skills and answer them well. Skills are PRIVATE to the
+candidate: they never appear in any company or organiser API/page, never change what a company sees, never change the
+random order of answers. EU AI Act: no AI ranking of jobs for people — matching is a deterministic, visible tag overlap
+the candidate can switch on; every problem stays listed.
+Types:
+- `TalentSkill { label: string /* ≤60 chars, phrased as work */; source: "cv" | "self"; addedAt: string }`
+- `Talent.skills?: TalentSkill[]` (max 15, unique case-insensitively).
+- `ProblemCard.skills?: string[]` — 3–6 short work tags on each problem (e.g. "Messy sensor data", "Python",
+  "Explaining results to non-experts"). Generated with the card by the intake LLM (add to CARD_SYSTEM output + the
+  canned fallback), editable in the card editor, shown on the problem card as "Work involved". Seed: tags on all cards.
+lib/skills.ts (new, pure): `normaliseSkill`, `skillMatches(talentSkills, cardSkills) → string[]` (the card tags that
+  match; match = case-insensitive equality, or they share a meaningful word ≥4 letters after dropping a small stopword
+  list; deterministic, no AI), `FALLBACK_VOCAB` (≈60 work skills) + `fallbackExtract(text) → string[]` (vocab terms
+  found in the text, max 12).
+API (talent only):
+- POST `/api/skills/extract` `{text}` (≤15 000 chars) → `{ suggestions: string[], fallback: boolean }`. Calls
+  `extractSkills` in lib/ai.ts (prompt `SKILLS_SYSTEM` in lib/prompts.ts: max 12 skills phrased as work the person has
+  done; NEVER employers, schools, degrees, years, job titles, nationality, age or other personal details); on no key /
+  error → `fallbackExtract`. The CV text is NOT stored, NOT logged, NOT written to activity. Suggestions already in the
+  talent's skills are left out.
+- PUT `/api/skills` `{skills: {label, source}[]}` → replaces the list (validated, max 15). 
+Pages:
+- `/profile` (talent): section `id="skills"` "Your skills — only you see these". Paste CV text (textarea) or choose a
+  .txt/.md file (read in the browser) → "Suggest skills" → suggestions as chips, each with Add / Dismiss, plus
+  "Add all" (still a human choice). Own skill input. Current skills listed with Remove. Note under the textarea:
+  "Your CV is used once to suggest skills. It is not saved, and companies never see it or your skills."
+  Accepted CV suggestions get source "cv"; typed ones "self". Show no AI label on skills (they are the person's
+  choices), but say "Suggested by AI from your CV — you choose which to keep" above the suggestion chips.
+- Explore (`/talent`): when the talent has skills, each card shows "Uses your skills: X, Y" (only matched tags), and a
+  sort toggle "Newest | Uses my skills" (`?sort=skills`, default newest; ties keep newest order). Nothing is hidden.
+  Without skills: a small link "Add your skills to see which problems use them" → /profile#skills.
+- Card detail / respond page: if matches, a quiet box beside the answer form: "Your related skills: …. Use them as a
+  starting point and write in your own words." 
+- Talent next steps: if no skills, waitingOnYou gets "Add your skills so Explore can show which problems use them"
+  (href /profile#skills), placed last.
+Seed: skills on Olena (cv: "Battery data analysis", "Python", "Cleaning messy sensor data", "Technical translation
+Ukrainian–English") and Yuki (a few). Tests: skillMatches, fallbackExtract, and that GET /api/cards/[id]/responses and
+buildThread for a company never contain a talent's skills.
+
+## Step C: Event-day identity card (after mutual opt-in only)
+Purpose: at the event both sides can confirm they are at the right table with the right person/company.
+- Exists only for a meeting that is `mode` event, `status` booked, with a scheduled slot (table + slotStart), i.e.
+  after the company shortlisted AND the candidate accepted (names already revealed). Nothing before that.
+- `Meeting.cardSkills?: string[]` — up to 3 of the candidate's own skills they choose to show (default none).
+- `meetCode(meeting)` (lib/meet-card.ts, pure): stable 6-char code from the meeting id (A–Z without I/O, 2–9),
+  shown as "PUL-XXXXXX". Both sides see the same code.
+- Page `/meet/[meetingId]` (company of the card, the candidate, or organiser; others 404): a big index-card style
+  card: event name, weekday date, venue, table number, slot time, problem title, company name, the company contact's
+  first name, the candidate's first name, chosen skills (if any), the code, and a QR code of the absolute URL of this
+  page (use the `qrcode` npm package, render SVG server-side; no external services). Validity: "Valid on <date>";
+  after the event date it shows "This card has expired" and hides the QR. Candidate sees a small form "Show up to 3 of
+  your skills on this card" (checkboxes from their skills) → PATCH `/api/meetings/[id]/card` `{skills}` (talent own,
+  each must be one of their skills). Print-friendly (print CSS hides the shell).
+- Links: "Your event card" in the talent's match thread meeting panel, my-day and talent meetings; "Event card" in the
+  company reader meeting panel and company my-day. 
+- Privacy: no email, no surname, no other data. Expires with the event.

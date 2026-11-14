@@ -13,7 +13,7 @@ const companies: Company[] = [
 
 const cards: ProblemCard[] = [
   {
-    id: "card-cleantech", companyId: "co-cleantech",
+    id: "card-cleantech", eventId: "ev-2", companyId: "co-cleantech",
     title: "Our battery sensor data is a mess and nobody trusts it",
     context: "Every incoming battery pack gets scanned for voltage and temperature before we dismantle it. The readings come from three generations of sensors and a few hand-built scripts. Operators have started ignoring the dashboard and judging packs by feel.",
     weekOneReality: "You would sit with the shift operators at the dismantling line, collect a week of raw readings, and find out where they disagree with what people see on the bench. By Friday we would like a short list of the five most suspicious data problems and a first fix for one.",
@@ -23,7 +23,7 @@ const cards: ProblemCard[] = [
     goal: { decideBy: "2026-12-12", replyWithinDays: 7, inviteDays: 3, meetModes: ["event", "office", "video"] } satisfies HiringGoal,
   },
   {
-    id: "card-game", companyId: "co-game",
+    id: "card-game", eventId: "ev-1", companyId: "co-game",
     title: "Players quit our puzzle game at level 12 and we do not know why",
     context: "About four in ten new players stop playing right after level 12. Our analytics show the moment but not the reason. Designers argue it is too hard, engineers think it is a loading hitch.",
     weekOneReality: "Watch recordings of real sessions, play level 12 yourself on three different phones, and talk to a handful of players who quit. Come back with one or two theories we can test the following week.",
@@ -33,7 +33,7 @@ const cards: ProblemCard[] = [
     goal: { decideBy: "2026-12-10", replyWithinDays: 5, inviteDays: 3, meetModes: ["event", "video"] } satisfies HiringGoal,
   },
   {
-    id: "card-game2", companyId: "co-game",
+    id: "card-game2", eventId: "ev-1", companyId: "co-game",
     title: "Our translated game text keeps breaking the buttons",
     context: "We ship in nine languages. Every release a few strings overflow, get cut off or show raw placeholder codes. A spreadsheet and a lot of goodwill hold the process together.",
     weekOneReality: "Collect the last three releases of translation bugs, sort them by cause, and propose a cheap check that catches the most common one before translators and testers see it.",
@@ -44,17 +44,17 @@ const cards: ProblemCard[] = [
     state: "paused", stateReason: "Team priorities changed", stateAt: "2026-11-22T09:00:00.000Z",
   },
   {
-    id: "card-medtech", companyId: "co-medtech",
+    id: "card-medtech", eventId: "ev-2", companyId: "co-medtech",
     title: "Nurses mute our alarms and we need to understand why",
     context: "Our bedside monitor beeps for many reasons. Hospital staff tell us most alarms need no action, so they mute them, and sometimes the one that mattered gets muted too.",
     weekOneReality: "Shadow a ward for a morning if the hospital allows it, otherwise go through alarm logs and interview our clinical specialist. Write down which alarms people actually act on and which they ignore.",
     hardPart: "Fewer alarms is not automatically safer. We need to cut noise without ever hiding something critical, and the people who know the truth are very busy.",
     niceToHave: ["Has worked in a care, hospital or emergency setting", "Experience writing safety-sensitive instructions"],
     languages: ["English", "Finnish", "Swedish"], languagesNeeded: ["English", "Finnish"], format: "onsite", status: "published", createdAt: "2026-11-10T08:45:00.000Z",
-    goal: { decideBy: "2026-12-05", replyWithinDays: 4, inviteDays: 3, meetModes: ["event", "office"] } satisfies HiringGoal,
+    goal: { decideBy: "2026-12-12", replyWithinDays: 4, inviteDays: 3, meetModes: ["event", "office"] } satisfies HiringGoal,
   },
   {
-    id: "card-saas", companyId: "co-saas",
+    id: "card-saas", eventId: "ev-1", companyId: "co-saas",
     title: "New customers sign up, then go quiet after two weeks",
     context: "Roughly a third of new customers never connect their bank account, which is the step where our product becomes useful. Support tickets hint at confusion, but nobody has time to read them all.",
     weekOneReality: "Read a few hundred support tickets and onboarding emails, group them by what people were trying to do, and sit in on two customer calls. Present the three most common stumbling points.",
@@ -64,7 +64,7 @@ const cards: ProblemCard[] = [
     goal: { decideBy: "2026-12-08", replyWithinDays: 5, inviteDays: 3, meetModes: ["event", "video"] } satisfies HiringGoal,
   },
   {
-    id: "card-saas2", companyId: "co-saas",
+    id: "card-saas2", eventId: "ev-1", companyId: "co-saas",
     title: "Customers upload invoice files in a hundred different shapes",
     context: "Our import feature expects a tidy CSV. Real customers send exports from old systems, with merged cells, commas in odd places and dates in three formats. Support fixes them by hand.",
     weekOneReality: "Take fifty real, anonymised problem files, work out the ten patterns behind most failures, and suggest which two we should handle automatically first.",
@@ -74,7 +74,7 @@ const cards: ProblemCard[] = [
     goal: { decideBy: "2026-12-15", replyWithinDays: 7, inviteDays: 3, meetModes: ["video"] } satisfies HiringGoal,
   },
   {
-    id: "card-logistics", companyId: "co-logistics",
+    id: "card-logistics", eventId: "ev-2", companyId: "co-logistics",
     title: "Trucks wait in the yard while pallets are hunted down",
     context: "At our cross-dock depot, outbound trucks regularly wait twenty to forty minutes because one or two pallets are not where the system says they are. Drivers are frustrated and so are the floor teams.",
     weekOneReality: "Spend two shifts on the depot floor following pallets from arrival to truck, noting every place where the system and reality drift apart. Propose one small change to try the following week.",
@@ -84,7 +84,7 @@ const cards: ProblemCard[] = [
     goal: { decideBy: "2026-11-28", replyWithinDays: 3, inviteDays: 2, meetModes: ["event", "office"] } satisfies HiringGoal,
   },
   {
-    id: "card-robotics", companyId: "co-robotics",
+    id: "card-robotics", eventId: "ev-1", companyId: "co-robotics",
     title: "Our robot arm drops shiny and wet parcels",
     context: "Our arm picks parcels with suction. It works on cardboard and fails on glossy plastic bags and anything damp. We lose about one pick in eight on those items, and customers notice.",
     weekOneReality: "Build a small test table with twenty awkward parcels, run a few hundred picks, and record what fails and how. Try one cheap change to the cups or the approach angle and compare.",
@@ -341,7 +341,11 @@ export const seed: DB = {
   responses,
   shortlists,
   meetings,
-  event: { id: "ev-1", name: "Espoo Tech Talent Day", date: "2026-12-05", startTime: "10:00", endTime: "14:00", slotMinutes: 10, tables: 6 },
+  events: [
+    { id: "ev-1", name: "Espoo Tech Talent Day", date: "2026-12-05", startTime: "10:00", endTime: "14:00", slotMinutes: 10, tables: 6, venue: "Otaniemi Hall A (demo venue)", focus: "Software, games, data and robotics" },
+    { id: "ev-2", name: "Espoo Green Transition Jobs Morning", date: "2026-12-10", startTime: "09:00", endTime: "12:00", slotMinutes: 10, tables: 4, venue: "Keilaniemi Pavilion (demo venue)", focus: "Clean-tech, logistics and health tech" },
+    { id: "ev-3", name: "Espoo International Talent Evening", date: "2027-01-21", startTime: "16:00", endTime: "19:00", slotMinutes: 10, tables: 4, venue: "Espoo Centre Library Hall (demo venue)", focus: "Any field; English-friendly teams" },
+  ],
   feedback: [],
   closures,
   activity: buildActivity(),

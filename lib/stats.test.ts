@@ -10,6 +10,7 @@ const event: Event = {
   endTime: "14:00",
   slotMinutes: 10,
   tables: 6,
+  venue: "Hall (demo venue)",
 };
 
 function card(
@@ -72,7 +73,7 @@ const db: DB = {
     { id: "s1", cardId: "c1", responseId: "r1", status: "invited" } satisfies Shortlist,
   ],
   meetings: [{ id: "m1", cardId: "c1", responseId: "r1", slotStart: "", table: 1 } satisfies Meeting],
-  event,
+  events: [event],
   feedback: [],
   closures: [],
   activity: [],

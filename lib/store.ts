@@ -3,6 +3,7 @@ import path from "node:path";
 import { addRelativeSeed, seed } from "@/data/seed";
 import type { DB } from "./types";
 import { buildSchedule } from "./schedule";
+import { sortedEvents } from "./events";
 import { sweepDeadlines } from "./sweep";
 
 const FILE = path.join(process.cwd(), "data", "db.json");
@@ -22,8 +23,14 @@ function persist(db: DB) {
   }
 }
 
+/** Older data shapes are re-seeded rather than migrated (demo data only). */
+function isCurrentShape(db: DB): boolean {
+  return [db.accounts, db.closures, db.activity, db.availability, db.events].every(Array.isArray) && db.events.length > 0;
+}
+
 export function getDB(): DB {
-  if (g.__pulmaDB) return g.__pulmaDB;
+  // The in-memory copy survives hot reloads, so check its shape too.
+  if (g.__pulmaDB && isCurrentShape(g.__pulmaDB)) return g.__pulmaDB;
   let db: DB | undefined;
   if (!memoryOnly) {
     try {
@@ -32,7 +39,7 @@ export function getDB(): DB {
       db = undefined;
     }
   }
-  if (db && (!Array.isArray(db.accounts) || !Array.isArray(db.closures) || !Array.isArray(db.activity) || !Array.isArray(db.availability))) db = undefined; // older db.json: re-seed
+  if (db && !isCurrentShape(db)) db = undefined; // older db.json: re-seed
   if (!db) {
     db = freshDB();
     persist(db);
@@ -51,7 +58,7 @@ export function mutate<T>(fn: (db: DB) => T): T {
 /** Write slot times and tables from buildSchedule onto db.meetings. Never throws. */
 export function applySchedule(db: DB): void {
   try {
-    const { slots } = buildSchedule(db);
+    const slots = sortedEvents(db).flatMap((ev) => buildSchedule(db, ev.id).slots);
     for (const m of db.meetings) {
       const slot = slots.find((x) => x.meetingId === m.id);
       if (slot) {

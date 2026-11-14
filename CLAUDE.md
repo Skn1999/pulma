@@ -61,7 +61,7 @@ Feedback     { id, meetingId, side: "company"|"talent", outcome: "next-step"|"no
    5. Which working languages are realistic in the team?
    Then call the LLM to turn the answers into a **Problem Card**, show an editable preview, and publish. Include a "Dictate" mic button.
    Prompt rule: the card must describe the work, not the person. It must never list credentials, years of experience or nationality; if the company asks for these, the AI gently suggests rephrasing them as the actual work.
-3. **Talent browse** (`/talent`): a grid of published problem cards with simple tag filters (sector, language, format) and no recommendations. Card detail page.
+3. **Talent browse** (`/talent`): a grid of published problem cards with simple tag filters (sector, language, format, event) and no hidden recommendations. Optional: the candidate's own private skills (suggested from their CV, each accepted by them) show a visible "Uses your skills: …" tag match and an opt-in sort; nothing is hidden, and skills never reach companies. Card detail page.
 4. **Talent respond** (`/talent/card/[id]`): a text box with a soft limit of about 600 characters ("3–5 sentences on how you'd approach this"), answerable in any language.
    Optional buttons: "Make this clearer" (the AI suggests edits as a diff that the user accepts or rejects) and "Translate for the company" (the original is kept and shown alongside).
    Show a privacy note listing exactly what the company will see.

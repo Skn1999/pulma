@@ -3,6 +3,7 @@
 // and words each item so it contains no identity that viewer may not know.
 
 import { newId } from "./store";
+import { eventOfMeeting } from "./events";
 import { meetingMode } from "./slots";
 import { shortDate } from "./next-steps";
 import { MEET_MODE_LABEL, type Account, type Activity, type ActivityView, type DB } from "./types";
@@ -21,7 +22,7 @@ function slotLabel(db: DB, responseId: string | undefined): string | null {
   const m = responseId ? db.meetings.find((x) => x.responseId === responseId) : undefined;
   if (!m || !m.slotStart) return null;
   const mode = meetingMode(m);
-  if (mode === "event") return m.table ? `Table ${m.table} · ${m.slotStart.slice(11, 16)}` : null;
+  if (mode === "event") return m.table ? `Table ${m.table} at ${eventOfMeeting(db, m).name} · ${m.slotStart.slice(11, 16)}` : null;
   return `${MEET_MODE_LABEL[mode]} · ${formatLocalSlot(m.slotStart)}`;
 }
 

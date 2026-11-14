@@ -1,5 +1,6 @@
 // Meeting times outside the event day. Pure. Local times are Europe/Helsinki strings "YYYY-MM-DDTHH:MM:00".
 import { goalOf } from "./deadlines";
+import { eventOf, eventOfMeeting } from "./events";
 import type { DB, Meeting, MeetMode } from "./types";
 
 export const OFF_EVENT_MINUTES = 30;
@@ -35,7 +36,7 @@ export function meetingStatus(m: Meeting): "pending" | "booked" | "reschedule" |
 }
 
 export function meetingEnd(db: DB, m: Meeting): string {
-  const mins = m.durationMin ?? (meetingMode(m) === "event" ? db.event.slotMinutes : OFF_EVENT_MINUTES);
+  const mins = m.durationMin ?? (meetingMode(m) === "event" ? eventOfMeeting(db, m).slotMinutes : OFF_EVENT_MINUTES);
   return addMinutesLocal(m.slotStart, mins);
 }
 
@@ -61,11 +62,12 @@ export function slotOptions(db: DB, meetingId: string, now: number): SlotOption[
   if (!card || !response) return [];
   const company = db.companies.find((c) => c.id === card.companyId);
   const modes = goalOf(card, db).meetModes;
+  const ev = eventOf(db, card);
   const nowLocal = localNow(now);
   const earliest = addMinutesLocal(nowLocal, LEAD_MINUTES);
   const out: SlotOption[] = [];
 
-  if (modes.includes("event") && `${db.event.date}T${db.event.endTime}:00` > nowLocal) out.push({ mode: "event" });
+  if (modes.includes("event") && `${ev.date}T${ev.endTime}:00` > nowLocal) out.push({ mode: "event" });
 
   // Busy intervals: the company's booked meetings (any card) and the talent's booked meetings (any company).
   const companyCards = new Set(db.cards.filter((c) => c.companyId === card.companyId).map((c) => c.id));

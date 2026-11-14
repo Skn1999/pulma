@@ -8,6 +8,8 @@ import { CLOSURE_REASONS, type BlindResponse, type Company, type HiringGoal, typ
 import { shortDate } from "@/lib/next-steps";
 import { goalLine, replyPromise } from "@/lib/promise-text";
 import { EditGoal } from "./edit-goal";
+import { EditEvent } from "./edit-event";
+import type { EventChoice } from "./event-select";
 import { ProblemStatus } from "./problem-status";
 import { MatchThread } from "@/components/thread/match-thread";
 import { AiLabel } from "@/components/ai-label";
@@ -61,13 +63,17 @@ function steppedBackText(sb: { until?: string }): string {
 }
 
 export function TriageView({
-  card, company, initialMeta, initialSelected, goal,
+  card, company, initialMeta, initialSelected, goal, eventLabel, eventId, eventChoices, eventLocked,
 }: {
   card: ProblemCard;
   company?: Company;
   initialMeta: Record<string, ReviewMeta>;
   initialSelected?: string;
   goal: HiringGoal;
+  eventLabel: string;
+  eventId: string;
+  eventChoices: EventChoice[];
+  eventLocked: boolean;
 }) {
   const cardId = card.id;
   const [items, setItems] = useState<BlindResponse[] | null>(null);
@@ -359,15 +365,17 @@ export function TriageView({
             All problems
           </Link>
           <h1 className="truncate font-display text-xl font-semibold">{card.title}</h1>
-          <p className="mt-0.5 text-xs text-muted-foreground">{goalLine(goal)}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">{eventLabel}</p>
+          <p className="text-xs text-muted-foreground">{goalLine(goal)}</p>
         </div>
         <div className="flex items-center gap-2">
           <ProblemStatus cardId={card.id} state={card.state ?? "open"} reason={card.stateReason} />
           <EditGoal cardId={card.id} goal={goal} />
+          <EditEvent cardId={card.id} eventId={eventId} events={eventChoices} locked={eventLocked} />
           <Button variant="outline" size="sm" onClick={() => setCardOpen(true)}>
             <FileText aria-hidden="true" /> View problem card
           </Button>
-          <Link href="/event?company=me" className={buttonVariants({ variant: "ghost", size: "sm" })}>
+          <Link href={`/event?event=${eventId}`} className={buttonVariants({ variant: "ghost", size: "sm" })}>
             <CalendarDays aria-hidden="true" /> Event day
           </Link>
         </div>

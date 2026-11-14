@@ -1,6 +1,7 @@
 // Match thread: one response seen from one side. Pure; privacy is decided here, never in the UI.
 import { feedFor } from "./activity";
 import { cardState, companyRecord, goalOf, inviteStatus, replyStatus, type ReplyStatus } from "./deadlines";
+import { eventOfMeeting, tablePlace } from "./events";
 import { meetingEnd, meetingMode, meetingStatus } from "./slots";
 import type { Account, ActivityView, DB, HiringGoal, Meeting, MeetMode } from "./types";
 
@@ -25,6 +26,7 @@ export interface ThreadView {
     start?: string;
     end?: string;
     table?: number;
+    eventPlace?: string; // "Table 2 at <event>, <day>, <venue>" for event-day meetings
     place?: string;
     lastChange?: Meeting["lastChange"];
   };
@@ -128,6 +130,7 @@ export function buildThread(db: DB, account: Account, responseId: string, now: n
             status: meetingStatus(anyMeeting),
             ...(anyMeeting.slotStart ? { start: anyMeeting.slotStart, end: meetingEnd(db, anyMeeting) } : {}),
             ...(anyMeeting.table ? { table: anyMeeting.table } : {}),
+            ...(anyMeeting.table && meetingMode(anyMeeting) === "event" ? { eventPlace: tablePlace(eventOfMeeting(db, anyMeeting), anyMeeting.table) } : {}),
             ...(anyMeeting.place ? { place: anyMeeting.place } : {}),
             ...(anyMeeting.lastChange ? { lastChange: anyMeeting.lastChange } : {}),
           },

@@ -6,9 +6,10 @@ import { PromiseBlock } from "./promise";
 const FORMAT_LABEL = { onsite: "On-site", online: "Online", hybrid: "Hybrid" } as const;
 
 export function ExploreCard({
-  card, company, answered, goal, record,
+  card, company, eventLabel, answered, goal, record,
 }: {
   card: ProblemCard;
+  eventLabel: string;
   company?: Company;
   answered: boolean;
   goal: HiringGoal;
@@ -23,6 +24,7 @@ export function ExploreCard({
         <p className="truncate text-xs text-muted-foreground">
           <span className="font-medium text-foreground">{company?.name}</span> · {company?.sector}
         </p>
+        <p className="mt-1 text-xs font-medium text-primary">{eventLabel}</p>
         <h2 className="mt-1 font-display text-lg font-semibold leading-snug">{card.title}</h2>
         <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{card.context}</p>
         <ul className="mt-2.5 flex flex-wrap items-center gap-1.5" aria-label="Languages and format">

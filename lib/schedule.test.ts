@@ -11,6 +11,7 @@ const event: Event = {
   endTime: "11:00",
   slotMinutes: 10,
   tables: 2,
+  venue: "Hall (demo venue)",
 };
 
 const companies = [
@@ -60,7 +61,7 @@ function makeDb(overrides: Partial<DB>): DB {
     responses: [],
     shortlists: [],
     meetings: [],
-    event,
+    events: [event],
     feedback: [],
     closures: [],
     activity: [],
@@ -96,7 +97,7 @@ describe("buildSchedule", () => {
   const db = makeDb({ cards, responses, meetings });
 
   it("never double-books a table or a talent", () => {
-    const { slots } = buildSchedule(db);
+    const { slots } = buildSchedule(db, "ev-test");
     const tableKeys = slots.map((s) => `${s.table}|${s.start}`);
     const talentKeys = slots.map((s) => `${s.talentId}|${s.start}`);
     expect(new Set(tableKeys).size).toBe(tableKeys.length);
@@ -104,7 +105,7 @@ describe("buildSchedule", () => {
   });
 
   it("keeps every slot inside event hours and slot length", () => {
-    const { slots } = buildSchedule(db);
+    const { slots } = buildSchedule(db, "ev-test");
     expect(slots.length).toBeGreaterThan(0);
     for (const s of slots) {
       expect(s.start.startsWith("2026-12-05T")).toBe(true);
@@ -115,7 +116,7 @@ describe("buildSchedule", () => {
   });
 
   it("assigns each company its fixed table", () => {
-    const { slots } = buildSchedule(db);
+    const { slots } = buildSchedule(db, "ev-test");
     for (const s of slots) {
       const expected = s.companyId === "co2" ? 2 : 1;
       expect(s.table).toBe(expected);
@@ -133,13 +134,14 @@ describe("buildSchedule", () => {
     );
     const result = buildSchedule(
       makeDb({ cards: oneCompanyCards, responses: oneCompanyResponses, meetings: oneCompanyMeetings }),
+      "ev-test",
     );
     expect(result.slots).toHaveLength(6);
     expect(result.unscheduled).toEqual(["mx7"]);
   });
 
   it("sets arrival to 15 minutes before the talent's first slot", () => {
-    const { slots, arrivals } = buildSchedule(db);
+    const { slots, arrivals } = buildSchedule(db, "ev-test");
     for (const talentId of ["t1", "t2", "t3", "t4", "t5"]) {
       const talentSlots = slots.filter((s) => s.talentId === talentId).sort((a, b) => (a.start < b.start ? -1 : 1));
       expect(talentSlots.length).toBeGreaterThan(0);
@@ -157,12 +159,12 @@ describe("buildSchedule", () => {
 
   it("is deterministic regardless of input order", () => {
     const reversed = makeDb({ cards, responses, meetings: [...meetings].reverse() });
-    expect(buildSchedule(reversed)).toEqual(buildSchedule(db));
+    expect(buildSchedule(reversed, "ev-test")).toEqual(buildSchedule(db, "ev-test"));
   });
 
   it("skips meetings whose response or card is missing", () => {
     const broken = makeDb({ cards, responses, meetings: [meeting("mz", "cA", "missing")] });
-    const result = buildSchedule(broken);
+    const result = buildSchedule(broken, "ev-test");
     expect(result.slots).toHaveLength(0);
     expect(result.unscheduled).toEqual(["mz"]);
   });

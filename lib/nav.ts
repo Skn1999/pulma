@@ -41,6 +41,7 @@ export function navFor(account: Account, db: DB): NavItem[] {
   }
   return [
     { href: "/organiser", label: "Overview", icon: "ChartNoAxesColumn" },
+    { href: "/organiser/events", label: "Events", icon: "CalendarDays" },
     { href: "/event", label: "Schedule", icon: "CalendarDays" },
     { href: "/organiser/follow-ups", label: "Follow-ups", icon: "Inbox" },
   ];

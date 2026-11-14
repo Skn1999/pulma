@@ -12,6 +12,7 @@ import { ProblemCardView } from "@/components/problem-card";
 import { QUESTIONS } from "./questions";
 import { DictateButton } from "./dictate-button";
 import { GoalFields } from "@/components/company/goal-fields";
+import { EventSelect, type EventChoice } from "@/components/company/event-select";
 import { CardEditor, splitList, type EditorState } from "./card-editor";
 
 type Stage = "chat" | "generating" | "edit";
@@ -32,7 +33,14 @@ function Bubble({ who, children }: { who: "ai" | "me"; children: React.ReactNode
   );
 }
 
-export function IntakeFlow({ company, defaultGoal }: { company?: Company; defaultGoal: HiringGoal }) {
+export function IntakeFlow({
+  company, defaultGoal, events, defaultEventId,
+}: {
+  company?: Company;
+  defaultGoal: HiringGoal;
+  events: EventChoice[];
+  defaultEventId: string;
+}) {
   const router = useRouter();
   const [stage, setStage] = useState<Stage>("chat");
   const [answers, setAnswers] = useState<string[]>(["", "", "", "", ""]);
@@ -44,6 +52,7 @@ export function IntakeFlow({ company, defaultGoal }: { company?: Company; defaul
   const [fallback, setFallback] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [goal, setGoal] = useState<HiringGoal>(defaultGoal);
+  const [eventId, setEventId] = useState(defaultEventId);
 
   const taRef = useRef<HTMLTextAreaElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
@@ -123,7 +132,7 @@ export function IntakeFlow({ company, defaultGoal }: { company?: Company; defaul
       const res = await fetch("/api/cards", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ draft, goal }),
+        body: JSON.stringify({ draft, goal, eventId }),
       });
       if (!res.ok) throw new Error("bad response");
       const card: ProblemCard = await res.json();
@@ -186,7 +195,21 @@ export function IntakeFlow({ company, defaultGoal }: { company?: Company; defaul
         <div className="mt-8 grid gap-10 lg:grid-cols-2">
           <div>
             <CardEditor state={editor} onChange={setEditor} />
-            <section aria-labelledby="goal-h" className="mt-8 rounded-xl border border-border bg-card p-4">
+            <div className="mt-8">
+              <EventSelect
+                id="f-event"
+                events={events}
+                value={eventId}
+                onChange={(next) => {
+                  // Keep the decide-by date in step when it simply followed the old event's date.
+                  const from = events.find((e) => e.id === eventId)?.date;
+                  const to = events.find((e) => e.id === next)?.date;
+                  if (to && goal.decideBy === from) setGoal({ ...goal, decideBy: to });
+                  setEventId(next);
+                }}
+              />
+            </div>
+            <section aria-labelledby="goal-h" className="mt-6 rounded-xl border border-border bg-card p-4">
               <h2 id="goal-h" className="font-display text-lg font-semibold">Your goal for this problem</h2>
               <p className="mb-4 mt-1 text-sm text-muted-foreground">What you promise to the people who answer.</p>
               <GoalFields goal={goal} onChange={setGoal} />
@@ -197,7 +220,7 @@ export function IntakeFlow({ company, defaultGoal }: { company?: Company; defaul
               </p>
             )}
             <div className="mt-6 flex flex-wrap gap-3">
-              <Button type="button" size="lg" onClick={publish} disabled={publishing || !editor.draft.title.trim()}>
+              <Button type="button" size="lg" onClick={publish} disabled={publishing || !editor.draft.title.trim() || !eventId}>
                 {publishing ? "Publishing…" : "Publish card"}
               </Button>
               <Button type="button" size="lg" variant="outline" onClick={() => setStage("chat")}>

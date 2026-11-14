@@ -1,9 +1,11 @@
 // Pure schedule builder. No I/O, no Next imports.
 // Times are treated as local Europe/Helsinki and emitted as ISO strings without a "Z".
 
+import { eventById, eventOf } from "./events";
 import type { DB } from "./types";
 
 export interface Slot {
+  eventId: string;
   meetingId: string;
   cardId: string;
   companyId: string;
@@ -41,14 +43,22 @@ function byString(a: string, b: string): number {
   return a < b ? -1 : a > b ? 1 : 0;
 }
 
+/** Company ids that have a problem in this event, in db.companies order (this fixes each company's table). */
+export function companiesInEvent(db: DB, eventId: string): string[] {
+  const ids = new Set(db.cards.filter((c) => eventOf(db, c).id === eventId).map((c) => c.companyId));
+  return db.companies.filter((c) => ids.has(c.id)).map((c) => c.id);
+}
+
 /**
  * Greedy scheduler. Meetings are processed in id order (deterministic). Each meeting
  * takes the earliest slot where neither its table nor its talent is already busy.
  * Only booked event-day meetings are placed (see filter below).
- * Each company has one fixed table: (index in db.companies % tables) + 1.
+ * Only meetings whose problem belongs to `eventId` are placed, using that event's times and tables.
+ * Each company has one fixed table per event: (index among companies with a problem in that event % tables) + 1.
  */
-export function buildSchedule(db: DB): Schedule {
-  const ev = db.event;
+export function buildSchedule(db: DB, eventId: string): Schedule {
+  const ev = eventById(db, eventId);
+  if (!ev) return { slots: [], arrivals: {}, unscheduled: [] };
   const dayStart = toMinutes(ev.startTime);
   const dayEnd = toMinutes(ev.endTime);
   const slotCount = Math.max(0, Math.floor((dayEnd - dayStart) / ev.slotMinutes));
@@ -60,8 +70,13 @@ export function buildSchedule(db: DB): Schedule {
   // pending / rescheduling / cancelled meetings hold no table slot.
   const meetings = db.meetings
     .filter((m) => (m.mode ?? "event") === "event" && (m.status === undefined || m.status === "booked"))
+    .filter((m) => {
+      const c = cardById.get(m.cardId);
+      return c ? eventOf(db, c).id === ev.id : false;
+    })
     .sort((a, b) => byString(a.id, b.id));
 
+  const eventCompanies = companiesInEvent(db, ev.id);
   const tableBusy = new Map<number, Set<number>>();
   const talentBusy = new Map<string, Set<number>>();
   const firstSlotIndex = new Map<string, number>();
@@ -71,9 +86,7 @@ export function buildSchedule(db: DB): Schedule {
   for (const meeting of meetings) {
     const card = cardById.get(meeting.cardId);
     const response = responseById.get(meeting.responseId);
-    const companyIndex = card
-      ? db.companies.findIndex((c) => c.id === card.companyId)
-      : -1;
+    const companyIndex = card ? eventCompanies.indexOf(card.companyId) : -1;
 
     if (!card || !response || companyIndex < 0) {
       unscheduled.push(meeting.id);
@@ -108,6 +121,7 @@ export function buildSchedule(db: DB): Schedule {
     if (prev === undefined || found < prev) firstSlotIndex.set(talentId, found);
 
     slots.push({
+      eventId: ev.id,
       meetingId: meeting.id,
       cardId: card.id,
       companyId: card.companyId,

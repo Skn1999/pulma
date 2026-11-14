@@ -83,6 +83,7 @@ export interface ProblemCard {
   languages: string[]; // every working language that is realistic in the team, e.g. ["English", "Finnish"]
   languagesNeeded?: string[]; // subset of `languages` actually NEEDED for the work; the rest are nice to have
   format: Format;
+  eventId?: string; // which event this problem is for; missing = defaultEvent(db)
   status: "draft" | "published";
   createdAt: string; // ISO
   goal?: HiringGoal; // missing on old data: use goalOf() from lib/deadlines.ts for defaults
@@ -147,6 +148,10 @@ export interface Event {
   endTime: string; // "HH:MM"
   slotMinutes: number; // 10
   tables: number; // 6
+  venue: string; // fictional, marked "(demo venue)"
+  address?: string;
+  focus?: string; // one line, e.g. "Software, games, data and robotics"
+  createdAt?: string;
 }
 
 export interface Feedback {
@@ -249,7 +254,7 @@ export interface DB {
   responses: Response[];
   shortlists: Shortlist[];
   meetings: Meeting[];
-  event: Event;
+  events: Event[];
   feedback: Feedback[];
   closures: Closure[];
   activity: Activity[];

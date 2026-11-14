@@ -1,18 +1,19 @@
 // Goals and deadlines. Pure: no I/O, `now` is always passed in (ms since epoch) so tests are stable.
 // Deadlines are promises people made; nothing here decides anything about a person.
-import type { DB, HiringGoal, ProblemCard, Response, Shortlist } from "./types";
+import { defaultEvent, eventOf } from "./events";
+import type { DB, Event, HiringGoal, ProblemCard, Response, Shortlist } from "./types";
 
 const DAY = 24 * 60 * 60 * 1000;
 
 export const GOAL_LIMITS = { replyWithinDays: [1, 14], inviteDays: [1, 7] } as const;
 
-export function defaultGoal(db: DB): HiringGoal {
-  return { decideBy: db.event.date, replyWithinDays: 5, inviteDays: 3, meetModes: ["event"] };
+export function defaultGoal(db: DB, ev?: Event): HiringGoal {
+  return { decideBy: (ev ?? defaultEvent(db)).date, replyWithinDays: 5, inviteDays: 3, meetModes: ["event"] };
 }
 
 /** The card's goal, filling any gaps with defaults (older cards have no goal). */
 export function goalOf(card: ProblemCard, db: DB): HiringGoal {
-  const d = defaultGoal(db);
+  const d = defaultGoal(db, eventOf(db, card));
   const g = card.goal;
   if (!g) return d;
   return {

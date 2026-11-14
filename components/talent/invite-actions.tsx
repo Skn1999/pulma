@@ -47,7 +47,7 @@ export function InviteActions({ shortlistId, companyName, responseId }: { shortl
       if (res?.status === 409) router.refresh();
       return;
     }
-    const data = (await res.json().catch(() => ({}))) as { table?: number; slotStart?: string; needsSlot?: boolean; meetingId?: string };
+    const data = (await res.json().catch(() => ({}))) as { table?: number; slotStart?: string; eventName?: string; needsSlot?: boolean; meetingId?: string };
     setConfirm(false);
     if (accept && data.needsSlot) {
       toast.success("Pick a time");
@@ -57,7 +57,7 @@ export function InviteActions({ shortlistId, companyName, responseId }: { shortl
     if (accept) {
       toast.success(
         data.table && data.slotStart
-          ? `Meeting booked — Table ${data.table} · ${slotLabel(data.slotStart)}`
+          ? `Meeting booked — Table ${data.table}${data.eventName ? ` at ${data.eventName}` : ""} · ${slotLabel(data.slotStart)}`
           : "Meeting booked — see Meetings for your time",
       );
     } else toast("Invitation declined. Nothing was shared.");

@@ -31,11 +31,13 @@ export interface CompanyDayRow {
 export function CompanyDay({
   companyName,
   table,
+  where,
   rows,
   unscheduled,
 }: {
   companyName: string;
   table: number | null;
+  where: string;
   rows: CompanyDayRow[];
   unscheduled: number;
 }) {
@@ -45,6 +47,7 @@ export function CompanyDay({
         <h2 id="company-day" className="font-display text-xl font-semibold">
           Your event day, {companyName}
         </h2>
+        <p className="w-full text-sm text-muted-foreground">{where}</p>
         {table !== null && (
           <p className="rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-accent-foreground">
             Your table: <span className="font-display text-lg tabular-nums">{table}</span>
@@ -94,7 +97,7 @@ export function CompanyDay({
 export interface TalentDayRow {
   followUp: FollowUpState;
   time: string;
-  table: number;
+  place: string;
   companyName: string;
   problemTitle: string;
   responseCode: string;
@@ -132,7 +135,8 @@ export function TalentDay({
               <li key={r.time} className="relative rounded-xl bg-card p-4 ring-1 ring-foreground/10">
                 <span aria-hidden="true" className="absolute -left-[1.95rem] top-5 size-3 rounded-full border-2 border-primary bg-background" />
                 <p className="font-display text-xl font-semibold tabular-nums">{r.time}</p>
-                <p className="mt-1 font-medium">{r.companyName}, table {r.table}</p>
+                <p className="mt-1 font-medium">{r.companyName}</p>
+                <p className="text-sm">{r.place}</p>
                 <p className="text-sm text-muted-foreground">{r.problemTitle}</p>
                 <p className="mt-1 text-xs text-muted-foreground">Your answer: Response #{r.responseCode}</p>
                 <FollowUp side="talent" companyName={r.companyName} state={r.followUp} />

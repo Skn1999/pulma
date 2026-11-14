@@ -103,7 +103,7 @@ export function MeetingPanel({
           <h3 id="thread-meeting" className="font-semibold">Meeting booked · {MEET_MODE_LABEL[m.mode]}</h3>
           {m.start && (
             <p className="mt-1">
-              {m.table ? `Table ${m.table} · ` : ""}{localSlotLabel(m.start)}
+              {m.eventPlace ? `${m.eventPlace} · ${m.start.slice(11, 16)}` : `${m.table ? `Table ${m.table} · ` : ""}${localSlotLabel(m.start)}`}
               {counterpartName ? ` · with ${counterpartName}` : ""}
             </p>
           )}

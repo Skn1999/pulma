@@ -1,6 +1,7 @@
 // Pure organiser statistics. No I/O, no Next imports.
 // Everything here counts published cards only. noInvite is a follow-up cue, never a ranking.
 
+import { eventOf } from "./events";
 import type { DB } from "./types";
 
 export interface Stats {
@@ -36,8 +37,9 @@ function daysBetween(from: string, to: string): number {
   return Math.round((toMs - fromMs) / DAY_MS);
 }
 
-export function getStats(db: DB): Stats {
-  const published = db.cards.filter((c) => c.status === "published");
+/** Statistics for published cards; pass an eventId to limit everything to that event's problems. */
+export function getStats(db: DB, eventId?: string): Stats {
+  const published = db.cards.filter((c) => c.status === "published" && (!eventId || eventOf(db, c).id === eventId));
   const publishedIds = new Set(published.map((c) => c.id));
 
   const companyById = new Map(db.companies.map((c) => [c.id, c]));
@@ -59,7 +61,7 @@ export function getStats(db: DB): Stats {
       cardId: card.id,
       title: card.title,
       createdAt: card.createdAt,
-      daysBeforeEvent: daysBetween(card.createdAt, db.event.date),
+      daysBeforeEvent: daysBetween(card.createdAt, eventOf(db, card).date),
     }));
 
   const shortlistedResponseIds = new Set(db.shortlists.map((s) => s.responseId));

@@ -22,7 +22,7 @@ function makeDb(): DB {
     ],
     shortlists: [{ id: "s1", cardId: "c1", responseId: "r1", status: "invited" }],
     meetings: [],
-    event: { id: "e", name: "E", date: "2026-12-05", startTime: "10:00", endTime: "14:00", slotMinutes: 10, tables: 6 },
+    events: [{ id: "e", name: "E", date: "2026-12-05", startTime: "10:00", endTime: "14:00", slotMinutes: 10, tables: 6, venue: "Hall (demo venue)" }],
     feedback: [],
     closures: [],
     activity: [],

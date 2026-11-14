@@ -4,16 +4,27 @@ import { buildTimetable } from "@/components/event/build-timetable";
 import { CompanyDay, TalentDay, EmptyDay, ScheduleNotice } from "@/components/event/my-day";
 import { fmtDay, fmtTime } from "@/components/event/format";
 import { getDB } from "@/lib/store";
-import { buildSchedule } from "@/lib/schedule";
+import { buildSchedule, companiesInEvent } from "@/lib/schedule";
 import { getAccount } from "@/lib/session";
+import { nowMs } from "@/lib/clock";
+import { eventLabel, eventsOfCompany, eventsOfTalent, pickEvent, sortedEvents, tablePlace, upcomingEvents } from "@/lib/events";
+import { EventPicker } from "@/components/event/event-picker";
 
 export const dynamic = "force-dynamic";
 
-export default async function EventPage() {
+export default async function EventPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const sp = await searchParams;
+  const asked = typeof sp.event === "string" ? sp.event : undefined;
   const account = await getAccount();
   const db = getDB();
-  const schedule = buildSchedule(db);
-  const ev = db.event;
+  const now = nowMs();
+  // Organisers see every event; companies and talent only the events they have problems or answers in.
+  let choices = sortedEvents(db);
+  if (account?.role === "company") choices = eventsOfCompany(db, account.companyId ?? "");
+  else if (account?.role === "talent") choices = eventsOfTalent(db, account.talentId ?? "");
+  if (choices.length === 0) choices = upcomingEvents(db, now).slice(0, 1);
+  const ev = pickEvent(db, choices, asked, now) ?? sortedEvents(db)[0];
+  const schedule = buildSchedule(db, ev.id);
 
   const meetingById = new Map(db.meetings.map((m) => [m.id, m]));
   const cardById = new Map(db.cards.map((c) => [c.id, c]));
@@ -42,7 +53,7 @@ export default async function EventPage() {
     title = "Event day";
     const companyId = account.companyId ?? "";
     const company = db.companies.find((c) => c.id === companyId);
-    const idx = db.companies.findIndex((c) => c.id === companyId);
+    const idx = companiesInEvent(db, ev.id).indexOf(companyId);
     const mine = schedule.slots.filter((s) => s.companyId === companyId);
     const unscheduled = schedule.unscheduled.filter((id) => {
       const m = meetingById.get(id);
@@ -52,6 +63,7 @@ export default async function EventPage() {
       <CompanyDay
         companyName={company?.name ?? "your company"}
         table={idx >= 0 ? (idx % ev.tables) + 1 : null}
+        where={eventLabel(ev)}
         unscheduled={unscheduled}
         rows={mine.map((s) => ({
           time: fmtTime(s.start),
@@ -75,7 +87,7 @@ export default async function EventPage() {
         unscheduled={unscheduled}
         rows={mine.map((s) => ({
           time: fmtTime(s.start),
-          table: s.table,
+          place: tablePlace(ev, s.table),
           companyName: db.companies.find((c) => c.id === s.companyId)?.name ?? "Company",
           problemTitle: cardById.get(s.cardId)?.title ?? "",
           responseCode: codeOf(s.responseId),
@@ -85,11 +97,11 @@ export default async function EventPage() {
     );
   } else {
     title = "Schedule";
-    const { columns, rows } = buildTimetable(db, schedule);
+    const { columns, rows } = buildTimetable(db, schedule, ev);
     body =
-      db.meetings.length === 0 ? (
+      schedule.slots.length === 0 && schedule.unscheduled.length === 0 ? (
         <EmptyDay
-          title="No meetings yet"
+          title="No meetings yet for this event"
           body="The timetable builds itself as talent accepts invites. Each table is one company; each row is a 10-minute slot."
         />
       ) : (
@@ -105,12 +117,14 @@ export default async function EventPage() {
     { k: "Hours", v: `${ev.startTime}–${ev.endTime}` },
     { k: "Slots", v: `${ev.slotMinutes} min` },
     { k: "Tables", v: String(ev.tables) },
+    { k: "Venue", v: ev.venue },
   ];
 
   return (
     <>
       <PageTitle title={title} subtitle={ev.name} />
       <div className="space-y-6 px-4 py-6 sm:px-6">
+        <EventPicker events={choices} selectedId={ev.id} basePath="/event" />
         <dl className="flex flex-wrap gap-x-8 gap-y-2 rounded-xl bg-card px-4 py-3 text-sm ring-1 ring-foreground/10">
           {facts.map((f) => (
             <div key={f.k}>

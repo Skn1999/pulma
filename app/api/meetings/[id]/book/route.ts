@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { apiAccount } from "@/lib/session";
 import { meetingAccess } from "@/lib/meeting-access";
 import { applySchedule, mutate } from "@/lib/store";
+import { eventOfMeeting } from "@/lib/events";
 import { logActivity } from "@/lib/activity";
 import { OFF_EVENT_MINUTES, isOptionFree, meetingStatus, placeFor } from "@/lib/slots";
 import { MEETING_CHANGE_REASONS, type MeetingChangeReason } from "@/lib/types";
@@ -42,7 +43,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     if (mode === "event") {
       m.slotStart = "";
       m.table = 0;
-      m.durationMin = db.event.slotMinutes;
+      m.durationMin = eventOfMeeting(db, m).slotMinutes;
       delete m.place;
     } else {
       m.slotStart = start!;

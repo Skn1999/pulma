@@ -3,6 +3,7 @@ import { nowMs } from "@/lib/clock";
 import { Suspense } from "react";
 import { getDB } from "@/lib/store";
 import { companyRecord, goalOf, isOpen } from "@/lib/deadlines";
+import { eventDay, eventLabel, eventOf, sortedEvents } from "@/lib/events";
 import { getTalentId } from "@/lib/persona";
 import { PageTitle } from "@/components/shell/page-title";
 import { ExploreCard } from "@/components/talent/explore-card";
@@ -26,6 +27,7 @@ export default async function TalentPage({
   const sector = one("sector");
   const language = one("language");
   const format = one("format");
+  const eventId = one("event");
 
   const db = getDB();
   const talentId = await getTalentId();
@@ -36,7 +38,13 @@ export default async function TalentPage({
 
   const sectors = [...new Set(published.map((c) => companyOf(c.companyId)?.sector).filter(Boolean) as string[])].sort();
   const languages = [...new Set(published.flatMap((c) => c.languages))].sort();
+  const openEventIds = new Set(published.map((c) => eventOf(db, c).id));
   const groups: FilterGroup[] = [
+    {
+      key: "event",
+      label: "Event",
+      options: sortedEvents(db).filter((e) => openEventIds.has(e.id)).map((e) => ({ value: e.id, label: `${e.name} · ${eventDay(e.date)}` })),
+    },
     { key: "sector", label: "Sector", options: sectors.map((s) => ({ value: s, label: s })) },
     { key: "language", label: "Language", options: languages.map((s) => ({ value: s, label: s })) },
     { key: "format", label: "Format", options: FORMATS },
@@ -44,6 +52,7 @@ export default async function TalentPage({
 
   const shown = published.filter(
     (c) =>
+      (!eventId || eventOf(db, c).id === eventId) &&
       (!sector || companyOf(c.companyId)?.sector === sector) &&
       (!language || c.languages.includes(language)) &&
       (!format || c.format === format),
@@ -55,7 +64,7 @@ export default async function TalentPage({
 
   return (
     <>
-      <PageTitle title="Explore" subtitle="Real problems from companies at Espoo Tech Talent Day. Newest first." />
+      <PageTitle title="Explore" subtitle="Real problems from companies at upcoming Espoo events. Newest first." />
       <div className="space-y-3 px-4 py-3 sm:px-6">
         <Suspense fallback={null}>
           <FilterChips groups={groups} />
@@ -76,6 +85,7 @@ export default async function TalentPage({
               <li key={c.id}>
                 <ExploreCard
                   card={c}
+                  eventLabel={eventLabel(eventOf(db, c))}
                   company={companyOf(c.companyId)}
                   answered={answered.has(c.id)}
                   goal={goalOf(c, db)}

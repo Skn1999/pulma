@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 
 export interface FilterGroup {
-  key: "sector" | "language" | "format";
+  key: "event" | "sector" | "language" | "format";
   label: string;
   options: { value: string; label: string }[];
 }

@@ -1,0 +1,34 @@
+import { NextResponse } from "next/server";
+import { apiAccount } from "@/lib/session";
+import { getDB, mutate } from "@/lib/store";
+import { eventById, eventOf, upcomingEvents } from "@/lib/events";
+import { nowMs } from "@/lib/clock";
+import { meetingMode, meetingStatus } from "@/lib/slots";
+
+/** The company moves its problem to another upcoming event, as long as no event-day meeting is booked on it. */
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const acc = await apiAccount("company");
+  if (acc instanceof NextResponse) return acc;
+  const { id } = await params;
+  const db0 = getDB();
+  const card = db0.cards.find((c) => c.id === id);
+  if (!card) return NextResponse.json({ error: "Card not found" }, { status: 404 });
+  if (card.companyId !== acc.companyId) return NextResponse.json({ error: "Not your card" }, { status: 403 });
+  const body = await req.json().catch(() => null);
+  const eventId = typeof body?.eventId === "string" ? body.eventId : "";
+  if (!eventById(db0, eventId) || !upcomingEvents(db0, nowMs()).some((e) => e.id === eventId)) {
+    return NextResponse.json({ error: "Pick an upcoming event." }, { status: 400 });
+  }
+  if (eventOf(db0, card).id === eventId) return NextResponse.json(card);
+  const booked = db0.meetings.some((m) => m.cardId === id && meetingMode(m) === "event" && meetingStatus(m) === "booked");
+  if (booked) return NextResponse.json({ error: "An event-day meeting is already booked for this problem, so it can't move to another event." }, { status: 409 });
+  const updated = mutate((db) => {
+    const c = db.cards.find((x) => x.id === id)!;
+    const oldDate = eventOf(db, c).date;
+    c.eventId = eventId;
+    // Keep the decide-by date in step when it simply followed the old event's date.
+    if (c.goal && c.goal.decideBy === oldDate) c.goal = { ...c.goal, decideBy: eventById(db, eventId)!.date };
+    return c;
+  });
+  return NextResponse.json(updated);
+}

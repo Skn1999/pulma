@@ -3,6 +3,7 @@ import { nowMs } from "@/lib/clock";
 import { notFound } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { getDB } from "@/lib/store";
+import { eventLabel, eventOf } from "@/lib/events";
 import { cardState, companyRecord, goalOf, isOpen } from "@/lib/deadlines";
 import { PromiseBlock } from "@/components/talent/promise";
 import { getTalentId } from "@/lib/persona";
@@ -29,6 +30,7 @@ export default async function TalentCardPage({ params }: { params: Promise<{ id:
           <ChevronLeft className="size-4" aria-hidden="true" /> Explore
         </Link>
         <CardStateBanner state={cardState(card)} companyName={company?.name ?? "The company"} reason={card.stateReason} />
+        <p className="mt-3 text-sm font-medium text-primary">{eventLabel(eventOf(db, card))}</p>
         <ProblemCardView card={card} company={company} />
         <PromiseBlock goal={goalOf(card, db)} record={companyRecord(db, card.companyId, nowMs())} />
         {mine && (

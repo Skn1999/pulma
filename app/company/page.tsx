@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { nowMs } from "@/lib/clock";
 import { getDB } from "@/lib/store";
+import { eventDay, eventOf } from "@/lib/events";
 import { requireAccount } from "@/lib/session";
 import { goalOf, goalProgress } from "@/lib/deadlines";
 import { nextSteps, shortDate } from "@/lib/next-steps";
@@ -28,6 +29,7 @@ export default async function CompanyHome() {
     const progress = goalProgress(db, card, now);
     return {
       card,
+      event: eventOf(db, card),
       goal: goalOf(card, db),
       progress,
       answers: answers.length,
@@ -81,7 +83,7 @@ export default async function CompanyHome() {
               </tr>
             </thead>
             <tbody>
-              {rows.map(({ card, goal, progress, answers, fresh, open, shortlisted, accepted }) => (
+              {rows.map(({ card, event, goal, progress, answers, fresh, open, shortlisted, accepted }) => (
                 <tr key={card.id} className="group relative border-b last:border-0 hover:bg-muted/50 focus-within:bg-muted/50">
                   <th scope="row" className="px-4 py-3 text-left font-medium sm:px-6">
                     <Link
@@ -90,6 +92,7 @@ export default async function CompanyHome() {
                     >
                       {card.title}
                     </Link>
+                    <span className="mt-0.5 block text-xs font-normal text-muted-foreground">{event.name} · {eventDay(event.date)}</span>
                   </th>
                   <td className="px-3 py-3">
                     <span className="rounded-full border px-2 py-0.5 text-xs">

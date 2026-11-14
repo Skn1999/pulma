@@ -3,6 +3,8 @@ import { apiAccount } from "@/lib/session";
 import { getDB, mutate, newId } from "@/lib/store";
 import { logActivity } from "@/lib/activity";
 import { defaultGoal, isOpen } from "@/lib/deadlines";
+import { defaultEvent, eventById, upcomingEvents } from "@/lib/events";
+import { nowMs } from "@/lib/clock";
 import { parseGoal } from "@/lib/goal-input";
 import type { CardDraft, Format, ProblemCard } from "@/lib/types";
 
@@ -28,9 +30,13 @@ export async function POST(req: Request) {
   const title = str(d.title);
   if (!title) return NextResponse.json({ error: "title required" }, { status: 400 });
   const format: Format = d.format === "onsite" || d.format === "online" || d.format === "hybrid" ? d.format : "hybrid";
+  const db0 = getDB();
+  const eventId = body?.eventId === undefined || body.eventId === null || body.eventId === "" ? defaultEvent(db0).id : String(body.eventId);
+  const ev = eventById(db0, eventId);
+  if (!ev || !upcomingEvents(db0, nowMs()).some((e) => e.id === eventId)) return NextResponse.json({ error: "Pick an upcoming event." }, { status: 400 });
   let goal = undefined as ProblemCard["goal"];
   if (body?.goal !== undefined && body.goal !== null) {
-    const parsed = parseGoal(body.goal, defaultGoal(getDB()));
+    const parsed = parseGoal(body.goal, defaultGoal(db0, ev));
     if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: 400 });
     goal = parsed.goal;
   }
@@ -46,7 +52,8 @@ export async function POST(req: Request) {
     languages: strs(d.languages),
     ...(Array.isArray(needed) ? { languagesNeeded: strs(needed).filter((l) => strs(d.languages).includes(l)) } : {}),
     format,
-    goal: goal ?? defaultGoal(getDB()),
+    eventId,
+    goal: goal ?? defaultGoal(db0, ev),
     status: "published",
     createdAt: new Date().toISOString(),
   };

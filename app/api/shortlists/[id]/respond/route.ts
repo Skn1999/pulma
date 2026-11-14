@@ -3,6 +3,7 @@ import { applySchedule, getDB, mutate, newId } from "@/lib/store";
 import { apiAccount } from "@/lib/session";
 import { logActivity } from "@/lib/activity";
 import { goalOf, inviteStatus } from "@/lib/deadlines";
+import { defaultEvent, eventOf } from "@/lib/events";
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const acc = await apiAccount("talent");
@@ -39,12 +40,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       logActivity(db, { kind: "invite_accepted", actor: "talent", ...ids });
       return { status: s.status, needsSlot: true, meetingId: pending.id };
     }
-    const meeting = { id: newId("mtg"), cardId: s.cardId, responseId: s.responseId, slotStart: "", table: 0, mode: "event" as const, status: "booked" as const, durationMin: db.event.slotMinutes };
+    const meeting = { id: newId("mtg"), cardId: s.cardId, responseId: s.responseId, slotStart: "", table: 0, mode: "event" as const, status: "booked" as const, durationMin: card ? eventOf(db, card).slotMinutes : defaultEvent(db).slotMinutes };
     db.meetings.push(meeting);
     logActivity(db, { kind: "invite_accepted", actor: "talent", ...ids });
     applySchedule(db);
     if (meeting.slotStart) logActivity(db, { kind: "meeting_scheduled", actor: "talent", ...ids });
-    return { status: s.status, table: meeting.table || null, slotStart: meeting.slotStart || null };
+    return { status: s.status, table: meeting.table || null, slotStart: meeting.slotStart || null, eventName: card ? eventOf(db, card).name : null };
   });
   return NextResponse.json(result);
 }

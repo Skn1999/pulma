@@ -2,6 +2,7 @@
 // Steps come only from promises people made (reply promise, invite window, decide-by date, meetings).
 // Nothing here orders or filters people; lists are sorted by deadline only.
 import { cardState, goalOf, inviteStatus, decideByDays, replyStatus } from "./deadlines";
+import { eventOf } from "./events";
 import { localNow, meetingMode, meetingStatus } from "./slots";
 import type { Account, DB, Meeting } from "./types";
 
@@ -92,7 +93,8 @@ export function nextSteps(db: DB, account: Account, now: number): NextSteps {
         const step = { href: `${href}?r=${m.responseId}` };
         if (st === "pending" || st === "reschedule") {
           const offersOffEvent = goal.meetModes.some((md) => md !== "event");
-          const eventAhead = goal.meetModes.includes("event") && `${db.event.date}T${db.event.endTime}:00` > localNow(now);
+          const ev = eventOf(db, card);
+          const eventAhead = goal.meetModes.includes("event") && `${ev.date}T${ev.endTime}:00` > localNow(now);
           if (offersOffEvent && !eventAhead && futureWindows.length === 0) {
             you.push({ id: `times-${m.id}`, text: `Add meeting times so ${who(m.responseId)} can book`, href: "/company/meetings" });
           } else {

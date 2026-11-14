@@ -41,3 +41,11 @@ Each email is locked to one account type, which you can show on **Profile**.
 Open two browser windows next to each other: one at `http://localhost:3000` and the other at `http://127.0.0.1:3000`.
 Each address keeps its own sign-in, so you can be Kiertovolt on the left and Olena on the right.
 The bell checks for news every 5 seconds, so actions on one side show up on the other within a few seconds.
+
+## Several events
+There are three fictional Espoo events (Tech Talent Day, Green Transition Jobs Morning, International Talent Evening), and every problem belongs to exactly one.
+- **Event team** → **Events**: the list with venue, tables, problems and meetings per event, plus **New event**. Overview and Schedule have an event picker.
+- **Talent** → Explore: the **Event** filter chips narrow the problems; each card shows its event, date and venue.
+- **Invites** and meeting details say "Table N at <event>, <day>, <venue>", so the right event is always clear.
+- **Company** → a problem → **Change event** (until an event-day meeting is booked). The intake asks "Which event?" before publishing.
+Note: the first load after this change re-seeds the demo data, so use **Reset demo data** to start clean.
