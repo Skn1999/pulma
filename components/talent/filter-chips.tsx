@@ -21,12 +21,10 @@ export function FilterChips({ groups }: { groups: FilterGroup[] }) {
   }
 
   return (
-    <div className="space-y-3">
+    <div role="toolbar" aria-label="Filters" className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden">
       {groups.map((g) => (
-        <div key={g.key} role="group" aria-label={`Filter by ${g.label}`} className="flex flex-wrap items-center gap-2">
-          <span className="w-full text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground sm:w-20">
-            {g.label}
-          </span>
+        <div key={g.key} role="group" aria-label={`Filter by ${g.label}`} className="flex shrink-0 items-center gap-2 border-r border-border pr-3 last:border-r-0">
+          <span className="text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">{g.label}</span>
           {g.options.map((o) => {
             const on = params.get(g.key) === o.value;
             return (
@@ -35,10 +33,8 @@ export function FilterChips({ groups }: { groups: FilterGroup[] }) {
                 type="button"
                 aria-pressed={on}
                 onClick={() => toggle(g.key, o.value)}
-                className={`inline-flex min-h-11 items-center gap-1.5 rounded-full border px-4 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50 ${
-                  on
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border bg-card text-foreground hover:bg-muted"
+                className={`inline-flex min-h-11 shrink-0 items-center gap-1 whitespace-nowrap rounded-full border px-3.5 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50 ${
+                  on ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card hover:bg-muted"
                 }`}
               >
                 {on && <span aria-hidden="true">✓</span>}

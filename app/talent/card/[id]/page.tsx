@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ChevronLeft } from "lucide-react";
 import { getDB } from "@/lib/store";
 import { getTalentId } from "@/lib/persona";
 import { ProblemCardView } from "@/components/problem-card";
 import { AiLabel } from "@/components/ai-label";
-import { ResponseForm } from "@/components/talent/response-form";
 
 export const dynamic = "force-dynamic";
 
@@ -14,42 +14,44 @@ export default async function TalentCardPage({ params }: { params: Promise<{ id:
   const card = db.cards.find((c) => c.id === id && c.status === "published");
   if (!card) notFound();
   const talentId = await getTalentId();
-  const talent = db.talents.find((t) => t.id === talentId);
   const mine = db.responses.find((r) => r.cardId === card.id && r.talentId === talentId);
   const company = db.companies.find((c) => c.id === card.companyId);
 
   return (
-    <main id="main" className="mx-auto max-w-3xl px-4 pb-20 pt-8 sm:px-6">
-      <Link href="/talent" className="inline-flex min-h-11 items-center text-sm text-primary underline underline-offset-4">
-        ← All problems
-      </Link>
-      <div className="mt-2">
+    <div className="pb-24">
+      <div className="mx-auto max-w-3xl px-4 pt-2 sm:px-6">
+        <Link href="/talent" className="inline-flex min-h-11 items-center gap-1 text-sm text-primary">
+          <ChevronLeft className="size-4" aria-hidden="true" /> Explore
+        </Link>
         <ProblemCardView card={card} company={company} />
-      </div>
-
-      <section aria-labelledby="respond-h" className="mt-10">
-        <h2 id="respond-h" className="font-display text-2xl font-semibold">
-          {mine ? "Your answer" : "Your turn"}
-        </h2>
-        {mine ? (
-          <div className="mt-4 space-y-4 rounded-lg border border-border bg-card p-5">
-            <p className="text-sm text-muted-foreground">
-              Submitted as <strong className="text-foreground">Response #{mine.publicCode}</strong>. You can&apos;t edit it
-              now. Check your <Link href="/talent/inbox" className="text-primary underline underline-offset-4">inbox</Link> for invitations.
-            </p>
-            <p className="whitespace-pre-wrap leading-7">{mine.text}</p>
+        {mine && (
+          <section aria-labelledby="mine-h" className="mt-6 rounded-xl border border-border bg-card p-4">
+            <h2 id="mine-h" className="text-sm font-semibold">Your answer · #{mine.publicCode}</h2>
+            <p className="mt-2 whitespace-pre-wrap text-sm leading-6">{mine.text}</p>
             {mine.translatedText && (
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Translation shown to the company</p>
-                <p className="mt-1 whitespace-pre-wrap leading-7">{mine.translatedText}</p>
-              </div>
+              <p className="mt-2 whitespace-pre-wrap border-t pt-2 text-sm leading-6 text-muted-foreground">{mine.translatedText}</p>
             )}
-            {mine.aiAssisted && <AiLabel />}
-          </div>
-        ) : (
-          <ResponseForm cardId={card.id} defaultLanguage={talent?.preferredLanguage ?? "English"} />
+            {mine.aiAssisted && <AiLabel className="mt-2" />}
+          </section>
         )}
-      </section>
-    </main>
+      </div>
+      <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 border-t bg-background/95 p-3 backdrop-blur md:sticky md:bottom-0 md:mx-auto md:max-w-3xl md:border-t-0 md:bg-transparent">
+        {mine ? (
+          <Link
+            href="/talent/answers"
+            className="flex min-h-12 items-center justify-center rounded-xl border border-primary/40 bg-accent px-4 text-sm font-medium text-accent-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring"
+          >
+            You answered · #{mine.publicCode} · See status
+          </Link>
+        ) : (
+          <Link
+            href={`/talent/card/${card.id}/answer`}
+            className="flex min-h-12 items-center justify-center rounded-xl bg-primary px-4 text-base font-medium text-primary-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring"
+          >
+            Answer this problem
+          </Link>
+        )}
+      </div>
+    </div>
   );
 }

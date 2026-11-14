@@ -18,7 +18,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
   const menu = { displayName: account.displayName, email: account.email, role: account.role };
 
   return (
-    <div className="flex h-dvh flex-col bg-muted/60 md:flex-row">
+    <div className="fixed inset-0 flex flex-col bg-muted/60 md:flex-row">
       <aside className="hidden w-60 shrink-0 flex-col border-r bg-sidebar md:flex">
         <div className="px-5 pb-4 pt-6">
           <Link href="/" className="font-display text-2xl font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring">

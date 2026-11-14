@@ -1,19 +1,19 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import Link from "next/link";
 import type { CardDraft, Company, IntakeAnswers, ProblemCard } from "@/lib/types";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { PageTitle } from "@/components/shell/page-title";
 import { Textarea } from "@/components/ui/textarea";
 import { ProblemCardView } from "@/components/problem-card";
 import { QUESTIONS } from "./questions";
 import { DictateButton } from "./dictate-button";
 import { CardEditor, splitList, type EditorState } from "./card-editor";
 
-type Stage = "chat" | "generating" | "edit" | "published";
-
-const linkBtn =
-  "inline-flex h-9 items-center justify-center rounded-lg px-4 text-sm font-medium outline-none focus-visible:ring-3 focus-visible:ring-ring/50";
+type Stage = "chat" | "generating" | "edit";
 
 function Bubble({ who, children }: { who: "ai" | "me"; children: React.ReactNode }) {
   return (
@@ -31,7 +31,8 @@ function Bubble({ who, children }: { who: "ai" | "me"; children: React.ReactNode
   );
 }
 
-export function IntakeFlow({ companyId, company }: { companyId: string; company?: Company }) {
+export function IntakeFlow({ company }: { company?: Company }) {
+  const router = useRouter();
   const [stage, setStage] = useState<Stage>("chat");
   const [answers, setAnswers] = useState<string[]>(["", "", "", "", ""]);
   const [step, setStep] = useState(0);
@@ -41,12 +42,10 @@ export function IntakeFlow({ companyId, company }: { companyId: string; company?
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [fallback, setFallback] = useState(false);
   const [publishing, setPublishing] = useState(false);
-  const [published, setPublished] = useState<ProblemCard | null>(null);
 
   const taRef = useRef<HTMLTextAreaElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const previewHeadingRef = useRef<HTMLHeadingElement>(null);
-  const doneHeadingRef = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
     if (stage === "chat") {
@@ -54,7 +53,6 @@ export function IntakeFlow({ companyId, company }: { companyId: string; company?
       endRef.current?.scrollIntoView({ block: "end", behavior: "smooth" });
     }
     if (stage === "edit") previewHeadingRef.current?.focus();
-    if (stage === "published") doneHeadingRef.current?.focus();
   }, [stage, step]);
 
   async function generate(all: string[]) {
@@ -125,71 +123,38 @@ export function IntakeFlow({ companyId, company }: { companyId: string; company?
       const res = await fetch("/api/cards", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ draft, companyId }),
+        body: JSON.stringify({ draft }),
       });
       if (!res.ok) throw new Error("bad response");
       const card: ProblemCard = await res.json();
-      setPublished(card);
-      setStage("published");
+      toast.success("Problem card published");
+      router.push(`/company/card/${card.id}`);
     } catch {
       setError("Publishing didn't work. Please try again.");
-    } finally {
+      toast.error("Publishing didn't work. Please try again.");
       setPublishing(false);
     }
   }
 
-  function reset() {
-    setAnswers(["", "", "", "", ""]);
-    setStep(0);
-    setValue("");
-    setEditor(null);
-    setSuggestions([]);
-    setPublished(null);
-    setError(null);
-    setStage("chat");
-  }
-
   if (stage === "generating") {
     return (
-      <div className="mx-auto max-w-xl py-24 text-center" role="status" aria-live="polite">
-        <div
-          aria-hidden="true"
-          className="mx-auto mb-6 size-8 rounded-full border-2 border-border border-t-primary motion-safe:animate-spin"
-        />
-        <p className="font-display text-xl">Turning your answers into a problem card…</p>
-        <p className="mt-2 text-sm text-muted-foreground">This usually takes a few seconds.</p>
-      </div>
-    );
-  }
-
-  if (stage === "published" && published) {
-    return (
-      <div className="mx-auto max-w-2xl">
-        <h1 ref={doneHeadingRef} tabIndex={-1} className="font-display text-3xl font-semibold outline-none">
-          Your problem card is live
-        </h1>
-        <p className="mt-2 text-muted-foreground">
-          Talent can now read it and answer in their own words. You will see their answers without names.
-        </p>
-        <div className="my-8">
-          <ProblemCardView card={published} company={company} />
+      <Frame step={5}>
+        <div className="mx-auto my-auto max-w-xl py-24 text-center" role="status" aria-live="polite">
+          <div
+            aria-hidden="true"
+            className="mx-auto mb-6 size-8 rounded-full border-2 border-border border-t-primary motion-safe:animate-spin"
+          />
+          <p className="font-display text-xl">Turning your answers into a problem card…</p>
+          <p className="mt-2 text-sm text-muted-foreground">This usually takes a few seconds.</p>
         </div>
-        <div className="flex flex-wrap gap-3">
-          <Link href={`/company/card/${published.id}`} className={`${linkBtn} bg-primary text-primary-foreground hover:bg-primary/80`}>
-            Review responses
-          </Link>
-          <button type="button" onClick={reset} className={`${linkBtn} border border-border bg-background hover:bg-muted`}>
-            Write another
-          </button>
-        </div>
-      </div>
+      </Frame>
     );
   }
 
   if (stage === "edit" && editor) {
     return (
-      <div>
-        <h1 ref={previewHeadingRef} tabIndex={-1} className="font-display text-3xl font-semibold outline-none">
+      <Frame step={5} scroll>
+        <h1 ref={previewHeadingRef} tabIndex={-1} className="font-display text-2xl font-semibold outline-none">
           Check your problem card
         </h1>
         <p className="mt-2 max-w-2xl text-muted-foreground">
@@ -243,23 +208,54 @@ export function IntakeFlow({ companyId, company }: { companyId: string; company?
             />
           </div>
         </div>
-      </div>
+      </Frame>
     );
   }
 
   const q = QUESTIONS[step];
   const last = step === QUESTIONS.length - 1;
   return (
-    <div className="mx-auto max-w-2xl">
-      <h1 className="font-display text-3xl font-semibold">Tell us your problem</h1>
-      <p className="mt-2 text-muted-foreground">
-        Five short questions. We turn your answers into a problem card that talent can respond to.
-      </p>
-      <p className="mt-6 text-sm font-medium text-muted-foreground" aria-live="polite">
-        Question {step + 1} of {QUESTIONS.length}
-      </p>
-
-      <div className="mt-4 space-y-3" aria-label="Conversation">
+    <Frame step={step} composer={
+      <div className="border-t bg-background px-4 py-3 sm:px-6">
+        <div className="mx-auto max-w-2xl space-y-2">
+          <label htmlFor="answer" className="sr-only">{q.text}</label>
+          <Textarea
+            id="answer"
+            ref={taRef}
+            rows={3}
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+                e.preventDefault();
+                send();
+              }
+            }}
+            aria-describedby="answer-hint"
+            className="max-h-40 resize-none"
+          />
+          <p id="answer-hint" className="text-xs text-muted-foreground">
+            {q.hint} Enter to send, Shift+Enter for a new line.
+          </p>
+          {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+          <div className="flex flex-wrap items-center gap-2">
+            <DictateButton value={value} onChange={setValue} />
+            <div className="ml-auto flex gap-2">
+              {step > 0 && (
+                <Button type="button" variant="outline" onClick={back}>Back</Button>
+              )}
+              <Button type="button" onClick={send} disabled={!value.trim()}>
+                {last ? "Create my card" : "Send"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    }>
+      <div className="mx-auto mt-auto w-full max-w-2xl space-y-3" role="log" aria-label="Conversation">
+        <Bubble who="ai">
+          Hi! Five short questions, and I&apos;ll turn your answers into a problem card that talent can respond to.
+        </Bubble>
         {QUESTIONS.slice(0, step).map((qq, i) => (
           <div key={qq.key} className="space-y-3">
             <Bubble who="ai">{qq.text}</Bubble>
@@ -269,45 +265,48 @@ export function IntakeFlow({ companyId, company }: { companyId: string; company?
         <Bubble who="ai">{q.text}</Bubble>
         <div ref={endRef} />
       </div>
+    </Frame>
+  );
+}
 
-      <div className="mt-6 space-y-3">
-        <label htmlFor="answer" className="sr-only">
-          {q.text}
-        </label>
-        <Textarea
-          id="answer"
-          ref={taRef}
-          rows={4}
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
-              e.preventDefault();
-              send();
-            }
-          }}
-          aria-describedby="answer-hint"
-        />
-        <p id="answer-hint" className="text-sm text-muted-foreground">
-          {q.hint} Enter to send, Shift+Enter for a new line.
-        </p>
-        {error && (
-          <p role="alert" className="text-sm text-destructive">
-            {error}
-          </p>
-        )}
-        <DictateButton value={value} onChange={setValue} />
-        <div className="flex gap-3 pt-1">
-          {step > 0 && (
-            <Button type="button" variant="outline" size="lg" onClick={back}>
-              Back
-            </Button>
-          )}
-          <Button type="button" size="lg" onClick={send} disabled={!value.trim()}>
-            {last ? "Create my card" : "Send"}
-          </Button>
-        </div>
+function Frame({
+  step, children, composer, scroll,
+}: {
+  step?: number;
+  children: React.ReactNode;
+  composer?: React.ReactNode;
+  scroll?: boolean;
+}) {
+  return (
+    <div className="flex h-[calc(100dvh-8rem)] flex-col md:h-[calc(100dvh-2rem-2px)]">
+      <PageTitle
+        title="New problem"
+        actions={
+          <Link href="/company" className={buttonVariants({ variant: "outline", size: "sm" })}>
+            Cancel
+          </Link>
+        }
+      />
+      {step !== undefined && (
+        <ol aria-label="Progress" className="flex items-center justify-center gap-2 border-b px-4 py-2">
+          {[0, 1, 2, 3, 4].map((n) => (
+            <li
+              key={n}
+              aria-current={n === step ? "step" : undefined}
+              className={`flex size-6 items-center justify-center rounded-full border text-xs ${
+                n < step ? "border-primary bg-primary text-primary-foreground" : n === step ? "border-primary font-semibold" : "text-muted-foreground"
+              }`}
+            >
+              <span className="sr-only">{n < step ? "Done: question " : n === step ? "Current: question " : "Question "}</span>
+              {n + 1}
+            </li>
+          ))}
+        </ol>
+      )}
+      <div className={`flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-4 sm:px-6`}>
+        {scroll ? <div className="mx-auto w-full max-w-5xl">{children}</div> : children}
       </div>
+      {composer}
     </div>
   );
 }

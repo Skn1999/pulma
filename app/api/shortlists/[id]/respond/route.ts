@@ -23,9 +23,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       return { status: s.status };
     }
     s.status = "accepted";
-    db.meetings.push({ id: newId("mtg"), cardId: s.cardId, responseId: s.responseId, slotStart: "", table: 0 });
+    const meeting = { id: newId("mtg"), cardId: s.cardId, responseId: s.responseId, slotStart: "", table: 0 };
+    db.meetings.push(meeting);
     applySchedule(db);
-    return { status: s.status };
+    return { status: s.status, table: meeting.table || null, slotStart: meeting.slotStart || null };
   });
   return NextResponse.json(result);
 }

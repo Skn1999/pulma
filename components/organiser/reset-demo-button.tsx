@@ -2,36 +2,54 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
 
 export function ResetDemoButton() {
   const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
   const [pending, startTransition] = useTransition();
-  const [message, setMessage] = useState<string | null>(null);
 
   async function onReset() {
-    if (!window.confirm("Reset all demo data to the seed? Cards, responses, shortlists and meetings will be removed.")) {
-      return;
-    }
-    setMessage(null);
+    setBusy(true);
     try {
       const res = await fetch("/api/reset", { method: "POST" });
-      if (!res.ok) throw new Error(`Reset failed: ${res.status}`);
-      setMessage("Demo data reset.");
+      if (!res.ok) throw new Error(String(res.status));
+      toast.success("Demo data reset to the seed.");
+      setOpen(false);
       startTransition(() => router.refresh());
     } catch {
-      setMessage("Could not reset the demo data. Try again.");
+      toast.error("Could not reset the demo data. Try again.");
+    } finally {
+      setBusy(false);
     }
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-4">
-      <Button type="button" variant="outline" onClick={onReset} disabled={pending}>
-        {pending ? "Refreshing…" : "Reset demo data"}
+    <>
+      <Button type="button" variant="outline" onClick={() => setOpen(true)} disabled={pending}>
+        Reset demo data
       </Button>
-      <p role="status" aria-live="polite" className="text-sm text-muted-foreground">
-        {message}
-      </p>
-    </div>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reset demo data?</DialogTitle>
+            <DialogDescription>
+              Everything goes back to the seed. Cards, responses, shortlists and meetings you created will be removed.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+            <Button type="button" onClick={onReset} disabled={busy}>
+              {busy ? "Resetting…" : "Reset"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

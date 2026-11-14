@@ -10,8 +10,8 @@ type Timeline = Stats["timeline"];
 export function NeedsTimeline({ timeline, eventDate }: { timeline: Timeline; eventDate: string }) {
   if (timeline.length === 0) {
     return (
-      <section aria-labelledby="timeline-heading" className="space-y-3">
-        <h2 id="timeline-heading" className="text-2xl font-semibold">
+      <section aria-labelledby="timeline-heading" className="space-y-3 rounded-xl bg-card p-4 ring-1 ring-foreground/10">
+        <h2 id="timeline-heading" className="font-display text-base font-semibold">
           When needs arrived
         </h2>
         <p className="text-muted-foreground">No problem cards have been published yet.</p>
@@ -29,19 +29,19 @@ export function NeedsTimeline({ timeline, eventDate }: { timeline: Timeline; eve
   });
 
   return (
-    <section aria-labelledby="timeline-heading" className="space-y-6">
+    <section aria-labelledby="timeline-heading" className="space-y-4 rounded-xl bg-card p-4 ring-1 ring-foreground/10">
       <div>
-        <h2 id="timeline-heading" className="text-2xl font-semibold">
+        <h2 id="timeline-heading" className="font-display text-base font-semibold">
           When needs arrived
         </h2>
-        <p className="mt-2 text-lg">
+        <p className="mt-1">
           Problems arrived on average{" "}
-          <strong className="font-display text-2xl tabular-nums">{avg}</strong> days before the event.
+          <strong className="font-display text-xl tabular-nums">{avg}</strong> days before the event
+          <span className="text-muted-foreground"> · Typical: the day before</span>
         </p>
-        <p className="text-sm text-muted-foreground">Typical: the day before.</p>
       </div>
 
-      <div className="rounded-xl bg-card p-6 ring-1 ring-foreground/10">
+      <div>
         <div aria-hidden="true" className="relative h-16">
           <div className="absolute inset-x-0 top-1/2 h-0.5 -translate-y-1/2 bg-border" />
           {dots.map((d) => (
@@ -61,8 +61,8 @@ export function NeedsTimeline({ timeline, eventDate }: { timeline: Timeline; eve
       </div>
 
       <div>
-        <h3 className="text-base font-semibold">Cards in order of arrival</h3>
-        <ol className="mt-3 divide-y divide-border rounded-xl bg-card ring-1 ring-foreground/10">
+        <h3 className="text-sm font-semibold">Cards in order of arrival</h3>
+        <ol className="mt-2 divide-y divide-border rounded-lg border border-border">
           {timeline.map((t) => (
             <li key={t.cardId} className="flex flex-wrap items-baseline justify-between gap-2 px-4 py-3 text-sm">
               <span className="font-medium">{t.title}</span>

@@ -21,7 +21,7 @@ export function navFor(account: Account, db: DB): NavItem[] {
     return [
       withBadge({ href: "/company", label: "Problems", icon: "LayoutGrid" }, fresh),
       { href: "/company/intake", label: "New problem", icon: "SquarePlus" },
-      { href: "/event?company=me", label: "Event day", icon: "CalendarDays" },
+      { href: "/event", label: "Event day", icon: "CalendarDays" },
     ];
   }
   if (account.role === "talent") {
@@ -31,11 +31,12 @@ export function navFor(account: Account, db: DB): NavItem[] {
       { href: "/talent", label: "Explore", icon: "Compass" },
       { href: "/talent/answers", label: "My answers", icon: "PenLine" },
       withBadge({ href: "/talent/inbox", label: "Invites", icon: "Inbox" }, invites),
-      { href: "/event?talent=me", label: "My day", icon: "CalendarDays" },
+      { href: "/event", label: "My day", icon: "CalendarDays" },
     ];
   }
   return [
     { href: "/organiser", label: "Overview", icon: "ChartNoAxesColumn" },
     { href: "/event", label: "Schedule", icon: "CalendarDays" },
+    { href: "/organiser/follow-ups", label: "Follow-ups", icon: "Inbox" },
   ];
 }

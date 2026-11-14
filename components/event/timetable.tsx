@@ -10,7 +10,7 @@ export function Timetable({ columns, rows }: { columns: TimetableColumn[]; rows:
     >
       <table className="w-full min-w-[40rem] border-collapse text-left text-sm">
         <caption id="timetable-caption" className="border-b border-border px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-          Full timetable: 10-minute meetings by start time and table. Names are not shown here.
+          Full timetable: meetings by start time and table. Response codes only, no names.
         </caption>
         <thead>
           <tr>

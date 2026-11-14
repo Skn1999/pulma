@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getDB } from "@/lib/store";
 import { getTalentId } from "@/lib/persona";
-import { PageHeader } from "@/components/page-header";
+import { PageTitle } from "@/components/shell/page-title";
 import { InviteActions } from "@/components/talent/invite-actions";
 
 export const dynamic = "force-dynamic";
@@ -33,71 +33,53 @@ export default async function InboxPage() {
     .sort((a, b) => (a.s.status === "invited" ? -1 : 0) - (b.s.status === "invited" ? -1 : 0));
 
   return (
-    <main id="main">
-      <PageHeader
-        title="Your inbox"
-        subtitle="Companies pick answers without seeing who wrote them. Your name is shared only if you accept."
-      />
-      <div className="mx-auto max-w-3xl space-y-4 px-4 pb-16 sm:px-6">
+    <>
+      <PageTitle title="Invites" subtitle="Your name is shared only if you accept." />
+      <div className="space-y-3 px-4 py-3 sm:px-6">
         {items.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-border p-8 text-center">
+          <div className="rounded-xl border border-dashed border-border p-8 text-center">
             <p className="font-display text-xl">No invitations yet.</p>
-            <p className="mt-2 text-muted-foreground">When a company wants to meet you, it will show up here.</p>
+            <p className="mt-2 text-sm text-muted-foreground">When a company wants to meet you, it will show up here.</p>
             <Link href="/talent" className="mt-3 inline-flex min-h-11 items-center text-primary underline underline-offset-4">
-              Browse problems
+              Explore problems
             </Link>
           </div>
         ) : (
           items.map(({ s, resp, card, company, meeting }) => (
             <article
               key={s.id}
-              className={`rounded-lg border border-border p-5 ${s.status === "declined" ? "bg-muted text-muted-foreground" : "bg-card"}`}
+              className={`mx-auto max-w-xl rounded-xl border border-border p-4 ${s.status === "declined" ? "bg-muted text-muted-foreground" : "bg-card"}`}
             >
-              <p className="text-sm text-muted-foreground">
-                {s.status === "invited" ? (
-                  <>
-                    <span className="font-medium text-foreground">{company?.name}</span> · {company?.sector}
-                  </>
-                ) : s.status === "accepted" ? (
-                  <>
-                    {company?.name} · {company?.sector}
-                  </>
-                ) : (
-                  "Declined"
-                )}
+              <p className="text-xs text-muted-foreground">
+                {s.status === "declined" ? "Declined" : <><span className="font-medium text-foreground">{company?.name}</span> · {company?.sector}</>}
               </p>
-              <h2 className="mt-1 font-display text-xl font-semibold">{card?.title}</h2>
+              <h2 className="mt-1 font-display text-lg font-semibold leading-snug">{card?.title}</h2>
               <p className="mt-1 text-sm">Your answer: Response #{resp.publicCode}</p>
 
               {s.status === "invited" && (
-                <div className="mt-4">
+                <div className="mt-3">
                   <p className="mb-3 text-sm">
-                    They would like a 10-minute conversation. Accepting shares your name with {company?.name}.
+                    They&apos;d like a 10-minute conversation. Accepting shares your name with {company?.name}.
                   </p>
-                  <InviteActions shortlistId={s.id} />
+                  <InviteActions shortlistId={s.id} companyName={company?.name ?? "the company"} />
                 </div>
               )}
               {s.status === "accepted" && (
-                <div className="mt-4 rounded-md border border-primary/40 bg-accent p-4 text-accent-foreground">
+                <div className="mt-3 rounded-lg border border-primary/40 bg-accent p-3 text-accent-foreground">
                   <p className="font-semibold">You&apos;ll meet {company?.name}</p>
                   <p className="mt-1 text-sm">
-                    {meeting?.slotStart
-                      ? `Table ${meeting.table} · ${when(meeting.slotStart)}`
-                      : "Time being scheduled"}
+                    {meeting?.slotStart ? `Table ${meeting.table} · ${when(meeting.slotStart)}` : "Time being scheduled"}
                   </p>
-                  <Link
-                    href="/event?talent=me"
-                    className="mt-2 inline-flex min-h-11 items-center underline underline-offset-4"
-                  >
-                    See your day
+                  <Link href="/event" className="mt-1 inline-flex min-h-11 items-center text-sm font-medium underline underline-offset-4">
+                    Open My day
                   </Link>
                 </div>
               )}
-              {s.status === "declined" && <p className="mt-3 text-sm">You declined. Nothing was shared.</p>}
+              {s.status === "declined" && <p className="mt-2 text-sm">You declined. Nothing was shared.</p>}
             </article>
           ))
         )}
       </div>
-    </main>
+    </>
   );
 }
