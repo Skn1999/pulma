@@ -1,5 +1,5 @@
 import { Briefcase, Sparkles } from "lucide-react";
-import type { CardDraft, Company, ProblemCard } from "@/lib/types";
+import { SUPPORT_LABEL, WORK_IN_FINLAND_URL, type CardDraft, type Company, type ProblemCard } from "@/lib/types";
 
 const FORMAT_LABEL = { onsite: "On-site", online: "Online", hybrid: "Hybrid" } as const;
 
@@ -137,6 +137,22 @@ export function ProblemCardView({
                   <Pill key={k} text={k} />
                 ))}
               </ul>
+            </Section>
+          )}
+          {card.support && card.support.length > 0 && (
+            <Section label="Help for international hires">
+              <ul className="flex flex-wrap gap-1.5" aria-label="Help for international hires">
+                {card.support.map((k) => (
+                  <Pill key={k} text={SUPPORT_LABEL[k]} />
+                ))}
+              </ul>
+              <p className="mt-1.5 text-sm text-muted-foreground">
+                Moving to Finland?{" "}
+                <a href={WORK_IN_FINLAND_URL} target="_blank" rel="noreferrer" className="text-primary underline underline-offset-2">
+                  Work in Finland<span className="sr-only"> (public service, opens in a new tab)</span>
+                </a>{" "}
+                explains permits, moving and settling in.
+              </p>
             </Section>
           )}
           <div className="mt-5 space-y-3" aria-label="Languages and format">

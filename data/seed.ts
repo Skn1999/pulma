@@ -13,7 +13,7 @@ const companies: Company[] = [
 
 const cards: ProblemCard[] = [
   {
-    id: "card-cleantech", eventId: "ev-2", companyId: "co-cleantech",
+    id: "card-cleantech", support: ["permit", "relocation", "onboarding-en"], eventId: "ev-2", companyId: "co-cleantech",
     title: "Our battery sensor data is a mess and nobody trusts it",
     context: "Every incoming battery pack gets scanned for voltage and temperature before we dismantle it. The readings come from three generations of sensors and a few hand-built scripts. Operators have started ignoring the dashboard and judging packs by feel.",
     weekOneReality: "You would sit with the shift operators at the dismantling line, collect a week of raw readings, and find out where they disagree with what people see on the bench. By Friday we would like a short list of the five most suspicious data problems and a first fix for one.",
@@ -23,7 +23,7 @@ const cards: ProblemCard[] = [
     goal: { decideBy: "2026-12-12", replyWithinDays: 7, inviteDays: 3, meetModes: ["event", "office", "video"] } satisfies HiringGoal,
   },
   {
-    id: "card-game", eventId: "ev-1", companyId: "co-game",
+    id: "card-game", support: ["relocation", "onboarding-en"], eventId: "ev-1", companyId: "co-game",
     title: "Players quit our puzzle game at level 12 and we do not know why",
     context: "About four in ten new players stop playing right after level 12. Our analytics show the moment but not the reason. Designers argue it is too hard, engineers think it is a loading hitch.",
     weekOneReality: "Watch recordings of real sessions, play level 12 yourself on three different phones, and talk to a handful of players who quit. Come back with one or two theories we can test the following week.",
@@ -44,7 +44,7 @@ const cards: ProblemCard[] = [
     state: "paused", stateReason: "Team priorities changed", stateAt: "2026-11-22T09:00:00.000Z",
   },
   {
-    id: "card-medtech", eventId: "ev-2", companyId: "co-medtech",
+    id: "card-medtech", support: ["permit"], eventId: "ev-2", companyId: "co-medtech",
     title: "Nurses mute our alarms and we need to understand why",
     context: "Our bedside monitor beeps for many reasons. Hospital staff tell us most alarms need no action, so they mute them, and sometimes the one that mattered gets muted too.",
     weekOneReality: "Shadow a ward for a morning if the hospital allows it, otherwise go through alarm logs and interview our clinical specialist. Write down which alarms people actually act on and which they ignore.",
@@ -54,7 +54,7 @@ const cards: ProblemCard[] = [
     goal: { decideBy: "2026-12-12", replyWithinDays: 4, inviteDays: 3, meetModes: ["event", "office"] } satisfies HiringGoal,
   },
   {
-    id: "card-saas", eventId: "ev-1", companyId: "co-saas",
+    id: "card-saas", support: ["onboarding-en"], eventId: "ev-1", companyId: "co-saas",
     title: "New customers sign up, then go quiet after two weeks",
     context: "Roughly a third of new customers never connect their bank account, which is the step where our product becomes useful. Support tickets hint at confusion, but nobody has time to read them all.",
     weekOneReality: "Read a few hundred support tickets and onboarding emails, group them by what people were trying to do, and sit in on two customer calls. Present the three most common stumbling points.",
@@ -84,7 +84,7 @@ const cards: ProblemCard[] = [
     goal: { decideBy: "2026-11-28", replyWithinDays: 3, inviteDays: 2, meetModes: ["event", "office"] } satisfies HiringGoal,
   },
   {
-    id: "card-robotics", eventId: "ev-1", companyId: "co-robotics",
+    id: "card-robotics", support: ["permit", "onboarding-en"], eventId: "ev-1", companyId: "co-robotics",
     title: "Our robot arm drops shiny and wet parcels",
     context: "Our arm picks parcels with suction. It works on cardboard and fails on glossy plastic bags and anything damp. We lose about one pick in eight on those items, and customers notice.",
     weekOneReality: "Build a small test table with twenty awkward parcels, run a few hundred picks, and record what fails and how. Try one cheap change to the cups or the approach angle and compare.",

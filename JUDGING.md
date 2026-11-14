@@ -10,7 +10,7 @@ Ratings: **Strong** (built and demoable), **Partial** (some of it, or only as a 
 | # | What the brief asks | Rating |
 |---|---|---|
 | Goal | More relevant, efficient, meaningful connections at Espoo events | Strong |
-| 1 | Companies hard to engage; doubt the city's candidates and a free service | **Partial** |
+| 1 | Companies hard to engage; doubt the city's candidates and a free service | Strong (since 14 Nov: "Why take part") |
 | 2 | Companies describe needs unclearly and too late | Strong |
 | 3 | Organisers can't see applicants' real capabilities vs. company needs (esp. tech) | **Partial** |
 | 4 | Companies overwhelmed by irrelevant approaches during events | Strong |
@@ -18,7 +18,7 @@ Ratings: **Strong** (built and demoable), **Partial** (some of it, or only as a 
 | 6 | AI-written CVs read by AI: synthetic representations | Strong |
 | 7 | Online event platforms with matching algorithms feel cumbersome | Strong |
 | 8 | Platform crashes when everyone logs in at the start | **Partial** |
-| 9 | International recruitment: compliance, language, culture, relocation, onboarding | **Gap** (language only) |
+| 9 | International recruitment: compliance, language, culture, relocation, onboarding | **Partial** (language + support badges) |
 | Bias | Don't disadvantage people by nationality, language, education, career path | Strong |
 | Scope | Registering, attending and following up | **Partial** (candidate registration, check-in) |
 | Data | Use relevant open data / APIs (ESCO, Work in Finland…) | **Gap** |
@@ -35,7 +35,11 @@ real problem replace CVs, and a blind, random-order first round replaces AI scre
 - Every connection at the event is pre-agreed by both sides; there is no cold queue at the booth.
 - Demo: Olena answers → Kiertovolt shortlists → Olena accepts → names revealed → slot booked → event card.
 
-### 1. Engaging companies; doubts about candidate quality and a free service — Partial
+### 1. Engaging companies; doubts about candidate quality and a free service — Strong (updated)
+- Added: a **"Why take part"** block on the company Events page whenever an invitation is open — anonymous
+  counts (answers per problem, % of answers replied to on time, conversations booked), a one-line promise of what
+  the company gets (one real problem, people from the city's talent pool, no CV sifting, free), and one anonymous
+  example answer.
 - Built: the organiser **invites** companies to a named event with a personal note; accepting gives a **table**
   and lets them publish up to 3 problems. Companies get a clear, low-effort way in (5 questions, dictation).
 - Built: once answers arrive, companies *see* quality for themselves (specific answers vs. obvious AI fluff).
@@ -95,7 +99,11 @@ real problem replace CVs, and a blind, random-order first round replaces AI scre
   before, spread over time"; static, cacheable event card and schedule pages. Optional: make the event card page
   fully static/cached.
 
-### 9. International recruitment — Gap (language handled, the rest not)
+### 9. International recruitment — Partial (updated)
+- Added: companies can tick **Work-permit help · Relocation help · Onboarding in English** on a problem; it shows
+  on the card and the Explore tile with a link to the public **Work in Finland** service, and the intake links
+  companies to **Business Espoo**'s recruitment assistance. Information about the job, never a filter on people.
+- Still missing: authority-compliance guidance and onboarding support beyond the badge.
 - Built: language needs are explicit and honest (needed vs. nice to have), "native speaker" requirements are
   steered away, and no nationality is collected.
 - Translation was removed on purpose (some jobs have strict language requirements), so non-Finnish speakers rely on
@@ -134,9 +142,8 @@ real problem replace CVs, and a blind, random-order first round replaces AI scre
 
 1. **Demo narrative and slides** that map the five demo steps to the brief's insights (2, 4, 5, 6, 8, bias).
    Highest impact, no code. Include the "load moves to the weeks before" diagram for insight 8.
-2. **Company value block** on invitations (insight 1): anonymous outcomes from the last event + a sample answer.
-   Small change; addresses the brief's first and most emphasised problem.
-3. **International support badges** on problems + Work in Finland link (insight 9). Small change; closes a visible gap.
+2. ~~Company value block~~ — done 14 Nov.
+3. ~~International support badges~~ — done 14 Nov.
 4. **ESCO mapping** for work tags and skills (Data + insight 3), with a cached fallback. Medium.
 5. **Organiser skills supply vs. demand** (insight 3), aggregated, minimum group size. Small once 4 exists.
 6. **Organiser check-in** by event-card code (journey: attend). Small–medium.

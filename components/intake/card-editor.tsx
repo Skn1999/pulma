@@ -2,7 +2,7 @@
 
 import { useId, useState } from "react";
 import { Briefcase, Check, Plus, Sparkles, X } from "lucide-react";
-import type { CardDraft, Format } from "@/lib/types";
+import { BUSINESS_ESPOO_RECRUITMENT_URL, INTERNATIONAL_SUPPORT, SUPPORT_LABEL, type CardDraft, type Format } from "@/lib/types";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -267,6 +267,38 @@ export function CardEditor({
             </label>
           ))}
         </div>
+      </fieldset>
+
+      <fieldset>
+        <legend className="text-sm font-medium text-foreground">
+          International hires: what can you help with? <span className="font-normal text-muted-foreground">(optional)</span>
+        </legend>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Shown on the card so people moving to Finland know what to expect. It never hides or filters anyone.
+        </p>
+        <div className="mt-2 flex flex-wrap gap-x-5 gap-y-2">
+          {INTERNATIONAL_SUPPORT.map((k) => (
+            <label key={k} className="flex cursor-pointer items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={(draft.support ?? []).includes(k)}
+                onChange={(e) => {
+                  const cur = draft.support ?? [];
+                  set({ support: e.target.checked ? [...cur, k] : cur.filter((x) => x !== k) });
+                }}
+                className="size-4 accent-[var(--primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              />
+              {SUPPORT_LABEL[k]}
+            </label>
+          ))}
+        </div>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Hiring from abroad for the first time?{" "}
+          <a href={BUSINESS_ESPOO_RECRUITMENT_URL} target="_blank" rel="noreferrer" className="text-primary underline underline-offset-2">
+            Business Espoo&apos;s recruitment assistance<span className="sr-only"> (opens in a new tab)</span>
+          </a>{" "}
+          can help with permits and relocation.
+        </p>
       </fieldset>
     </div>
   );

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { CheckCircle2, ChevronRight } from "lucide-react";
-import type { Company, HiringGoal, ProblemCard } from "@/lib/types";
+import { SUPPORT_LABEL, type Company, type HiringGoal, type ProblemCard } from "@/lib/types";
 import { PromiseBlock } from "./promise";
 
 const FORMAT_LABEL = { onsite: "On-site", online: "Online", hybrid: "Hybrid" } as const;
@@ -40,6 +40,11 @@ export function ExploreCard({
             </li>
           )}
         </ul>
+        {card.support && card.support.length > 0 && (
+          <p className="mt-2 text-xs">
+            <span className="font-medium text-navy">Help for international hires:</span> {card.support.map((k) => SUPPORT_LABEL[k]).join(", ")}
+          </p>
+        )}
         {matched.length > 0 && (
           <p className="mt-2 text-xs">
             <span className="font-medium text-primary">Uses your skills:</span> {matched.join(", ")}

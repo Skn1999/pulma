@@ -74,6 +74,20 @@ export interface Company {
   office?: string; // fictional visiting address for office meetings
 }
 
+/**
+ * What a company can help an international hire with. Information about the JOB, shown to everyone;
+ * never a filter on people. Links point to public services (Work in Finland, Business Espoo).
+ */
+export type InternationalSupport = "permit" | "relocation" | "onboarding-en";
+export const INTERNATIONAL_SUPPORT: InternationalSupport[] = ["permit", "relocation", "onboarding-en"];
+export const SUPPORT_LABEL: Record<InternationalSupport, string> = {
+  permit: "Work-permit help",
+  relocation: "Relocation help",
+  "onboarding-en": "Onboarding in English",
+};
+export const WORK_IN_FINLAND_URL = "https://www.workinfinland.com/en";
+export const BUSINESS_ESPOO_RECRUITMENT_URL = "https://www.businessespoo.com/";
+
 export interface ProblemCard {
   id: string;
   companyId: string;
@@ -87,6 +101,7 @@ export interface ProblemCard {
   format: Format;
   eventId?: string; // which event this problem is for; missing = defaultEvent(db)
   skills?: string[]; // 3–6 short tags of the work involved ("Work involved"); public, describes the work not the person
+  support?: InternationalSupport[]; // optional: what the company can help an international hire with
   status: "draft" | "published";
   createdAt: string; // ISO
   goal?: HiringGoal; // missing on old data: use goalOf() from lib/deadlines.ts for defaults
@@ -314,7 +329,7 @@ export interface BlindResponse {
 /** Problem card fields the AI generates from the intake. */
 export type CardDraft = Pick<
   ProblemCard,
-  "title" | "context" | "weekOneReality" | "hardPart" | "niceToHave" | "languages" | "languagesNeeded" | "format" | "skills"
+  "title" | "context" | "weekOneReality" | "hardPart" | "niceToHave" | "languages" | "languagesNeeded" | "format" | "skills" | "support"
 >;
 
 export interface IntakeAnswers {
