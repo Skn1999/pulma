@@ -87,6 +87,7 @@ export function IntakeFlow({
       setEditor({
         draft: { ...data.draft, languagesNeeded: data.draft.languagesNeeded ?? data.draft.languages },
         niceRaw: data.draft.niceToHave.join(", "),
+        skillsRaw: (data.draft.skills ?? []).join(", "),
       });
       setSuggestions(data.suggestions ?? []);
       setFallback(!!data.fallback);
@@ -128,6 +129,7 @@ export function IntakeFlow({
       const draft: CardDraft = {
         ...editor.draft,
         niceToHave: splitList(editor.niceRaw),
+        skills: splitList(editor.skillsRaw).slice(0, 6),
       };
       const res = await fetch("/api/cards", {
         method: "POST",
@@ -231,7 +233,7 @@ export function IntakeFlow({
           <div className="lg:sticky lg:top-6 lg:self-start">
             <p className="mb-3 text-sm font-medium text-muted-foreground">Live preview</p>
             <ProblemCardView
-              card={{ ...editor.draft, niceToHave: splitList(editor.niceRaw) }}
+              card={{ ...editor.draft, niceToHave: splitList(editor.niceRaw), skills: splitList(editor.skillsRaw).slice(0, 6) }}
               company={company}
             />
           </div>

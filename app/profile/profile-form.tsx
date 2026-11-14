@@ -14,7 +14,7 @@ const LABEL: Record<Role, string> = { company: "Company", talent: "Talent", orga
 const OTHER: Record<Role, string> = { company: "talent or organiser", talent: "company or organiser", organiser: "company or talent" };
 const SECTORS = ["Game studio", "Clean-tech", "Medtech", "B2B SaaS", "Logistics", "Robotics", "Other"];
 const STORED: Record<Role, string[]> = {
-  talent: ["Display name", "Email", "Preferred language (optional)", "Your answers to problem cards"],
+  talent: ["Display name", "Email", "Preferred language (optional)", "Your answers to problem cards", "Skills you choose to keep (only you see them; your CV is never saved)"],
   company: ["Contact name", "Email", "Company name, sector, size and description", "Problem cards you publish and your private shortlist notes"],
   organiser: ["Display name", "Email"],
 };

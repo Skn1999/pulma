@@ -8,6 +8,7 @@ import { diffWords } from "diff";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { AiLabel } from "@/components/ai-label";
+import { RelatedSkills } from "@/components/talent/related-skills";
 import { PreviewButton } from "@/components/thread/answer-preview";
 
 const LANGS = ["English", "Finnish", "Swedish", "Ukrainian", "Spanish", "Russian", "Arabic", "Other"];
@@ -15,9 +16,9 @@ const SOFT_LIMIT = 600;
 const btn = "min-h-11 px-4 text-sm";
 
 export function ResponseForm({
-  cardId, cardTitle, companyName, defaultLanguage, existing,
+  cardId, cardTitle, companyName, defaultLanguage, existing, relatedSkills = [],
 }: {
-  cardId: string; cardTitle: string; companyName: string; defaultLanguage: string;
+  cardId: string; cardTitle: string; companyName: string; defaultLanguage: string; relatedSkills?: string[];
   existing?: { id: string; text: string; language: string; translatedText?: string; aiAssisted: boolean };
 }) {
   const router = useRouter();
@@ -127,6 +128,7 @@ export function ResponseForm({
             <ChevronDown className={`size-4 shrink-0 transition-transform ${showCard ? "rotate-180" : ""}`} aria-hidden="true" />
           </button>
 
+          <RelatedSkills className="mt-3" skills={relatedSkills} />
           <label htmlFor="answer" className="sr-only">How would you approach this?</label>
           <Textarea
             id="answer"

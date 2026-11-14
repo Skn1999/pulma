@@ -51,6 +51,7 @@ export async function POST(req: Request) {
     niceToHave: strs(d.niceToHave),
     languages: strs(d.languages),
     ...(Array.isArray(needed) ? { languagesNeeded: strs(needed).filter((l) => strs(d.languages).includes(l)) } : {}),
+    skills: [...new Map(strs((d as { skills?: unknown }).skills).map((x) => x.slice(0, 60)).map((x) => [x.toLowerCase(), x])).values()].slice(0, 6),
     format,
     eventId,
     goal: goal ?? defaultGoal(db0, ev),

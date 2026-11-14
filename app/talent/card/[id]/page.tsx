@@ -10,6 +10,8 @@ import { getTalentId } from "@/lib/persona";
 import { ProblemCardView } from "@/components/problem-card";
 import { CardStateBanner } from "@/components/talent/card-state-banner";
 import { AiLabel } from "@/components/ai-label";
+import { RelatedSkills } from "@/components/talent/related-skills";
+import { relatedSkillLabels } from "@/lib/skills";
 
 export const dynamic = "force-dynamic";
 
@@ -32,6 +34,7 @@ export default async function TalentCardPage({ params }: { params: Promise<{ id:
         <CardStateBanner state={cardState(card)} companyName={company?.name ?? "The company"} reason={card.stateReason} />
         <p className="mt-3 text-sm font-medium text-primary">{eventLabel(eventOf(db, card))}</p>
         <ProblemCardView card={card} company={company} />
+        <RelatedSkills className="mt-4" skills={relatedSkillLabels(db.talents.find((t) => t.id === talentId)?.skills, card.skills)} />
         <PromiseBlock goal={goalOf(card, db)} record={companyRecord(db, card.companyId, nowMs())} />
         {mine && (
           <section aria-labelledby="mine-h" className="mt-6 rounded-xl border border-border bg-card p-4">

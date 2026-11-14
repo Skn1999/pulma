@@ -18,6 +18,7 @@ const SOCIAL_CHECK_LANGUAGES = ["Finnish", "Swedish"];
 export interface EditorState {
   draft: CardDraft;
   niceRaw: string;
+  skillsRaw: string;
 }
 
 export function splitList(s: string): string[] {
@@ -165,6 +166,20 @@ export function CardEditor({
             onChange({ ...state, niceRaw: e.target.value, draft: { ...draft, niceToHave: splitList(e.target.value) } })
           }
         />
+      </Field>
+
+      <Field id="f-skills" label="Work involved (3–6 short tags, comma-separated)">
+        <Input
+          id="f-skills"
+          value={state.skillsRaw}
+          aria-describedby="f-skills-help"
+          onChange={(e) =>
+            onChange({ ...state, skillsRaw: e.target.value, draft: { ...draft, skills: splitList(e.target.value).slice(0, 6) } })
+          }
+        />
+        <p id="f-skills-help" className="text-xs text-muted-foreground">
+          Name the work, for example &quot;Messy sensor data&quot; or &quot;Python&quot;. Talent can see which problems use their own skills; nobody is ranked or hidden.
+        </p>
       </Field>
 
       <fieldset className="space-y-2">

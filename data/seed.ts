@@ -95,8 +95,26 @@ const cards: ProblemCard[] = [
   },
 ];
 
+// Work tags per problem ("Work involved"). They describe the work, never the person.
+const CARD_SKILLS: Record<string, string[]> = {
+  "card-cleantech": ["Messy sensor data", "Python", "Data analysis", "Working with shift operators", "Explaining results to non-experts"],
+  "card-game": ["Watching player sessions", "Talking to players", "Data analysis", "Testing on real phones"],
+  "card-game2": ["Technical translation", "Software testing", "Game text and UI", "Spotting layout bugs"],
+  "card-medtech": ["Interviewing ward staff", "Reading device logs", "Safety-sensitive writing", "Data analysis"],
+  "card-saas": ["Talking to customers", "SQL", "Onboarding design", "Data analysis"],
+  "card-saas2": ["Cleaning messy data", "Python", "File formats", "Edge case testing"],
+  "card-logistics": ["Warehouse operations", "Process improvement", "Talking to night shifts", "Spreadsheets"],
+  "card-robotics": ["Careful experiments", "Robotics", "Computer vision", "Hardware tinkering"],
+};
+for (const c of cards) c.skills = CARD_SKILLS[c.id];
+
 const talents: Talent[] = [
-  { id: "t-olena", displayName: "Olena Kovalenko", email: "olena.k@example.com", preferredLanguage: "Ukrainian" },
+  { id: "t-olena", displayName: "Olena Kovalenko", email: "olena.k@example.com", preferredLanguage: "Ukrainian", skills: [
+    { label: "Battery data analysis", source: "cv", addedAt: "2026-11-10T10:00:00.000Z" },
+    { label: "Python", source: "cv", addedAt: "2026-11-10T10:00:00.000Z" },
+    { label: "Cleaning messy sensor data", source: "cv", addedAt: "2026-11-10T10:00:00.000Z" },
+    { label: "Technical translation Ukrainian–English", source: "cv", addedAt: "2026-11-10T10:00:00.000Z" },
+  ] },
   { id: "t-mika", displayName: "Mika Salonen", email: "mika.s@example.com", preferredLanguage: "Finnish" },
   { id: "t-aino", displayName: "Aino Virtanen", email: "aino.v@example.com", preferredLanguage: "Finnish" },
   { id: "t-joonas", displayName: "Joonas Heikkinen", email: "joonas.h@example.com" },
@@ -111,7 +129,11 @@ const talents: Talent[] = [
   { id: "t-ville", displayName: "Ville Mäkelä", email: "ville.m@example.com", preferredLanguage: "Finnish" },
   { id: "t-carmen", displayName: "Carmen Ortiz", email: "carmen.o@example.com", preferredLanguage: "Spanish" },
   { id: "t-kasper", displayName: "Kasper Jensen", email: "kasper.j@example.com" },
-  { id: "t-yuki", displayName: "Yuki Tanaka", email: "yuki.t@example.com", preferredLanguage: "English" },
+  { id: "t-yuki", displayName: "Yuki Tanaka", email: "yuki.t@example.com", preferredLanguage: "English", skills: [
+    { label: "Watching player sessions", source: "self", addedAt: "2026-11-11T10:00:00.000Z" },
+    { label: "Level design", source: "self", addedAt: "2026-11-11T10:00:00.000Z" },
+    { label: "Software testing", source: "self", addedAt: "2026-11-11T10:00:00.000Z" },
+  ] },
   { id: "t-hanna", displayName: "Hanna Laaksonen", email: "hanna.l@example.com", preferredLanguage: "Finnish" },
   { id: "t-ivan", displayName: "Ivan Petrenko", email: "ivan.p@example.com", preferredLanguage: "Ukrainian" },
   { id: "t-leena", displayName: "Leena Rantanen", email: "leena.r@example.com" },

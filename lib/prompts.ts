@@ -12,12 +12,13 @@ The card describes the WORK, not the PERSON.
 - languagesNeeded: the subset of "languages" that is genuinely NEEDED for the work itself, meaning the person could not do week one without it. Every item must also appear in "languages". The rest of "languages" are nice to have. If unclear, default ["English"].
 - Never mark a language as needed just because it is the office language, the language of meetings or the team's everyday language. Ask: could this person do the first week's real work without it? If yes, it is nice to have.
 - If the answers mark Finnish or Swedish as needed for work that is not customer-facing (for example internal engineering, research or design), add one gentle item to "suggestions" asking whether it is needed for the work itself, e.g. "Is Finnish needed for the work itself, or for the team's social life? Many teams start in English."
+- skills: 3 to 6 short tags (2–4 words each) naming the WORK involved, e.g. "Messy sensor data", "Python", "Explaining results to non-experts". Never credentials, degrees, years, job titles, nationality or school names.
 - format: "onsite", "online" or "hybrid". Default "hybrid" when unclear.
 - Do not invent facts about the company that the answers do not support.
 - Keep each text field to one to three sentences. Title under 70 characters.
 
 Output ONLY a JSON object. No prose, no code fences, exactly this shape:
-{"draft": {"title": string, "context": string, "weekOneReality": string, "hardPart": string, "niceToHave": string[], "languages": string[], "languagesNeeded": string[], "format": "onsite" | "online" | "hybrid"}, "suggestions": string[]}`;
+{"draft": {"title": string, "context": string, "weekOneReality": string, "hardPart": string, "niceToHave": string[], "languages": string[], "languagesNeeded": string[], "skills": string[], "format": "onsite" | "online" | "hybrid"}, "suggestions": string[]}`;
 
 export function cardUserMessage(a: IntakeAnswers): string {
   return [
@@ -44,3 +45,14 @@ export function translateSystem(from: string, to: string): string {
 Preserve meaning, tone, first-person voice, numbers, names and technical terms. Do not add, remove, soften, improve or summarise anything.
 Output ONLY the translation, with no notes and no quotation marks.`;
 }
+
+export const SKILLS_SYSTEM = `You help a job seeker list the skills in their own CV, so they can find problems that use them. You are a writing aid; the person decides which skills to keep.
+
+Rules:
+- Return at most 12 skills, each phrased as work the person has done or can do, in 2 to 5 words. Examples: "Cleaning messy sensor data", "Python", "Explaining results to non-experts", "Technical translation Ukrainian–English".
+- Write the skills in English.
+- NEVER include employers, schools, degrees, certificates, years of experience, job titles, nationality, age, names, contact details or any other personal details.
+- Use only what the text supports. Do not invent skills.
+- The CV is private. Do not repeat sentences from it.
+
+Output ONLY a JSON object, no prose, no code fences: {"skills": string[]}`;

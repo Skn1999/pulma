@@ -84,6 +84,7 @@ export interface ProblemCard {
   languagesNeeded?: string[]; // subset of `languages` actually NEEDED for the work; the rest are nice to have
   format: Format;
   eventId?: string; // which event this problem is for; missing = defaultEvent(db)
+  skills?: string[]; // 3–6 short tags of the work involved ("Work involved"); public, describes the work not the person
   status: "draft" | "published";
   createdAt: string; // ISO
   goal?: HiringGoal; // missing on old data: use goalOf() from lib/deadlines.ts for defaults
@@ -98,6 +99,14 @@ export interface Talent {
   email: string; // fake
   preferredLanguage?: string;
   goal?: TalentGoal; // private to the talent
+  skills?: TalentSkill[]; // private to the talent: never sent to a company or organiser
+}
+
+/** A skill the talent chose to keep, phrased as work. PRIVATE. The CV it came from is never stored. */
+export interface TalentSkill {
+  label: string; // ≤60 chars
+  source: "cv" | "self";
+  addedAt: string; // ISO
 }
 
 export interface Response {
@@ -278,7 +287,7 @@ export interface BlindResponse {
 /** Problem card fields the AI generates from the intake. */
 export type CardDraft = Pick<
   ProblemCard,
-  "title" | "context" | "weekOneReality" | "hardPart" | "niceToHave" | "languages" | "languagesNeeded" | "format"
+  "title" | "context" | "weekOneReality" | "hardPart" | "niceToHave" | "languages" | "languagesNeeded" | "format" | "skills"
 >;
 
 export interface IntakeAnswers {

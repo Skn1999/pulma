@@ -4,6 +4,7 @@ import { getDB } from "@/lib/store";
 import { getTalentId } from "@/lib/persona";
 import { isOpen } from "@/lib/deadlines";
 import { CardStateBanner } from "@/components/talent/card-state-banner";
+import { relatedSkillLabels } from "@/lib/skills";
 import { ResponseForm } from "@/components/talent/response-form";
 
 export const dynamic = "force-dynamic";
@@ -48,6 +49,7 @@ export default async function AnswerPage({ params }: { params: Promise<{ id: str
       cardId={card.id}
       cardTitle={card.title}
       companyName={company?.name ?? ""}
+      relatedSkills={relatedSkillLabels(talent?.skills, card.skills)}
       defaultLanguage={talent?.preferredLanguage ?? "English"}
       existing={mine ? { id: mine.id, text: mine.text, language: mine.originalLanguage, translatedText: mine.translatedText, aiAssisted: mine.aiAssisted } : undefined}
     />

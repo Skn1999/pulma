@@ -49,3 +49,11 @@ There are three fictional Espoo events (Tech Talent Day, Green Transition Jobs M
 - **Invites** and meeting details say "Table N at <event>, <day>, <venue>", so the right event is always clear.
 - **Company** → a problem → **Change event** (until an event-day meeting is booked). The intake asks "Which event?" before publishing.
 Note: the first load after this change re-seeds the demo data, so use **Reset demo data** to start clean.
+
+## Skills (candidate only)
+- Sign in as Olena (talent) → Profile → "Your skills — only you see these". Her four skills are already there. To show the flow, paste any CV-like text (for example "Python, SQL, data analysis, technical translation, teaching") and press "Suggest skills". Each suggestion has Add / Dismiss, or "Add all". Without an API key the offline word list is used.
+- Say it out loud: the CV is used once and never saved; companies and the organiser never see skills; every suggestion is the person's choice.
+- Explore (`/talent`): cards show "Uses your skills: …" and a "Newest | Uses my skills" toggle. Nothing is hidden. Open the clean-tech battery problem to see the quiet "Your related skills" box next to the answer form.
+- Switch to a company: the answers are still anonymous and in the same random order, with no skills anywhere.
+- Skills for problems ("Work involved") come from the intake and can be edited in the card editor.
+- After editing seed data, use Reset demo (organiser) so the seeded skills and tags appear.

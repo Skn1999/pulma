@@ -143,5 +143,10 @@ export function nextSteps(db: DB, account: Account, now: number): NextSteps {
     }
   }
 
-  return { waitingOnYou: you.sort(byDeadline), waitingOnThem: them.sort(byDeadline) };
+  const sortedYou = you.sort(byDeadline);
+  // Talent only, and always last: a gentle pointer to the private skills list.
+  if (account.role === "talent" && !db.talents.find((t) => t.id === account.talentId)?.skills?.length) {
+    sortedYou.push({ id: "add-skills", text: "Add your skills so Explore can show which problems use them", href: "/profile#skills" });
+  }
+  return { waitingOnYou: sortedYou, waitingOnThem: them.sort(byDeadline) };
 }

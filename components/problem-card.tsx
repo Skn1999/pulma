@@ -130,6 +130,15 @@ export function ProblemCardView({
               </ul>
             </Section>
           )}
+          {card.skills && card.skills.length > 0 && (
+            <Section label="Work involved">
+              <ul className="flex flex-wrap gap-1.5" aria-label="Work involved">
+                {card.skills.map((k) => (
+                  <Pill key={k} text={k} />
+                ))}
+              </ul>
+            </Section>
+          )}
           <div className="mt-5 space-y-3" aria-label="Languages and format">
             <LanguageGroup kind="needed" langs={needed} emptyText="None marked as needed" />
             {nice.length > 0 && <LanguageGroup kind="nice" langs={nice} emptyText="" />}

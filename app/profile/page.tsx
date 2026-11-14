@@ -1,6 +1,7 @@
 import { requireAccount } from "@/lib/session";
 import { getDB } from "@/lib/store";
 import { ProfileForm } from "./profile-form";
+import { SkillsSection } from "@/components/talent/skills-section";
 
 export const metadata = { title: "Profile · Pulma" };
 
@@ -24,6 +25,11 @@ export default async function ProfilePage() {
           about: company?.about ?? "",
         }}
       />
+      {acc.role === "talent" && (
+        <div className="mt-8">
+          <SkillsSection initial={(talent?.skills ?? []).map((s) => ({ label: s.label, source: s.source }))} />
+        </div>
+      )}
     </div>
   );
 }

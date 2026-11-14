@@ -6,7 +6,7 @@ import { PromiseBlock } from "./promise";
 const FORMAT_LABEL = { onsite: "On-site", online: "Online", hybrid: "Hybrid" } as const;
 
 export function ExploreCard({
-  card, company, eventLabel, answered, goal, record,
+  card, company, eventLabel, answered, goal, record, matched = [],
 }: {
   card: ProblemCard;
   eventLabel: string;
@@ -14,6 +14,8 @@ export function ExploreCard({
   answered: boolean;
   goal: HiringGoal;
   record: { rate: number | null; counted: number };
+  /** Card tags that match the signed-in talent's own skills. Private to them. */
+  matched?: string[];
 }) {
   return (
     <Link
@@ -38,6 +40,11 @@ export function ExploreCard({
             </li>
           )}
         </ul>
+        {matched.length > 0 && (
+          <p className="mt-2 text-xs">
+            <span className="font-medium text-primary">Uses your skills:</span> {matched.join(", ")}
+          </p>
+        )}
         <PromiseBlock goal={goal} record={record} compact />
       </div>
       <ChevronRight className="mt-1 size-5 shrink-0 text-muted-foreground" aria-hidden="true" />

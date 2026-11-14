@@ -3,7 +3,8 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { cannedTranslation } from "@/lib/demo-fallbacks";
 import type { CardDraft, Format, IntakeAnswers } from "./types";
-import { CARD_SYSTEM, CLARITY_SYSTEM, cardUserMessage, translateSystem } from "./prompts";
+import { CARD_SYSTEM, CLARITY_SYSTEM, SKILLS_SYSTEM, cardUserMessage, translateSystem } from "./prompts";
+import { MAX_SKILL_LENGTH, fallbackExtract, normaliseSkill } from "./skills";
 
 const MODEL = "claude-sonnet-5-5";
 const MAX_TOKENS = 1200;
@@ -139,6 +140,7 @@ function validateCard(obj: Record<string, unknown>): CardResult | null {
       niceToHave: cleanList(r.niceToHave, 8),
       languages,
       languagesNeeded,
+      skills: dedupe(cleanList(r.skills, 6, MAX_SKILL_LENGTH)),
       format,
     },
     suggestions: cleanList(obj.suggestions, 4, 300),
@@ -213,6 +215,7 @@ function fallbackCard(a: IntakeAnswers): CardResult {
         .slice(0, 8),
       languages,
       languagesNeeded,
+      skills: fallbackExtract(all).slice(0, 6),
       format: "hybrid",
     },
     suggestions: suggestions.slice(0, 4),
@@ -255,4 +258,22 @@ export async function translate(
   const out = await complete(translateSystem(from, to), input);
   if (out) return { text: out, fallback: false };
   return { text: cannedTranslation(input), fallback: true };
+}
+
+/**
+ * Suggests skills from CV text. The text is used for this one call only: it is not stored, not logged.
+ * Suggestions are the person's to accept or dismiss; nothing is saved here.
+ */
+export async function extractSkills(text: string): Promise<{ suggestions: string[]; fallback: boolean }> {
+  const input = typeof text === "string" ? text.trim() : "";
+  if (!input) return { suggestions: [], fallback: true };
+  try {
+    const raw = await complete(SKILLS_SYSTEM, input);
+    const obj = raw ? parseJsonObject(raw) : null;
+    const list = obj ? dedupe(cleanList(obj.skills, 12, MAX_SKILL_LENGTH).map(normaliseSkill).filter(Boolean)) : [];
+    if (list.length) return { suggestions: list, fallback: false };
+  } catch {
+    // fall through to the offline vocabulary
+  }
+  return { suggestions: fallbackExtract(input), fallback: true };
 }
