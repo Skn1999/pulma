@@ -1,5 +1,6 @@
 import { Fragment } from "react";
-import { CalendarClock } from "lucide-react";
+import Link from "next/link";
+import { CalendarClock, IdCard } from "lucide-react";
 import { FollowUp, type FollowUpState } from "./follow-up";
 
 export function ScheduleNotice({ count }: { count: number }) {
@@ -22,6 +23,7 @@ export function EmptyDay({ title, body }: { title: string; body: string }) {
 }
 
 export interface CompanyDayRow {
+  meetingId: string;
   followUp: FollowUpState;
   time: string;
   responseCode: string;
@@ -80,6 +82,9 @@ export function CompanyDay({
                   </tr>
                   <tr className="border-b border-border last:border-0">
                     <td colSpan={3} className="px-4 pb-3">
+                      <Link href={`/meet/${r.meetingId}`} className="inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-primary underline underline-offset-4 outline-none focus-visible:ring-3 focus-visible:ring-ring">
+                        <IdCard className="size-4" aria-hidden="true" /> Event card
+                      </Link>
                       <FollowUp side="company" state={r.followUp} />
                     </td>
                   </tr>
@@ -95,6 +100,7 @@ export function CompanyDay({
 }
 
 export interface TalentDayRow {
+  meetingId: string;
   followUp: FollowUpState;
   time: string;
   place: string;
@@ -139,6 +145,9 @@ export function TalentDay({
                 <p className="text-sm">{r.place}</p>
                 <p className="text-sm text-muted-foreground">{r.problemTitle}</p>
                 <p className="mt-1 text-xs text-muted-foreground">Your answer: Response #{r.responseCode}</p>
+                <Link href={`/meet/${r.meetingId}`} className="inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-primary underline underline-offset-4 outline-none focus-visible:ring-3 focus-visible:ring-ring">
+                  <IdCard className="size-4" aria-hidden="true" /> Your event card
+                </Link>
                 <FollowUp side="talent" companyName={r.companyName} state={r.followUp} />
               </li>
             ))}

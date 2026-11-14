@@ -30,7 +30,7 @@ export function eventOfMeeting(db: DB, meeting: Meeting): Event {
 }
 
 /** Today's date in Helsinki, "YYYY-MM-DD". */
-function helsinkiToday(now: number): string {
+export function helsinkiToday(now: number): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Helsinki", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(now));
 }
 

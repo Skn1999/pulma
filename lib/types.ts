@@ -146,6 +146,8 @@ export interface Meeting {
   status?: "pending" | "booked" | "reschedule" | "cancelled";
   durationMin?: number; // 10 for event, 30 for office/video
   place?: string; // office address or (fake) video link
+  /** Up to 3 of the candidate's own skill labels they chose to show on the event-day card. Private until chosen. */
+  cardSkills?: string[];
   lastChange?: { by: "company" | "talent"; kind: "reschedule" | "cancel"; reason: MeetingChangeReason; at: string };
 }
 

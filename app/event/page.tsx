@@ -66,6 +66,7 @@ export default async function EventPage({ searchParams }: { searchParams: Promis
         where={eventLabel(ev)}
         unscheduled={unscheduled}
         rows={mine.map((s) => ({
+          meetingId: s.meetingId,
           time: fmtTime(s.start),
           responseCode: codeOf(s.responseId),
           followUp: followUpFor(s.meetingId, "company"),
@@ -86,6 +87,7 @@ export default async function EventPage({ searchParams }: { searchParams: Promis
         arrival={schedule.arrivals[talentId] ?? null}
         unscheduled={unscheduled}
         rows={mine.map((s) => ({
+          meetingId: s.meetingId,
           time: fmtTime(s.start),
           place: tablePlace(ev, s.table),
           companyName: db.companies.find((c) => c.id === s.companyId)?.name ?? "Company",

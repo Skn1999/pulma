@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { CalendarCheck, CalendarClock, CalendarX2, Download } from "lucide-react";
+import Link from "next/link";
+import { CalendarCheck, CalendarClock, CalendarX2, Download, IdCard } from "lucide-react";
 import { toast } from "sonner";
 import type { ThreadView } from "@/lib/thread";
 import { MEET_MODE_LABEL } from "@/lib/types";
@@ -121,6 +122,14 @@ export function MeetingPanel({
           >
             <Download className="size-4" aria-hidden="true" /> Add to calendar
           </a>
+        )}
+        {m.mode === "event" && m.eventPlace && (
+          <Link
+            href={`/meet/${m.id}`}
+            className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border bg-background px-3 text-sm font-medium outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring"
+          >
+            <IdCard className="size-4" aria-hidden="true" /> {viewer === "talent" ? "Your event card" : "Event card"}
+          </Link>
         )}
         <ChangeMeetingDialog meetingId={m.id} action={viewer === "talent" ? "move" : "ask-move"} onChanged={onChanged} />
         <ChangeMeetingDialog meetingId={m.id} action="cancel" onChanged={onChanged} />

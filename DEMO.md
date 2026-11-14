@@ -57,3 +57,10 @@ Note: the first load after this change re-seeds the demo data, so use **Reset de
 - Switch to a company: the answers are still anonymous and in the same random order, with no skills anywhere.
 - Skills for problems ("Work involved") come from the intake and can be edited in the card editor.
 - After editing seed data, use Reset demo (organiser) so the seeded skills and tags appear.
+
+## Event card
+After a company shortlists an answer and the candidate accepts, an event-day meeting with a table and time gets an identity card at `/meet/<meeting id>`: first names, company, problem, event, venue, table, time, a code (PUL-XXXXXX) and a QR code of its own address. Nothing else (no surname, no email). It stops working after the event date ("This card has expired", no QR).
+- Try it: `/meet/mt-1` is Olena × Pulssi Medical, Table 2 at the Green Transition Jobs Morning (10 Dec, 09:00). Open it as **Olena** (olena.k@example.com), **Pulssi Medical** (hiring@pulssimedical.example) or the **Event team** (events@talentday.example). Any other account gets a "not found" page.
+- Olena can tick up to 3 of her four skills under the card ("Show up to 3 of your skills on this card"); the company then sees them on the card, and only those.
+- Links: **Meetings** → "Your event card" (candidate), the booked-meeting panel in the thread (both sides), and the event-day "My day" rows.
+- Print: the card page has a "Print this card" button; the app header and buttons are hidden when printing.

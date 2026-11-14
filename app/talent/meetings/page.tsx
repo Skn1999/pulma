@@ -65,6 +65,11 @@ export default async function TalentMeetingsPage() {
                     >
                       {needsPick ? "Pick a time" : "Open"}
                     </Link>
+                    {mode === "event" && status === "booked" && m.table > 0 && (
+                      <Link href={`/meet/${m.id}`} className="inline-flex min-h-11 items-center rounded-lg border px-4 text-sm font-medium outline-none focus-visible:ring-3 focus-visible:ring-ring">
+                        Your event card
+                      </Link>
+                    )}
                     {mode === "event" && status === "booked" && (
                       <Link href={`/event?event=${card?.eventId ?? eventOfMeeting(db, m).id}`} className="inline-flex min-h-11 items-center rounded-lg border px-4 text-sm font-medium outline-none focus-visible:ring-3 focus-visible:ring-ring">
                         See my event day
