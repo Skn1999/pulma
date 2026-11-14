@@ -15,7 +15,6 @@ export function buildBlindResponses(db: DB, card: ProblemCard, now: number): Bli
         publicCode: r.publicCode,
         text: r.text,
         originalLanguage: r.originalLanguage,
-        translatedText: r.translatedText,
         aiAssisted: r.aiAssisted,
         shortlist: s
           ? (() => {

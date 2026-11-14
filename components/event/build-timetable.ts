@@ -1,5 +1,5 @@
 // Pure: turns a schedule into a grid for the public timetable. Imported by the server page only.
-import { companiesInEvent, type Schedule } from "@/lib/schedule";
+import { companiesInEvent, tableOf, type Schedule } from "@/lib/schedule";
 import type { DB, Event } from "@/lib/types";
 import { fmtTime } from "./format";
 
@@ -15,11 +15,12 @@ export interface TimetableRow {
 
 export function buildTimetable(db: DB, schedule: Schedule, ev: Event): { columns: TimetableColumn[]; rows: TimetableRow[] } {
   const tables = ev.tables;
-  const inEvent = companiesInEvent(db, ev.id);
+  const confirmed = db.participations.filter((p) => p.eventId === ev.id && p.status === "confirmed").map((p) => p.companyId);
+  const inEvent = [...new Set([...companiesInEvent(db, ev.id), ...confirmed])];
   const columns: TimetableColumn[] = Array.from({ length: tables }, (_, i) => {
     const table = i + 1;
     const companies = inEvent
-      .filter((_, idx) => (idx % tables) + 1 === table)
+      .filter((id) => tableOf(db, ev.id, id) === table)
       .map((id) => db.companies.find((c) => c.id === id)?.name ?? id);
     return { table, companies };
   });

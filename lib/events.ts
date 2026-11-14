@@ -65,9 +65,10 @@ export function pickEvent(db: DB, list: Event[], requested: string | undefined, 
   return list.find((e) => today.includes(e.id)) ?? list[0];
 }
 
-/** Events that have at least one problem from this company. */
+/** Events where this company has a problem or a confirmed place. */
 export function eventsOfCompany(db: DB, companyId: string): Event[] {
   const ids = new Set(db.cards.filter((c) => c.companyId === companyId).map((c) => eventOf(db, c).id));
+  for (const p of db.participations) if (p.companyId === companyId && p.status === "confirmed") ids.add(p.eventId);
   return sortedEvents(db).filter((e) => ids.has(e.id));
 }
 

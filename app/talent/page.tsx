@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { getDB } from "@/lib/store";
 import { companyRecord, goalOf, isOpen } from "@/lib/deadlines";
 import { eventDay, eventLabel, eventOf, sortedEvents } from "@/lib/events";
+import { candidateVisibleCards } from "@/lib/participation";
 import { getTalentId } from "@/lib/persona";
 import { skillMatches } from "@/lib/skills";
 import { PageTitle } from "@/components/shell/page-title";
@@ -33,7 +34,8 @@ export default async function TalentPage({
 
   const db = getDB();
   const talentId = await getTalentId();
-  const published = db.cards
+  // Only problems of open or locked events: draft and finished events stay out of sight.
+  const published = candidateVisibleCards(db, nowMs())
     .filter((c) => isOpen(c))
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   const companyOf = (id: string) => db.companies.find((c) => c.id === id);

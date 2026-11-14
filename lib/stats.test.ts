@@ -10,7 +10,7 @@ const event: Event = {
   endTime: "14:00",
   slotMinutes: 10,
   tables: 6,
-  venue: "Hall (demo venue)",
+  venue: "Hall (demo venue)", stage: "open" as const, problemDeadline: "2026-11-21",
 };
 
 function card(
@@ -77,7 +77,7 @@ const db: DB = {
   feedback: [],
   closures: [],
   activity: [],
-  availability: [],
+  availability: [], participations: [],
 };
 
 describe("getStats", () => {

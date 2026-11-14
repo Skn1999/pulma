@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { apiAccount } from "@/lib/session";
 import { getDB, mutate } from "@/lib/store";
-import { eventById, eventOf, upcomingEvents } from "@/lib/events";
+import { eventById, eventOf } from "@/lib/events";
+import { canPublishTo } from "@/lib/participation";
 import { nowMs } from "@/lib/clock";
 import { meetingMode, meetingStatus } from "@/lib/slots";
 
@@ -16,10 +17,10 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (card.companyId !== acc.companyId) return NextResponse.json({ error: "Not your card" }, { status: 403 });
   const body = await req.json().catch(() => null);
   const eventId = typeof body?.eventId === "string" ? body.eventId : "";
-  if (!eventById(db0, eventId) || !upcomingEvents(db0, nowMs()).some((e) => e.id === eventId)) {
-    return NextResponse.json({ error: "Pick an upcoming event." }, { status: 400 });
-  }
+  if (!eventById(db0, eventId)) return NextResponse.json({ error: "Pick an event." }, { status: 400 });
   if (eventOf(db0, card).id === eventId) return NextResponse.json(card);
+  const can = canPublishTo(db0, acc.companyId ?? "", eventId, nowMs());
+  if (!can.ok) return NextResponse.json({ error: can.reason }, { status: 400 });
   const booked = db0.meetings.some((m) => m.cardId === id && meetingMode(m) === "event" && meetingStatus(m) === "booked");
   if (booked) return NextResponse.json({ error: "An event-day meeting is already booked for this problem, so it can't move to another event." }, { status: 409 });
   const updated = mutate((db) => {

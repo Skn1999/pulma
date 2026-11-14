@@ -3,6 +3,8 @@ import { getDB, mutate, newId, nextPublicCode } from "@/lib/store";
 import { logActivity } from "@/lib/activity";
 import { apiAccount } from "@/lib/session";
 import { isOpen } from "@/lib/deadlines";
+import { ANSWERS_CLOSED, eventTakesAnswers } from "@/lib/participation";
+import { nowMs } from "@/lib/clock";
 import type { Response as Resp } from "@/lib/types";
 
 export async function POST(req: Request) {
@@ -15,13 +17,13 @@ export async function POST(req: Request) {
   if (!db.talents.some((t) => t.id === talentId)) return NextResponse.json({ error: "Unknown talent" }, { status: 401 });
   const card = db.cards.find((c) => c.id === b.cardId && c.status === "published");
   if (!card) return NextResponse.json({ error: "Card not found" }, { status: 404 });
+  if (!eventTakesAnswers(db, card, nowMs())) return NextResponse.json({ error: ANSWERS_CLOSED }, { status: 409 });
   if (!isOpen(card)) return NextResponse.json({ error: "This problem isn't taking new answers right now" }, { status: 409 });
   const text = typeof b.text === "string" ? b.text.trim() : "";
   if (!text) return NextResponse.json({ error: "text required" }, { status: 400 });
   if (text.length > 4000) return NextResponse.json({ error: "text too long" }, { status: 400 });
   if (db.responses.some((r) => r.cardId === card.id && r.talentId === talentId))
     return NextResponse.json({ error: "You have already responded to this card" }, { status: 409 });
-  const translated = typeof b.translatedText === "string" && b.translatedText.trim() ? b.translatedText.trim() : undefined;
   const created = mutate((d) => {
     const r: Resp = {
       id: newId("resp"),
@@ -30,7 +32,6 @@ export async function POST(req: Request) {
       talentId,
       text,
       originalLanguage: typeof b.originalLanguage === "string" && b.originalLanguage ? b.originalLanguage : "English",
-      translatedText: translated,
       aiAssisted: b.aiAssisted === true,
       createdAt: new Date().toISOString(),
     };

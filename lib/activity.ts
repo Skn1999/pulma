@@ -31,8 +31,43 @@ function changeReason(db: DB, responseId: string | undefined, by: "company" | "t
   return m?.lastChange && m.lastChange.by === by ? ` (${m.lastChange.reason})` : "";
 }
 
+/** Event-level rows (invitations and answers) as the organiser reads them on the event page. */
+export function eventActivityText(db: DB, a: Activity): string | null {
+  const company = db.companies.find((c) => c.id === a.companyId)?.name ?? "A company";
+  const ev = db.events.find((e) => e.id === a.eventId)?.name ?? "the event";
+  switch (a.kind) {
+    case "event_invited":
+      return `${company} was invited to ${ev}`;
+    case "event_joined":
+      return `${company} accepted the invitation to ${ev}`;
+    case "event_declined":
+      return `${company} declined the invitation to ${ev}`;
+    default:
+      return null;
+  }
+}
+
+/** Event-level rows for a company's bell. Only invitations ring: its own answers are not news to it. */
+function viewEventActivity(db: DB, account: Account, a: Activity): ActivityView | null {
+  if (account.role !== "company" || !account.companyId || a.companyId !== account.companyId) return null;
+  const ev = db.events.find((e) => e.id === a.eventId);
+  if (!ev || ev.stage === "draft") return null; // draft events are the organiser's alone
+  const base = { id: a.id, at: a.at, kind: a.kind, byMe: a.actor === "company", href: "/company/events" };
+  switch (a.kind) {
+    case "event_invited":
+      return { ...base, text: `The event team invited you to ${ev.name}` };
+    case "event_joined":
+      return { ...base, text: `You accepted the invitation to ${ev.name}` };
+    case "event_declined":
+      return { ...base, text: `You declined the invitation to ${ev.name}` };
+    default:
+      return null;
+  }
+}
+
 export function viewActivity(db: DB, account: Account, a: Activity): ActivityView | null {
   if (account.role === "organiser") return null;
+  if (a.kind === "event_invited" || a.kind === "event_joined" || a.kind === "event_declined") return viewEventActivity(db, account, a);
   const card = db.cards.find((c) => c.id === a.cardId);
   if (!card) return null;
   const response = a.responseId ? db.responses.find((r) => r.id === a.responseId) : undefined;

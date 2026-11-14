@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { ChevronDown, Languages, Sparkles, X } from "lucide-react";
+import { ChevronDown, Sparkles, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { diffWords } from "diff";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,7 @@ export function ResponseForm({
   cardId, cardTitle, companyName, defaultLanguage, existing, relatedSkills = [],
 }: {
   cardId: string; cardTitle: string; companyName: string; defaultLanguage: string; relatedSkills?: string[];
-  existing?: { id: string; text: string; language: string; translatedText?: string; aiAssisted: boolean };
+  existing?: { id: string; text: string; language: string; aiAssisted: boolean };
 }) {
   const router = useRouter();
   const [text, setText] = useState(existing?.text ?? "");
@@ -27,23 +27,19 @@ export function ResponseForm({
   const [suggestion, setSuggestion] = useState<string | null>(null);
   const [clarityMsg, setClarityMsg] = useState("");
   const [clarityAccepted, setClarityAccepted] = useState(existing?.aiAssisted ?? false);
-  const [translation, setTranslation] = useState<string | null>(existing?.translatedText ?? null);
-  const [translateMsg, setTranslateMsg] = useState("");
-  const [busy, setBusy] = useState<"" | "clarity" | "translate" | "submit">("");
+  const [busy, setBusy] = useState<"" | "clarity" | "submit">("");
   const [error, setError] = useState("");
   const [sent, setSent] = useState(false);
   const [showCard, setShowCard] = useState(false);
 
   const over = text.length > SOFT_LIMIT;
-  const aiAssisted = clarityAccepted || !!translation;
+  const aiAssisted = clarityAccepted;
   const trimmed = text.trim();
 
   function onChange(v: string) {
     setText(v);
     setSuggestion(null);
     setClarityMsg("");
-    setTranslation(null); // translation belongs to the exact text it was made from
-    setTranslateMsg("");
   }
 
   async function post(url: string, body: unknown, method = "POST") {
@@ -66,26 +62,13 @@ export function ResponseForm({
     setBusy("");
   }
 
-  async function translateIt() {
-    setBusy("translate");
-    setTranslateMsg("");
-    try {
-      const r = await post("/api/ai/translate", { text, from: language, to: "English" });
-      if (r.text) setTranslation(r.text);
-      else setTranslateMsg("Translation isn't available right now. The company will see your original text.");
-    } catch {
-      setTranslateMsg("Translation isn't available right now. The company will see your original text.");
-    }
-    setBusy("");
-  }
-
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!trimmed) return;
     setBusy("submit");
     setError("");
     try {
-      const payload = { text, originalLanguage: language, translatedText: translation ?? undefined, aiAssisted };
+      const payload = { text, originalLanguage: language, aiAssisted };
       const r = existing
         ? await post(`/api/responses/${existing.id}`, payload, "PATCH")
         : await post("/api/responses", { cardId, ...payload });
@@ -135,14 +118,13 @@ export function ResponseForm({
             autoFocus
             value={text}
             onChange={(e) => onChange(e.target.value)}
-            placeholder="3–5 sentences on how you'd approach this. Any language is fine."
+            placeholder="3–5 sentences on how you'd approach this, in one of the team's working languages."
             aria-describedby="answer-count"
             className="mt-3 min-h-48 resize-none border-0 bg-transparent px-1 text-lg leading-8 shadow-none focus-visible:ring-0"
           />
 
           <div aria-live="polite" className="space-y-3">
             {clarityMsg && <p className="text-sm text-muted-foreground">{clarityMsg}</p>}
-            {translateMsg && <p className="text-sm text-muted-foreground">{translateMsg}</p>}
             {error && <p role="alert" className="text-sm font-medium text-destructive">{error}</p>}
 
             {suggestion && (
@@ -173,7 +155,6 @@ export function ResponseForm({
                     onClick={() => {
                       setText(suggestion);
                       setSuggestion(null);
-                      setTranslation(null);
                       setClarityAccepted(true);
                     }}
                   >
@@ -183,26 +164,6 @@ export function ResponseForm({
                     Keep mine
                   </Button>
                 </div>
-              </div>
-            )}
-
-            {translation && (
-              <div className="rounded-xl border border-border bg-card p-4">
-                <h3 className="text-sm font-semibold">Translation for the company</h3>
-                <div className="mt-2 grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Your original ({language})</p>
-                    <p className="mt-1 whitespace-pre-wrap leading-7">{text}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">English translation</p>
-                    <p className="mt-1 whitespace-pre-wrap leading-7">{translation}</p>
-                  </div>
-                </div>
-                <p className="mt-2 text-xs text-muted-foreground">Using translation. The company sees both.</p>
-                <Button type="button" variant="outline" className={`${btn} mt-3`} onClick={() => setTranslation(null)}>
-                  Remove translation
-                </Button>
               </div>
             )}
 
@@ -226,7 +187,6 @@ export function ResponseForm({
               <ul className="list-disc space-y-0.5 pl-5">
                 <li>A response code (for example #A7)</li>
                 <li>Your answer</li>
-                <li>The translation, if you add one</li>
                 <li>The AI-assisted label, if you used it</li>
               </ul>
               <p className="mt-1.5 text-muted-foreground">
@@ -240,25 +200,16 @@ export function ResponseForm({
             <Sparkles className="size-4" aria-hidden="true" />
             {busy === "clarity" ? "Thinking…" : "Clearer"}
           </Button>
-          {language !== "English" && (
-            <Button type="button" variant="outline" className={`${btn} shrink-0 gap-1.5`} disabled={!trimmed || busy !== ""} onClick={translateIt}>
-              <Languages className="size-4" aria-hidden="true" />
-              {busy === "translate" ? "Translating…" : "Translate"}
-            </Button>
-          )}
           <PreviewButton
             companyName={companyName}
             disabled={!trimmed}
-            answer={{ text, translatedText: translation, originalLanguage: language, aiAssisted }}
+            answer={{ text, originalLanguage: language, aiAssisted }}
           />
           <label htmlFor="lang" className="sr-only">Language you wrote in</label>
           <select
             id="lang"
             value={language}
-            onChange={(e) => {
-              setLanguage(e.target.value);
-              setTranslation(null);
-            }}
+            onChange={(e) => setLanguage(e.target.value)}
             className="min-h-11 shrink-0 rounded-lg border border-input bg-card px-2 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
           >
             {LANGS.map((l) => (

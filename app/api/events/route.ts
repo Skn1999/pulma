@@ -9,7 +9,8 @@ import type { Event } from "@/lib/types";
 export async function GET() {
   const acc = await apiAccount();
   if (acc instanceof NextResponse) return acc;
-  return NextResponse.json(sortedEvents(getDB()));
+  // Draft events belong to the organiser until they open them.
+  return NextResponse.json(sortedEvents(getDB()).filter((e) => acc.role === "organiser" || e.stage !== "draft"));
 }
 
 export async function POST(req: Request) {
@@ -18,7 +19,7 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
   const parsed = parseEventInput(body, nowMs());
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: 400 });
-  const ev: Event = { id: newId("ev"), ...parsed.event, slotMinutes: 10, createdAt: new Date().toISOString() };
+  const ev: Event = { id: newId("ev"), ...parsed.event, slotMinutes: 10, stage: "draft", createdAt: new Date().toISOString() };
   mutate((db) => {
     db.events.push(ev);
   });

@@ -3,6 +3,8 @@ import { apiAccount } from "@/lib/session";
 import { getDB, mutate, newId } from "@/lib/store";
 import { logActivity } from "@/lib/activity";
 import { addDays, goalOf, isOpen } from "@/lib/deadlines";
+import { ANSWERS_CLOSED, eventTakesAnswers } from "@/lib/participation";
+import { nowMs } from "@/lib/clock";
 
 const MAX = 5;
 const MESSAGE_MAX = 200;
@@ -27,6 +29,7 @@ export async function POST(req: Request) {
   if (card.companyId !== acc.companyId) return NextResponse.json({ error: "Not your card" }, { status: 403 });
   const target = db.responses.find((r) => r.id === b.responseId && r.cardId === b.cardId);
   if (!target) return NextResponse.json({ error: "Response not found for this card" }, { status: 404 });
+  if (!eventTakesAnswers(db, card, nowMs())) return NextResponse.json({ error: ANSWERS_CLOSED }, { status: 409 });
   if (!isOpen(card)) return NextResponse.json({ error: "This problem isn't taking new invites right now" }, { status: 409 });
   if (target.steppedBack) return NextResponse.json({ error: "This person has stepped back" }, { status: 409 });
   if (db.closures.some((c) => c.responseId === b.responseId))

@@ -16,7 +16,7 @@ describe("meetCode", () => {
   });
 });
 
-const ev = { id: "ev-1", name: "Tech Day", date: "2026-12-05", startTime: "10:00", endTime: "14:00", slotMinutes: 10, tables: 2, venue: "Hall A (demo venue)" };
+const ev = { id: "ev-1", name: "Tech Day", date: "2026-12-05", startTime: "10:00", endTime: "14:00", slotMinutes: 10, tables: 2, venue: "Hall A (demo venue)", stage: "open" as const, problemDeadline: "2026-11-21" };
 const base: Meeting = { id: "mt-1", cardId: "c1", responseId: "r1", slotStart: "2026-12-05T10:20:00", table: 2 };
 const T = (iso: string) => Date.parse(iso);
 
@@ -28,7 +28,7 @@ function db(m: Partial<Meeting> = {}, over: Partial<DB> = {}): DB {
     talents: [{ id: "t1", displayName: "Olena Kovalenko", email: "o@example.com", skills: [{ label: "Python", source: "self", addedAt: "" }, { label: "SQL", source: "self", addedAt: "" }] }],
     responses: [{ id: "r1", publicCode: "A1", cardId: "c1", talentId: "t1", text: "", originalLanguage: "English", aiAssisted: false, createdAt: "" }],
     shortlists: [{ id: "s1", cardId: "c1", responseId: "r1", status: "accepted" }],
-    meetings: [{ ...base, ...m }], events: [ev], feedback: [], closures: [], activity: [], availability: [], ...over,
+    meetings: [{ ...base, ...m }], events: [ev], feedback: [], closures: [], activity: [], availability: [], participations: [], ...over,
   };
 }
 

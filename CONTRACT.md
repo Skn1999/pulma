@@ -445,3 +445,88 @@ Purpose: at the event both sides can confirm they are at the right table with th
 - Links: "Your event card" in the talent's match thread meeting panel, my-day and talent meetings; "Event card" in the
   company reader meeting panel and company my-day. 
 - Privacy: no email, no surname, no other data. Expires with the event.
+
+---
+# v7 — Events run by the organiser (Step E)
+Decisions (user, 14 Nov): the organiser invites companies to an event; companies accept or decline; up to
+3 problems per company per event; candidates do not register for events (later: organisers add candidates
+through a separate onboarding flow — NOT in this step). Existing seed companies become confirmed for the
+events their problems are in, with their current tables.
+
+## Types (lib/types.ts)
+- `EventStage = "draft" | "open" | "locked" | "done"`. `Event` gains `stage: EventStage`,
+  `problemDeadline: string` ("YYYY-MM-DD"), `description?: string` (≤400 chars).
+  - draft: only the organiser sees it. open: invited companies see it, confirmed companies publish problems,
+    candidates see its problems and answer. locked (the organiser locks it, e.g. the day before): no new
+    problems, answers, invites or table changes; the schedule is final. done: after the event (the organiser
+    marks it, or it is shown as done once its date has passed).
+- `Participation { id; eventId; companyId; status: "invited" | "confirmed" | "declined" | "withdrawn";
+  table?: number; invitedAt: string; respondedAt?: string; note?: string /* organiser's message, ≤300 */ }`
+- `DB.participations: Participation[]`. `MAX_PROBLEMS_PER_EVENT = 3`.
+- Store `isCurrentShape` also requires `participations` to be an array.
+
+## lib/participation.ts (new, pure)
+- `participationOf(db, eventId, companyId)`, `confirmedEvents(db, companyId)`, `eventStage(ev, now)`
+  (returns "done" when the date has passed even if the stored stage is earlier).
+- `canPublishTo(db, companyId, eventId, now) → { ok: true } | { ok: false; reason: string }` — confirmed,
+  stage open, today ≤ problemDeadline, fewer than 3 published problems from this company in this event.
+  Reasons are short, human sentences ("The problem deadline for this event has passed.").
+- `freeTable(db, eventId)` = lowest table number 1..tables not held by a confirmed participation.
+  `seatsLeft(db, eventId)` = tables − (confirmed + invited). Inviting beyond seatsLeft is refused ("Full").
+- Schedule (lib/schedule.ts): a company's table in an event = its confirmed participation's `table`; fall back
+  to the old index rule only when no participation exists.
+
+## API
+- POST `/api/events` (organiser): as now, plus `problemDeadline` (default date − 14 days, must be ≤ date) and
+  `description`; new events start as **draft**.
+- PATCH `/api/events/[id]` (organiser): `{stage?, problemDeadline?, description?}`. Allowed stage moves:
+  draft→open, open→locked, locked→open (unlock), locked→done, open→done only after the date.
+- POST `/api/events/[id]/invites` (organiser) `{companyIds: string[], note?: string}`: creates `invited`
+  participations (skip companies already invited/confirmed), refuse when seatsLeft would go below 0, only for
+  draft/open events. Log activity kind `event_invited` (company sees "The event team invited you to <event>").
+- POST `/api/participations/[id]/respond` (company, own) `{accept: boolean}`: accept → `confirmed` with
+  `table = freeTable` (409 "This event is full" if none); decline → `declined`. Log `event_joined` /
+  `event_declined` (organiser-side rows; the organiser has no bell, they show on the event page).
+- PATCH `/api/participations/[id]` (organiser) `{table}`: 1..tables, unique among confirmed in that event,
+  not when locked/done; re-run applySchedule.
+- POST `/api/participations/[id]/withdraw` (company or organiser): only while the company has no booked
+  event-day meetings in that event; its problems in that event become `state: "paused"` with reason "The
+  company is no longer taking part in this event" (reuse card_paused so everyone who answered is told).
+- POST `/api/cards` and PATCH `/api/cards/[id]/event`: enforce `canPublishTo` (400 with the reason).
+- Answers (POST /api/responses) and invites (shortlists) are refused when the card's event is locked/done
+  ("Answers for this event have closed.").
+
+## Pages
+Organiser
+- `/organiser/events`: event list with a stage badge (word + icon), date, venue, problem deadline,
+  "4 of 6 tables taken", problems count; "New event" creates a draft.
+- `/organiser/events/[id]` (new) with tabs via `?tab=` (real links, aria-current): 
+  - **Overview**: stage panel with the one next action and a plain explanation ("Open the event: invited
+    companies can publish problems and candidates can see them"), problem deadline (editable), description,
+    counts, the needs timeline for this event.
+  - **Employers**: participations table (company, status badge, table select for confirmed, invited date,
+    remove/withdraw); "Invite companies" dialog: checkbox list of companies not yet invited (name, sector),
+    optional note, shows seats left.
+  - **Problems**: this event's problems (title, company, published date, answers count, state). No people.
+  - **Schedule**: link to `/event?event=<id>`.
+- Draft events never appear to companies or candidates.
+Employer
+- Nav item "Events" (icon CalendarDays) → `/company/events`: **Invitations** (event details, organiser note,
+  Accept / Decline), **Your events** (stage, date, venue, table, problem deadline, "2 of 3 problems",
+  "Publish a problem" → `/company/intake?event=<id>` when canPublishTo ok, otherwise the reason), **Past**.
+- Intake: the event is chosen FIRST. With `?event=` (and allowed) show it fixed at the top ("For: <event
+  label> · Table N"); otherwise the first step lists events where canPublishTo is ok; if none, an empty state
+  linking to Events ("You can publish a problem once you have accepted an event invitation."). Remove the old
+  "Which event?" select at the end.
+- Company home (Problems): grouped under one heading per event (event label, table, stage, deadline).
+- "Change event" dialog: only events where canPublishTo is ok.
+Candidate
+- Explore and card pages only show problems of open/locked events; on locked events the answer button is
+  replaced by "Answers for this event have closed."
+Seed
+- ev-1, ev-2 stage open, ev-3 stage open with no problems; problemDeadline = date − 14 days (ev-1: 2026-11-21,
+  ev-2: 2026-11-26, ev-3: 2027-01-07). Confirmed participations for every company with problems in ev-1/ev-2,
+  table = the table it has today. Plus ONE pending invitation: Kiertovolt (co-cleantech) invited to ev-3 with
+  note "We'd love a clean-tech problem at the International Talent Evening." (demo: accept, then publish).
+Tests: canPublishTo (each reason), freeTable/seatsLeft, schedule uses participation tables, draft events
+hidden from candidates' card list helper, respond/accept assigns a table.

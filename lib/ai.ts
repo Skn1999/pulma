@@ -1,9 +1,8 @@
 // Server-only AI helpers. Every function returns a fallback and never throws.
 // AI only helps people write; it never ranks, scores or filters people (CLAUDE.md hard rule 1).
 import Anthropic from "@anthropic-ai/sdk";
-import { cannedTranslation } from "@/lib/demo-fallbacks";
 import type { CardDraft, Format, IntakeAnswers } from "./types";
-import { CARD_SYSTEM, CLARITY_SYSTEM, SKILLS_SYSTEM, cardUserMessage, translateSystem } from "./prompts";
+import { CARD_SYSTEM, CLARITY_SYSTEM, SKILLS_SYSTEM, cardUserMessage } from "./prompts";
 import { MAX_SKILL_LENGTH, fallbackExtract, normaliseSkill } from "./skills";
 
 const MODEL = "claude-sonnet-5-5";
@@ -16,8 +15,9 @@ const KNOWN_LANGUAGES = [
   "Estonian", "Arabic", "Chinese", "Japanese", "Italian", "Portuguese", "Polish", "Hindi",
   "Persian", "Turkish", "Vietnamese", "Dutch",
 ];
-// Patterns that signal credentials about a person (years of experience, degree, nationality, native speaker).
-const CREDENTIAL_HINT = /\b\d+\+?\s*(years?|yrs?)\b|\bdegree\b|\bnative\b|\bnationalit|\bcitizen/i;
+// Patterns that signal demographic or discriminating requirements. Experience and degrees are fine; these are not.
+const DEMOGRAPHIC_HINT =
+  /\bnative\b|\bnationalit|\bcitizen|\bage[ds]?\s+\d|\bunder\s+\d{2}\b|\byoung\b|\brecent graduate|\bdigital native|\bgender\b|\b(male|female|man|woman)\b|\breligio|\bmarried\b|\bchildren\b|\bpregnan|\bethnic|\bphoto\b|\bhealthy\b/i;
 
 type CardResult = { draft: CardDraft; suggestions: string[]; fallback: boolean };
 
@@ -194,9 +194,9 @@ function fallbackCard(a: IntakeAnswers): CardResult {
   const all = [a.problem, a.firstWeek, a.hardPart, a.bonus, a.languages].join(" ");
 
   const suggestions: string[] = [];
-  if (CREDENTIAL_HINT.test(all)) {
+  if (DEMOGRAPHIC_HINT.test(all)) {
     suggestions.push(
-      "Years of experience, degrees, nationality or 'native speaker' are not part of the card. Try describing the work itself: what will this person actually do in week one?",
+      "Age, nationality, gender, 'native speaker' or family details can lead to discrimination, so they are left out of the card. Try describing what the work needs instead, e.g. which language the person will use and with whom.",
     );
   }
   const socialNeeded = languagesNeeded.find((l) => l === "Finnish" || l === "Swedish");
@@ -246,18 +246,6 @@ export async function suggestClarity(
   const out = await complete(CLARITY_SYSTEM, input);
   if (!out || out.length > CLARITY_MAX_CHARS) return { suggestion: null, fallback: true };
   return { suggestion: out, fallback: false };
-}
-
-export async function translate(
-  text: string,
-  from: string,
-  to: string,
-): Promise<{ text: string | null; fallback: boolean }> {
-  const input = typeof text === "string" ? text.trim() : "";
-  if (!input) return { text: null, fallback: true };
-  const out = await complete(translateSystem(from, to), input);
-  if (out) return { text: out, fallback: false };
-  return { text: cannedTranslation(input), fallback: true };
 }
 
 /**

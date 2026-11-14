@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { getDB } from "@/lib/store";
 import { eventLabel, eventOf } from "@/lib/events";
+import { ANSWERS_CLOSED, eventTakesAnswers, visibleToCandidates } from "@/lib/participation";
 import { cardState, companyRecord, goalOf, isOpen } from "@/lib/deadlines";
 import { PromiseBlock } from "@/components/talent/promise";
 import { getTalentId } from "@/lib/persona";
@@ -23,7 +24,10 @@ export default async function TalentCardPage({ params }: { params: Promise<{ id:
   const talentId = await getTalentId();
   const mine = db.responses.find((r) => r.cardId === card.id && r.talentId === talentId);
   const locked = !!mine && db.shortlists.some((s) => s.responseId === mine.id);
+  // A problem of a draft or finished event is not shown, except to someone who already answered it.
+  if (!mine && !visibleToCandidates(eventOf(db, card), nowMs())) notFound();
   const company = db.companies.find((c) => c.id === card.companyId);
+  const takesAnswers = eventTakesAnswers(db, card, nowMs());
 
   return (
     <div className="pb-24">
@@ -40,20 +44,19 @@ export default async function TalentCardPage({ params }: { params: Promise<{ id:
           <section aria-labelledby="mine-h" className="mt-6 rounded-xl border border-border bg-card p-4">
             <h2 id="mine-h" className="text-sm font-semibold">Your answer · #{mine.publicCode}</h2>
             <p className="mt-2 whitespace-pre-wrap text-sm leading-6">{mine.text}</p>
-            {mine.translatedText && (
-              <p className="mt-2 whitespace-pre-wrap border-t pt-2 text-sm leading-6 text-muted-foreground">{mine.translatedText}</p>
-            )}
             {mine.aiAssisted && <AiLabel className="mt-2" />}
           </section>
         )}
       </div>
       <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 border-t bg-background/95 p-3 backdrop-blur md:sticky md:bottom-0 md:mx-auto md:max-w-3xl md:border-t-0 md:bg-transparent">
-        {!isOpen(card) && !mine ? (
+        {!takesAnswers && !mine ? (
+          <p className="rounded-xl border bg-muted/60 p-3 text-center text-sm font-medium">{ANSWERS_CLOSED}</p>
+        ) : !isOpen(card) && !mine ? (
           <p className="rounded-xl border bg-muted/60 p-3 text-center text-sm font-medium">This problem isn&apos;t taking new answers right now.</p>
         ) : mine ? (
           <div className="flex items-center gap-2 rounded-xl border border-primary/40 bg-accent p-2 pl-4 text-accent-foreground">
             <p className="min-w-0 flex-1 text-sm font-medium">You answered · #{mine.publicCode}</p>
-            {!locked && isOpen(card) && !mine.steppedBack && (
+            {!locked && isOpen(card) && takesAnswers && !mine.steppedBack && (
               <Link
                 href={`/talent/card/${card.id}/answer`}
                 className="inline-flex min-h-11 items-center rounded-lg border border-primary/40 bg-background px-4 text-sm font-medium outline-none focus-visible:ring-3 focus-visible:ring-ring"

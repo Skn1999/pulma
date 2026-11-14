@@ -12,10 +12,20 @@ import { ProblemCardView } from "@/components/problem-card";
 import { QUESTIONS } from "./questions";
 import { DictateButton } from "./dictate-button";
 import { GoalFields } from "@/components/company/goal-fields";
-import { EventSelect, type EventChoice } from "@/components/company/event-select";
+import { CalendarDays } from "lucide-react";
 import { CardEditor, splitList, type EditorState } from "./card-editor";
 
-type Stage = "chat" | "generating" | "edit";
+type Stage = "event" | "chat" | "generating" | "edit";
+
+/** An event this company may publish to right now. */
+export interface IntakeEvent {
+  id: string;
+  label: string; // eventLabel(ev)
+  date: string; // "YYYY-MM-DD"
+  table?: number;
+  deadline: string; // problem deadline
+  used: number; // problems already published in this event
+}
 
 function Bubble({ who, children }: { who: "ai" | "me"; children: React.ReactNode }) {
   return (
@@ -34,15 +44,15 @@ function Bubble({ who, children }: { who: "ai" | "me"; children: React.ReactNode
 }
 
 export function IntakeFlow({
-  company, defaultGoal, events, defaultEventId,
+  company, defaultGoal, events, fixedEventId,
 }: {
   company?: Company;
   defaultGoal: HiringGoal;
-  events: EventChoice[];
-  defaultEventId: string;
+  events: IntakeEvent[];
+  fixedEventId?: string; // from ?event=: the event is already chosen
 }) {
   const router = useRouter();
-  const [stage, setStage] = useState<Stage>("chat");
+  const [stage, setStage] = useState<Stage>(fixedEventId ? "chat" : "event");
   const [answers, setAnswers] = useState<string[]>(["", "", "", "", ""]);
   const [step, setStep] = useState(0);
   const [value, setValue] = useState("");
@@ -52,7 +62,14 @@ export function IntakeFlow({
   const [fallback, setFallback] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [goal, setGoal] = useState<HiringGoal>(defaultGoal);
-  const [eventId, setEventId] = useState(defaultEventId);
+  const [eventId, setEventId] = useState(fixedEventId ?? "");
+  const chosen = events.find((e) => e.id === eventId);
+
+  function chooseEvent(e: IntakeEvent) {
+    setEventId(e.id);
+    setGoal({ ...goal, decideBy: e.date });
+    setStage("chat");
+  }
 
   const taRef = useRef<HTMLTextAreaElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
@@ -136,15 +153,70 @@ export function IntakeFlow({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ draft, goal, eventId }),
       });
-      if (!res.ok) throw new Error("bad response");
+      if (!res.ok) {
+        const msg = ((await res.json().catch(() => null)) as { error?: string } | null)?.error;
+        throw new Error(msg ?? "bad response");
+      }
       const card: ProblemCard = await res.json();
       toast.success("Problem card published");
       router.push(`/company/card/${card.id}`);
-    } catch {
-      setError("Publishing didn't work. Please try again.");
-      toast.error("Publishing didn't work. Please try again.");
+    } catch (e) {
+      const known = e instanceof Error && e.message !== "bad response" && e.message !== "Failed to fetch";
+      const msg = known ? (e as Error).message : "Publishing didn't work. Please try again.";
+      setError(msg);
+      toast.error(msg);
       setPublishing(false);
     }
+  }
+
+  const banner = chosen ? (
+    <div className="mx-auto mb-3 flex w-full max-w-2xl flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-border bg-card px-3 py-2 text-sm">
+      <CalendarDays className="size-4 shrink-0 text-primary" aria-hidden="true" />
+      <p className="min-w-0 flex-1">
+        <span className="font-medium">For: </span>
+        {chosen.label}{chosen.table ? ` · Table ${chosen.table}` : ""}
+      </p>
+      {!fixedEventId && events.length > 1 && (
+        <button type="button" onClick={() => setStage("event")} className="inline-flex min-h-9 items-center rounded px-2 text-sm text-primary underline underline-offset-4 outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
+          Change event
+        </button>
+      )}
+    </div>
+  ) : null;
+
+  if (stage === "event") {
+    return (
+      <Frame>
+        <div className="mx-auto w-full max-w-2xl">
+          <h2 className="font-display text-xl font-semibold">Which event is this problem for?</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Candidates answer your problem for this event, and your meetings happen there.</p>
+          {events.length === 0 ? (
+            <div className="mt-6 rounded-xl border border-dashed p-8 text-center">
+              <p className="font-display text-lg font-semibold">No event to publish to yet</p>
+              <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">You can publish a problem once you have accepted an event invitation.</p>
+              <Link href="/company/events" className={`${buttonVariants()} mt-4`}>Go to Events</Link>
+            </div>
+          ) : (
+            <ul className="mt-4 space-y-2">
+              {events.map((e) => (
+                <li key={e.id}>
+                  <button
+                    type="button"
+                    onClick={() => chooseEvent(e)}
+                    className="w-full rounded-xl border border-border bg-card p-4 text-left outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50"
+                  >
+                    <span className="block font-medium">{e.label}</span>
+                    <span className="mt-1 block text-sm text-muted-foreground">
+                      {e.table ? `Table ${e.table} · ` : ""}{e.used} of 3 problems · deadline {e.deadline}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </Frame>
+    );
   }
 
   if (stage === "generating") {
@@ -165,6 +237,7 @@ export function IntakeFlow({
   if (stage === "edit" && editor) {
     return (
       <Frame step={5} scroll>
+        {banner}
         <h1 ref={previewHeadingRef} tabIndex={-1} className="font-display text-2xl font-semibold outline-none">
           Check your problem card
         </h1>
@@ -197,20 +270,6 @@ export function IntakeFlow({
         <div className="mt-8 grid gap-10 lg:grid-cols-2">
           <div>
             <CardEditor state={editor} onChange={setEditor} />
-            <div className="mt-8">
-              <EventSelect
-                id="f-event"
-                events={events}
-                value={eventId}
-                onChange={(next) => {
-                  // Keep the decide-by date in step when it simply followed the old event's date.
-                  const from = events.find((e) => e.id === eventId)?.date;
-                  const to = events.find((e) => e.id === next)?.date;
-                  if (to && goal.decideBy === from) setGoal({ ...goal, decideBy: to });
-                  setEventId(next);
-                }}
-              />
-            </div>
             <section aria-labelledby="goal-h" className="mt-6 rounded-xl border border-border bg-card p-4">
               <h2 id="goal-h" className="font-display text-lg font-semibold">Your goal for this problem</h2>
               <p className="mb-4 mt-1 text-sm text-muted-foreground">What you promise to the people who answer.</p>
@@ -282,6 +341,7 @@ export function IntakeFlow({
         </div>
       </div>
     }>
+      {banner}
       <div className="mx-auto mt-auto w-full max-w-2xl space-y-3" role="log" aria-label="Conversation">
         <Bubble who="ai">
           Hi! Five short questions, and I&apos;ll turn your answers into a problem card that talent can respond to.

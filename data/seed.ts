@@ -1,5 +1,5 @@
 // Synthetic seed data. Every person and company here is fictional.
-import type { DB, Account, Activity, Availability, Closure, Company, HiringGoal, ProblemCard, Shortlist, Meeting, Talent, Response } from "@/lib/types";
+import type { DB, Account, Activity, Availability, Closure, Company, HiringGoal, Participation, ProblemCard, Shortlist, Meeting, Talent, Response } from "@/lib/types";
 import { localNow, placeFor } from "@/lib/slots";
 
 const companies: Company[] = [
@@ -144,12 +144,11 @@ const talents: Talent[] = [
 
 interface R {
   id: string; code: string; card: string; talent: string; text: string; date: string;
-  lang?: string; tr?: string; ai?: boolean;
+  lang?: string; ai?: boolean;
 }
 const mk = (r: R): Response => ({
   id: r.id, publicCode: r.code, cardId: r.card, talentId: r.talent, text: r.text,
   originalLanguage: r.lang ?? "English",
-  ...(r.tr ? { translatedText: r.tr } : {}),
   aiAssisted: r.ai ?? false,
   createdAt: `2026-11-${r.date}T12:00:00.000Z`,
 });
@@ -164,9 +163,8 @@ const responses: Response[] = [
     text: "I ran a goods-in warehouse for six years, and scanners lie in predictable ways: dirty lenses, a cable that only fails when the forklift passes. I would first log every reading next to the operator's own verdict for one shift, then look for sensors that disagree with people in the same direction every time. Those are probably hardware, not batteries. I would fix one cable problem quickly so the operators see their feedback matters." }),
   mk({ id: "r-c2", code: "B3", card: "card-cleantech", talent: "t-priya", date: "19",
     text: "I left a physics PhD after two years of calibrating noisy detectors, which is roughly this problem. I would start by plotting each sensor generation separately and checking whether the oddities cluster by device, time of day or battery type. If they cluster by device it is the instrument. I would also ask the leavers' old colleagues what the sensors were meant to do and write that down, even if it is only half remembered." }),
-  mk({ id: "r-c3", code: "C2", card: "card-cleantech", talent: "t-ville", date: "20", lang: "Finnish", ai: true,
-    text: "Olen työskennellyt sähköasentajana ja huoltotehtävissä kahdeksan vuotta. Menisin ensin linjalle ja katsoisin, miten operaattorit käyttävät mittareita oikeasti. Tarkistaisin kaapeloinnit ja liittimet ennen kuin epäilisin dataa, koska kymmenen ongelmasta kahdeksan on yleensä johdoissa. Sen jälkeen kirjaisin viikon lukemat ja vertaisin niitä operaattorien arvioihin.",
-    tr: "I have worked as an electrician and in maintenance roles for eight years. I would go to the line first and watch how the operators really use the readings. I would check the cabling and connectors before suspecting the data, because eight problems in ten are usually in the wires. After that I would log a week of readings and compare them with the operators' judgements." }),
+  mk({ id: "r-c3", code: "C2", card: "card-cleantech", talent: "t-ville", date: "20", ai: true,
+    text: "I have worked as an electrician and in maintenance roles for eight years. I would go to the line first and watch how the operators really use the readings. I would check the cabling and connectors before suspecting the data, because eight problems in ten are usually in the wires. After that I would log a week of readings and compare them with the operators' judgements." }),
   mk({ id: "r-c4", code: "D5", card: "card-cleantech", talent: "t-noor", date: "20",
     text: "I think data quality is really important and I would look at the sensors and try to make the data better. Communication with the team is key. I am a quick learner and would work hard to understand the problem." }),
   mk({ id: "r-c5", code: "F1", card: "card-cleantech", talent: "t-kasper", date: "21", text: FLUFF_1 }),
@@ -178,16 +176,13 @@ const responses: Response[] = [
     text: "I am a returning parent and my kids play puzzle games on whatever old phone is in the drawer. I would borrow three cheap phones and play level 12 with a stopwatch, because slow loading on old devices feels like difficulty. Then I would ask five people who quit what they were doing just before, since 'too hard' is often really 'I was interrupted and lost my place'." }),
   mk({ id: "r-g2", code: "B6", card: "card-game", talent: "t-yuki", date: "14",
     text: "Two things are happening at once, so I would try to pull them apart. Compare players on fast and slow devices at level 12: if only the slow ones quit, it is loading. If both quit, look at the recordings for the same repeated mistake. I did this once on a bootcamp project for a quiz app and the answer was a confusing hint button, not difficulty." }),
-  mk({ id: "r-g3", code: "C9", card: "card-game", talent: "t-sofia", date: "14", lang: "Spanish", ai: true,
-    text: "Jugaría el nivel 12 yo misma en tres teléfonos y anotaría exactamente dónde me desespero. Después hablaría con jugadores que lo dejaron, sin preguntar si era difícil, solo qué hacían en ese momento. Trabajé años como profesora, así que sé que la gente casi nunca dice la causa real a la primera.",
-    tr: "I would play level 12 myself on three phones and note exactly where I get frustrated. Then I would talk to players who stopped, not asking whether it was hard, just what they were doing at that moment. I worked for years as a teacher, so I know people almost never give the real cause the first time." }),
+  mk({ id: "r-g3", code: "C9", card: "card-game", talent: "t-sofia", date: "14", ai: true,
+    text: "I would play level 12 myself on three phones and note exactly where I get frustrated. Then I would talk to players who stopped, not asking whether it was hard, just what they were doing at that moment. I worked for years as a teacher, so I know people almost never give the real cause the first time." }),
   mk({ id: "r-g4", code: "D1", card: "card-game", talent: "t-tomas", date: "15",
     text: "I love games and I think the key is the player experience. I would look at the analytics and see what players want. Good design makes players happy." }),
 
   // ---- card-game2 ----
-  mk({ id: "r-h1", code: "A4", card: "card-game2", talent: "t-carmen", date: "20", lang: "Spanish",
-    text: "He trabajado como traductora técnica y el problema casi siempre es que no vemos la pantalla. Pediría capturas de los diez textos que más se rompen y una lista de cuántos caracteres caben en cada botón. Una comprobación automática de longitud, con margen para alemán y finés, probablemente evitaría la mayoría de errores.",
-    tr: "I have worked as a technical translator and the problem is almost always that we do not see the screen. I would ask for screenshots of the ten strings that break most and a list of how many characters fit in each button. An automatic length check, with room for German and Finnish, would probably prevent most errors." }),
+  mk({ id: "r-h1", code: "A4", card: "card-game2", talent: "t-carmen", date: "20", text: "I have worked as a technical translator and the problem is almost always that we do not see the screen. I would ask for screenshots of the ten strings that break most and a list of how many characters fit in each button. An automatic length check, with room for German and Finnish, would probably prevent most errors." }),
   mk({ id: "r-h2", code: "B8", card: "card-game2", talent: "t-ivan", date: "20",
     text: "I would sort the last three releases' bugs into overflow, missing placeholders and wrong context. In my last job in a support team I did the same with tickets and one cause was 60 percent of everything. I expect here a quick script that flags strings over a length budget or missing a placeholder would be the cheapest first step." }),
   mk({ id: "r-h3", code: "C3", card: "card-game2", talent: "t-hanna", date: "21", lang: "Finnish",
@@ -196,9 +191,8 @@ const responses: Response[] = [
   // ---- card-medtech ----
   mk({ id: "r-m1", code: "A5", card: "card-medtech", talent: "t-liisa", date: "11",
     text: "I worked nights as a care assistant for five years, so I know the sound of an alarm you stop hearing. I would ask nurses to talk me through the last shift: which beeps made them move and which made them sigh. Then I would compare that list with the logs to find the alarms nobody acts on. I would not remove any of them, only suggest which to look at more closely with clinicians." }),
-  mk({ id: "r-m2", code: "B1", card: "card-medtech", talent: "t-olena", date: "12", lang: "Ukrainian", ai: true,
-    text: "Я працювала медсестрою в Харкові, тому добре знаю втому від сигналів. Спочатку я б пройшла одну зміну в палаті й записала, на які тривоги реагують одразу, а які просто вимикають. Потім я порівняла б це з журналами пристрою. Важливо нічого не приховувати без клінічного погодження, а лише показати, де шум найбільший.",
-    tr: "I worked as a nurse in Kharkiv, so I know alarm fatigue well. First I would follow one ward shift and write down which alarms people respond to immediately and which they just switch off. Then I would compare this with the device logs. It is important not to hide anything without clinical agreement, only to show where the noise is greatest." }),
+  mk({ id: "r-m2", code: "B1", card: "card-medtech", talent: "t-olena", date: "12", ai: true,
+    text: "I worked as a nurse in Kharkiv, so I know alarm fatigue well. First I would follow one ward shift and write down which alarms people respond to immediately and which they just switch off. Then I would compare this with the device logs. It is important not to hide anything without clinical agreement, only to show where the noise is greatest." }),
   mk({ id: "r-m3", code: "C7", card: "card-medtech", talent: "t-elias", date: "12",
     text: "I come from technical writing for aircraft maintenance, where a warning that is ignored is also a design problem. I would collect the alarm texts and sort them by what action the nurse should take. If two alarms look the same but need different actions, that is where mistakes happen. I would draft clearer wording and test it with two or three nurses." }),
   mk({ id: "r-m4", code: "D4", card: "card-medtech", talent: "t-amara", date: "13",
@@ -209,17 +203,13 @@ const responses: Response[] = [
     text: "I ran a small bookkeeping firm and I know why people stall at bank connection: they do not have the login to hand, or they fear giving access. I would tag tickets by that single question first, 'was the person blocked by trust, by a missing credential, or by an error?'. Three piles will tell you more than reading everything twice." }),
   mk({ id: "r-s2", code: "B5", card: "card-saas", talent: "t-joonas", date: "15",
     text: "Bootcamp grad, but before that I worked in a phone shop for four years, so I read confused customers for a living. I would export tickets to a spreadsheet and read the first line of each, label it, then count. In the customer calls I would watch them click through onboarding silently and only ask afterwards where they hesitated." }),
-  mk({ id: "r-s3", code: "C6", card: "card-saas", talent: "t-sofia", date: "16", lang: "Spanish",
-    text: "Como profesora de adultos aprendí que las personas dicen 'no funciona' cuando no entienden el siguiente paso. Agruparía los tickets según lo que la persona intentaba hacer, no según lo que escribió. Después pediría ver la pantalla de dos clientes mientras conectan el banco, porque ahí se ven las dudas.",
-    tr: "As an adult-education teacher I learned that people say 'it does not work' when they do not understand the next step. I would group tickets by what the person was trying to do, not by what they wrote. Then I would ask to see two customers' screens while they connect the bank, because that is where the doubts show.",
+  mk({ id: "r-s3", code: "C6", card: "card-saas", talent: "t-sofia", date: "16", text: "As an adult-education teacher I learned that people say 'it does not work' when they do not understand the next step. I would group tickets by what the person was trying to do, not by what they wrote. Then I would ask to see two customers' screens while they connect the bank, because that is where the doubts show.",
     ai: true }),
   mk({ id: "r-s4", code: "D8", card: "card-saas", talent: "t-kasper", date: "16",
     text: "Customer success is about understanding users. I would leverage data to find pain points and collaborate with product to improve the onboarding journey. Listening is key." }),
 
   // ---- card-saas2 ----
-  mk({ id: "r-i1", code: "A6", card: "card-saas2", talent: "t-dmytro", date: "18", lang: "Ukrainian",
-    text: "Я працював бухгалтером і щодня отримував експорти зі старих систем. Я б узяв п'ятдесят файлів і для кожного записав, що саме ламається: об'єднані клітинки, формат дати чи роздільник. Швидше за все, десять причин пояснять майже все. Автоматично я б спочатку виправляв дати й роздільники, бо це найменш ризиковано.",
-    tr: "I worked as an accountant and received exports from old systems every day. I would take the fifty files and for each write down exactly what breaks: merged cells, date format or separator. Most likely ten causes explain nearly everything. I would automate dates and separators first because that is the least risky.",
+  mk({ id: "r-i1", code: "A6", card: "card-saas2", talent: "t-dmytro", date: "18", text: "I worked as an accountant and received exports from old systems every day. I would take the fifty files and for each write down exactly what breaks: merged cells, date format or separator. Most likely ten causes explain nearly everything. I would automate dates and separators first because that is the least risky.",
     ai: true }),
   mk({ id: "r-i2", code: "B2", card: "card-saas2", talent: "t-yuki", date: "19",
     text: "I would build a table: one row per file, one column per problem found. After fifty files the common patterns are obvious. I would keep every fix behind a test that uses the original ugly file, so a new fix cannot silently break an old customer. I have done this kind of cleanup on survey data for a research assistant job." }),
@@ -229,9 +219,7 @@ const responses: Response[] = [
   // ---- card-logistics ----
   mk({ id: "r-l1", code: "A1", card: "card-logistics", talent: "t-mika", date: "17",
     text: "I led a goods-in team and the missing-pallet problem is nearly always at handover: the night shift scans, the day shift moves, nobody scans again. I would walk the whole route from dock door to truck on a night shift and mark where a pallet is put down without a scan. A floor sticker at the awkward corner might fix more than any software." }),
-  mk({ id: "r-l2", code: "B4", card: "card-logistics", talent: "t-ville", date: "17", lang: "Finnish",
-    text: "Olin trukinkuljettajana kuusi vuotta. Tiedän, että lavoja jää väliaikaisesti paikkoihin, joita järjestelmä ei tunne, kun kiire on suuri. Seuraisin yhden lavan matkaa ovelta lähtölavalle ja kirjaisin, missä kohdassa se pysähtyy ilman skannausta. Kysyisin myös kuljettajilta, mihin kohtaan he laittavat lavat silloin, kun paikka on täynnä.",
-    tr: "I was a forklift driver for six years. I know pallets get left temporarily in places the system does not know about when it is busy. I would follow one pallet's journey from the door to the outbound pallet position and note where it stops without a scan. I would also ask drivers where they put pallets when the spot is full.",
+  mk({ id: "r-l2", code: "B4", card: "card-logistics", talent: "t-ville", date: "17", text: "I was a forklift driver for six years. I know pallets get left temporarily in places the system does not know about when it is busy. I would follow one pallet's journey from the door to the outbound pallet position and note where it stops without a scan. I would also ask drivers where they put pallets when the spot is full.",
     ai: true }),
   mk({ id: "r-l3", code: "C5", card: "card-logistics", talent: "t-aino", date: "18",
     text: "I would take two shifts, one day and one night, and follow pallets on foot with a notebook. I studied geography and spent a summer counting traffic by hand, which taught me that patterns appear only if you watch for a long time. My first proposal would be one marked drop zone for pallets waiting for a truck." }),
@@ -243,9 +231,7 @@ const responses: Response[] = [
     text: "I repaired vacuum equipment for a living, so I would look at the cups first: worn lips and cheap hoses cause half of all grip problems. Then I would fix the test: same twenty parcels, same lighting, and every pick logged as pass or fail with a photo. Only after that I would change one thing at a time, such as softer cups for plastic bags." }),
   mk({ id: "r-b2", code: "B7", card: "card-robotics", talent: "t-priya", date: "21",
     text: "Because the failures are noisy, I would decide before testing how many picks I need per condition, say two hundred, so I do not chase luck. I would run wet and dry parcels in alternating order to avoid the humidity drifting during the day. A research background taught me that a fair test matters more than a clever fix." }),
-  mk({ id: "r-b3", code: "C4", card: "card-robotics", talent: "t-carmen", date: "21", lang: "Spanish",
-    text: "Soy ingeniera mecánica y he trabajado en un taller de prototipos. Montaría una mesa de pruebas con veinte paquetes difíciles y registraría cada intento con vídeo. Probaría primero cambiar el ángulo de aproximación, porque es gratis, y después ventosas más blandas para las bolsas brillantes.",
-    tr: "I am a mechanical engineer and have worked in a prototype workshop. I would set up a test table with twenty difficult parcels and record every attempt on video. I would try changing the approach angle first because it is free, and then softer cups for the glossy bags.",
+  mk({ id: "r-b3", code: "C4", card: "card-robotics", talent: "t-carmen", date: "21", text: "I am a mechanical engineer and have worked in a prototype workshop. I would set up a test table with twenty difficult parcels and record every attempt on video. I would try changing the approach angle first because it is free, and then softer cups for the glossy bags.",
     ai: true }),
 ];
 
@@ -355,6 +341,29 @@ function buildActivity(): Activity[] {
   return out;
 }
 
+/**
+ * Every company with problems in ev-1 / ev-2 is confirmed there, at the table it has always had
+ * (its index among those companies, in company order). Plus one open invitation: Kiertovolt to ev-3.
+ */
+function buildParticipations(): Participation[] {
+  const out: Participation[] = [];
+  const tablesOf: Record<string, number> = { "ev-1": 6, "ev-2": 4 };
+  for (const eventId of ["ev-1", "ev-2"]) {
+    const inEvent = companies.filter((c) => cards.some((k) => k.companyId === c.id && k.eventId === eventId));
+    inEvent.forEach((c, i) => {
+      out.push({
+        id: `pa-${eventId}-${c.id}`, eventId, companyId: c.id, status: "confirmed", table: (i % tablesOf[eventId]) + 1,
+        invitedAt: "2026-10-20T09:00:00.000Z", respondedAt: "2026-10-21T09:00:00.000Z",
+      });
+    });
+  }
+  out.push({
+    id: "pa-ev-3-co-cleantech", eventId: "ev-3", companyId: "co-cleantech", status: "invited",
+    invitedAt: "2026-11-13T09:00:00.000Z", note: "We'd love a clean-tech problem at the International Talent Evening.",
+  });
+  return out;
+}
+
 export const seed: DB = {
   accounts,
   companies,
@@ -364,14 +373,15 @@ export const seed: DB = {
   shortlists,
   meetings,
   events: [
-    { id: "ev-1", name: "Espoo Tech Talent Day", date: "2026-12-05", startTime: "10:00", endTime: "14:00", slotMinutes: 10, tables: 6, venue: "Otaniemi Hall A (demo venue)", focus: "Software, games, data and robotics" },
-    { id: "ev-2", name: "Espoo Green Transition Jobs Morning", date: "2026-12-10", startTime: "09:00", endTime: "12:00", slotMinutes: 10, tables: 4, venue: "Keilaniemi Pavilion (demo venue)", focus: "Clean-tech, logistics and health tech" },
-    { id: "ev-3", name: "Espoo International Talent Evening", date: "2027-01-21", startTime: "16:00", endTime: "19:00", slotMinutes: 10, tables: 4, venue: "Espoo Centre Library Hall (demo venue)", focus: "Any field; English-friendly teams" },
+    { id: "ev-1", name: "Espoo Tech Talent Day", date: "2026-12-05", startTime: "10:00", endTime: "14:00", slotMinutes: 10, tables: 6, venue: "Otaniemi Hall A (demo venue)", stage: "open", problemDeadline: "2026-11-21", focus: "Software, games, data and robotics" },
+    { id: "ev-2", name: "Espoo Green Transition Jobs Morning", date: "2026-12-10", startTime: "09:00", endTime: "12:00", slotMinutes: 10, tables: 4, venue: "Keilaniemi Pavilion (demo venue)", stage: "open", problemDeadline: "2026-11-26", focus: "Clean-tech, logistics and health tech" },
+    { id: "ev-3", name: "Espoo International Talent Evening", date: "2027-01-21", startTime: "16:00", endTime: "19:00", slotMinutes: 10, tables: 4, venue: "Espoo Centre Library Hall (demo venue)", stage: "open", problemDeadline: "2027-01-07", focus: "Any field; English-friendly teams" },
   ],
   feedback: [],
   closures,
   activity: buildActivity(),
   availability: [],
+  participations: buildParticipations(),
 };
 
 /**

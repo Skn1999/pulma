@@ -21,8 +21,12 @@ export function navFor(account: Account, db: DB): NavItem[] {
     );
     const shortlisted = new Set(db.shortlists.map((s) => s.responseId));
     const fresh = db.responses.filter((r) => cardIds.has(r.cardId) && !shortlisted.has(r.id)).length;
+    const invitations = db.participations.filter(
+      (p) => p.companyId === account.companyId && p.status === "invited" && db.events.find((e) => e.id === p.eventId)?.stage !== "draft",
+    ).length;
     return [
       withBadge({ href: "/company", label: "Problems", icon: "LayoutGrid" }, fresh),
+      withBadge({ href: "/company/events", label: "Events", icon: "CalendarDays" }, invitations),
       { href: "/company/intake", label: "New problem", icon: "SquarePlus" },
       { href: "/company/meetings", label: "Meetings", icon: "CalendarClock" },
       { href: "/event", label: "Event day", icon: "CalendarDays" },

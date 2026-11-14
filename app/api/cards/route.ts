@@ -3,15 +3,17 @@ import { apiAccount } from "@/lib/session";
 import { getDB, mutate, newId } from "@/lib/store";
 import { logActivity } from "@/lib/activity";
 import { defaultGoal, isOpen } from "@/lib/deadlines";
-import { defaultEvent, eventById, upcomingEvents } from "@/lib/events";
+import { eventById, eventOf } from "@/lib/events";
+import { canPublishTo, visibleToCandidates } from "@/lib/participation";
 import { nowMs } from "@/lib/clock";
 import { parseGoal } from "@/lib/goal-input";
 import type { CardDraft, Format, ProblemCard } from "@/lib/types";
 
 export async function GET() {
   const db = getDB();
+  const now = nowMs();
   const cards = db.cards
-    .filter((c) => isOpen(c))
+    .filter((c) => isOpen(c) && visibleToCandidates(eventOf(db, c), now))
     .map((c) => ({ ...c, company: db.companies.find((co) => co.id === c.companyId) }));
   return NextResponse.json(cards);
 }
@@ -31,9 +33,11 @@ export async function POST(req: Request) {
   if (!title) return NextResponse.json({ error: "title required" }, { status: 400 });
   const format: Format = d.format === "onsite" || d.format === "online" || d.format === "hybrid" ? d.format : "hybrid";
   const db0 = getDB();
-  const eventId = body?.eventId === undefined || body.eventId === null || body.eventId === "" ? defaultEvent(db0).id : String(body.eventId);
+  const eventId = body?.eventId === undefined || body.eventId === null ? "" : String(body.eventId);
   const ev = eventById(db0, eventId);
-  if (!ev || !upcomingEvents(db0, nowMs()).some((e) => e.id === eventId)) return NextResponse.json({ error: "Pick an upcoming event." }, { status: 400 });
+  if (!ev) return NextResponse.json({ error: "Pick an event first." }, { status: 400 });
+  const can = canPublishTo(db0, companyId, eventId, nowMs());
+  if (!can.ok) return NextResponse.json({ error: can.reason }, { status: 400 });
   let goal = undefined as ProblemCard["goal"];
   if (body?.goal !== undefined && body.goal !== null) {
     const parsed = parseGoal(body.goal, defaultGoal(db0, ev));

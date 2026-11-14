@@ -2,7 +2,8 @@ import { notFound, redirect } from "next/navigation";
 import { goalOf } from "@/lib/deadlines";
 import { getDB } from "@/lib/store";
 import { nowMs } from "@/lib/clock";
-import { eventLabel, eventOf, upcomingEvents } from "@/lib/events";
+import { eventLabel, eventOf, sortedEvents } from "@/lib/events";
+import { canPublishTo } from "@/lib/participation";
 import { meetingMode, meetingStatus } from "@/lib/slots";
 import { getCompanyId } from "@/lib/persona";
 import { TriageView, type ReviewMeta } from "@/components/company/triage-view";
@@ -33,8 +34,8 @@ export default async function CompanyCardPage({ params, searchParams }: { params
   // Keyed on the selected answer so opening a notification link while already on this page
   // remounts the view with that answer selected (and its list freshly loaded).
   const ev = eventOf(db, card);
-  // The current event stays in the list even if it has passed, so the select always shows the truth.
-  const choices = [...upcomingEvents(db, nowMs())];
+  // Only events this company may publish to, plus the current one so the select always shows the truth.
+  const choices = sortedEvents(db).filter((e) => canPublishTo(db, companyId, e.id, nowMs()).ok);
   if (!choices.some((e) => e.id === ev.id)) choices.unshift(ev);
   const locked = db.meetings.some((m) => m.cardId === id && meetingMode(m) === "event" && meetingStatus(m) === "booked");
   return (

@@ -3,6 +3,9 @@ import { notFound } from "next/navigation";
 import { getDB } from "@/lib/store";
 import { getTalentId } from "@/lib/persona";
 import { isOpen } from "@/lib/deadlines";
+import { eventOf } from "@/lib/events";
+import { nowMs } from "@/lib/clock";
+import { ANSWERS_CLOSED, eventTakesAnswers, visibleToCandidates } from "@/lib/participation";
 import { CardStateBanner } from "@/components/talent/card-state-banner";
 import { relatedSkillLabels } from "@/lib/skills";
 import { ResponseForm } from "@/components/talent/response-form";
@@ -31,6 +34,18 @@ export default async function AnswerPage({ params }: { params: Promise<{ id: str
   }
   const talent = db.talents.find((t) => t.id === talentId);
   const company = db.companies.find((c) => c.id === card.companyId);
+  if (!mine && !visibleToCandidates(eventOf(db, card), nowMs())) notFound();
+  if (!eventTakesAnswers(db, card, nowMs())) {
+    return (
+      <div className="mx-auto max-w-md px-4 py-10 text-center">
+        <p className="font-display text-xl">{ANSWERS_CLOSED}</p>
+        <p className="mt-2 text-sm text-muted-foreground">The event is locked, so answers can&apos;t be added or edited now.</p>
+        <Link href={`/talent/card/${card.id}`} className="mt-4 inline-flex min-h-11 items-center rounded-lg bg-primary px-5 text-sm font-medium text-primary-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring">
+          Back to the problem
+        </Link>
+      </div>
+    );
+  }
   if (!isOpen(card)) {
     return (
       <div className="mx-auto max-w-md px-4 py-10">
@@ -51,7 +66,7 @@ export default async function AnswerPage({ params }: { params: Promise<{ id: str
       companyName={company?.name ?? ""}
       relatedSkills={relatedSkillLabels(talent?.skills, card.skills)}
       defaultLanguage={talent?.preferredLanguage ?? "English"}
-      existing={mine ? { id: mine.id, text: mine.text, language: mine.originalLanguage, translatedText: mine.translatedText, aiAssisted: mine.aiAssisted } : undefined}
+      existing={mine ? { id: mine.id, text: mine.text, language: mine.originalLanguage, aiAssisted: mine.aiAssisted } : undefined}
     />
   );
 }

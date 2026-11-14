@@ -3,6 +3,8 @@ import { apiAccount } from "@/lib/session";
 import { getDB, mutate } from "@/lib/store";
 import { logActivity } from "@/lib/activity";
 import { cardState } from "@/lib/deadlines";
+import { eventOf } from "@/lib/events";
+import { participationOf } from "@/lib/participation";
 import { FILLED_REASONS, PAUSE_REASONS, type CardStateReason } from "@/lib/types";
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -23,6 +25,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     if (typeof b.reason !== "string" || !allowed.includes(b.reason))
       return NextResponse.json({ error: "Please choose one of the listed reasons" }, { status: 400 });
     reason = b.reason as CardStateReason;
+  }
+  if (state === "open" && participationOf(db0, eventOf(db0, card).id, card.companyId)?.status === "withdrawn") {
+    return NextResponse.json({ error: "Your company is no longer taking part in this event, so this problem can't reopen." }, { status: 409 });
   }
   if (cardState(card) === state && card.stateReason === reason) return NextResponse.json(card);
   const kind = state === "paused" ? "card_paused" : state === "filled" ? "card_filled" : "card_reopened";

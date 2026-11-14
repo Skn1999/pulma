@@ -27,11 +27,11 @@ function makeDb(): DB {
     ],
     shortlists: [],
     meetings: [],
-    events: [{ id: "e", name: "E", date: "2026-12-05", startTime: "10:00", endTime: "14:00", slotMinutes: 10, tables: 6, venue: "Hall (demo venue)" }],
+    events: [{ id: "e", name: "E", date: "2026-12-05", startTime: "10:00", endTime: "14:00", slotMinutes: 10, tables: 6, venue: "Hall (demo venue)", stage: "open" as const, problemDeadline: "2026-11-21" }],
     feedback: [],
     closures: [],
     activity: [],
-    availability: [],
+    availability: [], participations: [],
   };
 }
 const company: Account = { id: "a1", email: "c@x", role: "company", displayName: "Boss", companyId: "co1", createdAt: "" };

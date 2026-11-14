@@ -35,7 +35,7 @@ export default async function AnswerPage({ params }: { params: Promise<{ id: str
         <MatchThread responseId={r.id} viewer="talent" />
         <section aria-labelledby="preview-h">
           <h2 id="preview-h" className="mb-2 text-sm font-semibold">What {company?.name} will see</h2>
-          <AnswerPreview a={{ code: r.publicCode, text: r.text, translatedText: r.translatedText, originalLanguage: r.originalLanguage, aiAssisted: r.aiAssisted }} />
+          <AnswerPreview a={{ code: r.publicCode, text: r.text, originalLanguage: r.originalLanguage, aiAssisted: r.aiAssisted }} />
         </section>
         {sl?.status === "invited" && (
           <Link href="/talent/inbox" className="inline-flex min-h-11 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring">

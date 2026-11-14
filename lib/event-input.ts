@@ -1,13 +1,20 @@
 // Validation for a new event. Pure: `now` is passed in.
 import type { Event } from "./types";
 
-export type ParsedEvent = Pick<Event, "name" | "date" | "startTime" | "endTime" | "tables" | "venue" | "focus">;
+export type ParsedEvent = Pick<Event, "name" | "date" | "startTime" | "endTime" | "tables" | "venue" | "focus" | "problemDeadline" | "description">;
 
 const TIME = /^([01]\d|2[0-3]):([0-5]\d)$/;
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 function helsinkiToday(now: number): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Helsinki", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(now));
+}
+
+/** "YYYY-MM-DD" minus n days. */
+export function minusDays(date: string, n: number): string {
+  const d = new Date(`${date}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() - n);
+  return d.toISOString().slice(0, 10);
 }
 
 const str = (v: unknown) => (typeof v === "string" ? v.trim() : "");
@@ -30,5 +37,14 @@ export function parseEventInput(body: unknown, now: number): { ok: true; event: 
   if (venue.length < 3 || venue.length > 120) return { ok: false, error: "Add a venue (3 to 120 characters)." };
   const focus = str(b.focus);
   if (focus.length > 120) return { ok: false, error: "Keep the focus to one line (120 characters)." };
-  return { ok: true, event: { name, date, startTime, endTime, tables, venue, ...(focus ? { focus } : {}) } };
+  const rawDeadline = str(b.problemDeadline);
+  const problemDeadline = rawDeadline || minusDays(date, 14);
+  if (!DATE.test(problemDeadline) || Number.isNaN(Date.parse(`${problemDeadline}T00:00:00Z`))) return { ok: false, error: "Pick a valid problem deadline." };
+  if (problemDeadline > date) return { ok: false, error: "The problem deadline can't be after the event." };
+  const description = str(b.description);
+  if (description.length > 400) return { ok: false, error: "Keep the description to 400 characters." };
+  return {
+    ok: true,
+    event: { name, date, startTime, endTime, tables, venue, problemDeadline, ...(focus ? { focus } : {}), ...(description ? { description } : {}) },
+  };
 }

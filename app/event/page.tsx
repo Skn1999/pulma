@@ -4,7 +4,7 @@ import { buildTimetable } from "@/components/event/build-timetable";
 import { CompanyDay, TalentDay, EmptyDay, ScheduleNotice } from "@/components/event/my-day";
 import { fmtDay, fmtTime } from "@/components/event/format";
 import { getDB } from "@/lib/store";
-import { buildSchedule, companiesInEvent } from "@/lib/schedule";
+import { buildSchedule, tableOf } from "@/lib/schedule";
 import { getAccount } from "@/lib/session";
 import { nowMs } from "@/lib/clock";
 import { eventLabel, eventsOfCompany, eventsOfTalent, pickEvent, sortedEvents, tablePlace, upcomingEvents } from "@/lib/events";
@@ -22,7 +22,9 @@ export default async function EventPage({ searchParams }: { searchParams: Promis
   let choices = sortedEvents(db);
   if (account?.role === "company") choices = eventsOfCompany(db, account.companyId ?? "");
   else if (account?.role === "talent") choices = eventsOfTalent(db, account.talentId ?? "");
-  if (choices.length === 0) choices = upcomingEvents(db, now).slice(0, 1);
+  // Draft events are the organiser's alone.
+  if (account?.role !== "organiser") choices = choices.filter((e) => e.stage !== "draft");
+  if (choices.length === 0) choices = upcomingEvents(db, now).filter((e) => account?.role === "organiser" || e.stage !== "draft").slice(0, 1);
   const ev = pickEvent(db, choices, asked, now) ?? sortedEvents(db)[0];
   const schedule = buildSchedule(db, ev.id);
 
@@ -53,7 +55,7 @@ export default async function EventPage({ searchParams }: { searchParams: Promis
     title = "Event day";
     const companyId = account.companyId ?? "";
     const company = db.companies.find((c) => c.id === companyId);
-    const idx = companiesInEvent(db, ev.id).indexOf(companyId);
+    const table = tableOf(db, ev.id, companyId);
     const mine = schedule.slots.filter((s) => s.companyId === companyId);
     const unscheduled = schedule.unscheduled.filter((id) => {
       const m = meetingById.get(id);
@@ -62,7 +64,7 @@ export default async function EventPage({ searchParams }: { searchParams: Promis
     body = (
       <CompanyDay
         companyName={company?.name ?? "your company"}
-        table={idx >= 0 ? (idx % ev.tables) + 1 : null}
+        table={table ?? null}
         where={eventLabel(ev)}
         unscheduled={unscheduled}
         rows={mine.map((s) => ({

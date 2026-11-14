@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { ArrowLeft, CalendarDays, CirclePause, Undo2, ChevronDown, Clock, Eye, FileText, Hourglass, Languages, RotateCcw, Sparkles, XCircle } from "lucide-react";
+import { ArrowLeft, CalendarDays, CirclePause, Undo2, ChevronDown, Clock, Eye, FileText, Hourglass, RotateCcw, Sparkles, XCircle } from "lucide-react";
 import { CLOSURE_REASONS, type BlindResponse, type Company, type HiringGoal, type ProblemCard } from "@/lib/types";
 import { shortDate } from "@/lib/next-steps";
 import { goalLine, replyPromise } from "@/lib/promise-text";
@@ -30,7 +30,7 @@ type Tab = "all" | "open" | "shortlisted" | "accepted" | "closed";
 const NO_REASON = "";
 
 function firstLine(r: BlindResponse) {
-  const t = (r.translatedText ?? r.text).trim().split("\n")[0];
+  const t = r.text.trim().split("\n")[0];
   return t.length > 90 ? t.slice(0, 90) + "…" : t;
 }
 
@@ -83,7 +83,6 @@ export function TriageView({
   const [tab, setTab] = useState<Tab>("all");
   const [selectedId, setSelectedId] = useState<string | null>(initialSelected ?? null);
   const [mobileOpen, setMobileOpen] = useState(!!initialSelected);
-  const [showOriginal, setShowOriginal] = useState<Record<string, boolean>>({});
   const [cardOpen, setCardOpen] = useState(false);
   const [closing, setClosing] = useState<BlindResponse[] | null>(null);
   const [reason, setReason] = useState<string>(NO_REASON);
@@ -478,11 +477,6 @@ export function TriageView({
                             <span className="sr-only">AI-assisted wording</span>
                           </span>
                         )}
-                        {r.translatedText && (
-                          <span className="inline-flex items-center gap-0.5 text-[11px] text-muted-foreground">
-                            <Languages className="size-3" aria-hidden="true" /> Translated
-                          </span>
-                        )}
                         {sl && (
                           <span className="ml-auto rounded-full border px-1.5 text-[11px] font-medium">
                             {STATUS_LABEL[sl.status]}
@@ -527,8 +521,6 @@ export function TriageView({
               full={full}
               cardOpen={cardOpenState}
               busy={busy === selected.id}
-              showOriginal={!!showOriginal[selected.id]}
-              onShowOriginal={(v) => setShowOriginal((s) => ({ ...s, [selected.id]: v }))}
               now={now}
               onReinvite={() => void reinvite(selected)}
               onToggle={() => void toggle(selected)}
@@ -671,7 +663,7 @@ function MessageField({
 }
 
 function Reader({
-  r, name, full, cardOpen, busy, now, onReinvite, showOriginal, onShowOriginal, onToggle, onClose, onReopen, onSee, onNote, onMessage, onBack,
+  r, name, full, cardOpen, busy, now, onReinvite, onToggle, onClose, onReopen, onSee, onNote, onMessage, onBack,
 }: {
   r: BlindResponse;
   name?: string;
@@ -680,8 +672,6 @@ function Reader({
   busy: boolean;
   now: number;
   onReinvite: () => void;
-  showOriginal: boolean;
-  onShowOriginal: (v: boolean) => void;
   onToggle: () => void;
   onClose: () => void;
   onReopen: () => void;
@@ -711,30 +701,7 @@ function Reader({
         </p>
       )}
 
-      {r.translatedText ? (
-        <>
-          <p className="mt-4 flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            Translated from {r.originalLanguage}
-            <button
-              type="button"
-              aria-expanded={showOriginal}
-              onClick={() => onShowOriginal(!showOriginal)}
-              className="rounded text-xs normal-case underline underline-offset-4 outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              {showOriginal ? "Hide original" : "Show original"}
-            </button>
-          </p>
-          <p className="mt-2 whitespace-pre-line leading-7">{r.translatedText}</p>
-          {showOriginal && (
-            <p className="mt-3 whitespace-pre-line border-l-2 pl-3 leading-7 text-muted-foreground">
-              <span className="sr-only">Original text in {r.originalLanguage}: </span>
-              {r.text}
-            </p>
-          )}
-        </>
-      ) : (
-        <p className="mt-4 whitespace-pre-line leading-7">{r.text}</p>
-      )}
+      <p className="mt-4 whitespace-pre-line leading-7">{r.text}</p>
 
       <div className="mt-6 flex flex-wrap items-center gap-3 border-t pt-4">
         <Button

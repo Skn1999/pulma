@@ -5,8 +5,8 @@ import { slotOptions } from "./slots";
 import { parseEventInput } from "./event-input";
 import type { DB, Event, Meeting, ProblemCard, Response } from "./types";
 
-const ev1: Event = { id: "ev-1", name: "Tech Day", date: "2026-12-05", startTime: "10:00", endTime: "11:00", slotMinutes: 10, tables: 2, venue: "Hall A (demo venue)" };
-const ev2: Event = { id: "ev-2", name: "Green Morning", date: "2026-12-10", startTime: "09:00", endTime: "10:00", slotMinutes: 10, tables: 2, venue: "Pavilion (demo venue)" };
+const ev1: Event = { id: "ev-1", name: "Tech Day", date: "2026-12-05", startTime: "10:00", endTime: "11:00", slotMinutes: 10, tables: 2, venue: "Hall A (demo venue)", stage: "open" as const, problemDeadline: "2026-11-21" };
+const ev2: Event = { id: "ev-2", name: "Green Morning", date: "2026-12-10", startTime: "09:00", endTime: "10:00", slotMinutes: 10, tables: 2, venue: "Pavilion (demo venue)", stage: "open" as const, problemDeadline: "2026-11-21" };
 
 const companies = [
   { id: "co1", name: "One", sector: "Clean-tech", size: "10", about: "" },
@@ -25,7 +25,7 @@ const meeting = (id: string, cardId: string, responseId: string): Meeting => ({ 
 function makeDb(over: Partial<DB> = {}): DB {
   return {
     accounts: [], companies, cards: [], talents: [], responses: [], shortlists: [], meetings: [], events: [ev2, ev1],
-    feedback: [], closures: [], activity: [], availability: [], ...over,
+    feedback: [], closures: [], activity: [], availability: [], participations: [], ...over,
   };
 }
 

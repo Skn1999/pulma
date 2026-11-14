@@ -64,3 +64,13 @@ After a company shortlists an answer and the candidate accepts, an event-day mee
 - Olena can tick up to 3 of her four skills under the card ("Show up to 3 of your skills on this card"); the company then sees them on the card, and only those.
 - Links: **Meetings** → "Your event card" (candidate), the booked-meeting panel in the thread (both sides), and the event-day "My day" rows.
 - Print: the card page has a "Print this card" button; the app header and buttons are hidden when printing.
+
+## Events run by the organiser
+The event team now decides which companies take part. Companies do not pick an event by themselves.
+- **Event team** (events@talentday.example) → **Events**: each event shows a stage (Draft, Open, Locked, Done), its problem deadline and "N of M tables taken". Open an event with **Manage**.
+- **Employers** tab → **Invite companies**: tick one or more companies, add an optional message, send. A company can only be invited while the event has a free table.
+- **Overview** tab: the one next step ("Open the event", then "Lock the event", then "Mark as done"), the problem deadline, a description and the needs timeline. Locking blocks new problems, answers, invitations and table changes. **New events start as drafts**: companies and candidates cannot see a draft.
+- **Kiertovolt** (hiring@kiertovolt.example) → **Events** (the nav shows a "1" badge): the invitation to the International Talent Evening, with the event team's message. **Accept** gives it a table. Then **Publish a problem** opens the intake already set to that event ("For: … · Table N"). A company can publish up to 3 problems per event, until the problem deadline.
+- Switch to a candidate (Olena): the new problem shows under Explore. Switch back to the Event team: the **Problems** tab lists it, and **Employers** shows Kiertovolt as Confirmed with its table (you can move it to another free table).
+- After **Lock the event**, a candidate sees "Answers for this event have closed." on that event's problems.
+- Existing demo companies are already confirmed for the events their problems belong to. Use **Reset demo data** (Overview) to get the pending Kiertovolt invitation back.

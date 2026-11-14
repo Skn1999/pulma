@@ -25,7 +25,7 @@ function persist(db: DB) {
 
 /** Older data shapes are re-seeded rather than migrated (demo data only). */
 function isCurrentShape(db: DB): boolean {
-  return [db.accounts, db.closures, db.activity, db.availability, db.events].every(Array.isArray) && db.events.length > 0;
+  return [db.accounts, db.closures, db.activity, db.availability, db.events, db.participations].every(Array.isArray) && db.events.length > 0;
 }
 
 export function getDB(): DB {

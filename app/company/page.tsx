@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { nowMs } from "@/lib/clock";
 import { getDB } from "@/lib/store";
-import { eventDay, eventOf } from "@/lib/events";
+import { eventDay, eventLabel, eventOf, sortedEvents } from "@/lib/events";
+import { eventStage, participationOf } from "@/lib/participation";
+import { StageBadge } from "@/components/events/stage-badge";
+import type { HiringGoal, ProblemCard } from "@/lib/types";
 import { requireAccount } from "@/lib/session";
 import { goalOf, goalProgress } from "@/lib/deadlines";
 import { nextSteps, shortDate } from "@/lib/next-steps";
@@ -40,6 +43,15 @@ export default async function CompanyHome() {
     };
   });
 
+  const groups = sortedEvents(db)
+    .map((event) => ({
+      event,
+      stage: eventStage(event, now),
+      table: participationOf(db, event.id, companyId)?.table,
+      rows: rows.filter((r) => r.event.id === event.id),
+    }))
+    .filter((g) => g.rows.length > 0);
+
   return (
     <div>
       <PageTitle
@@ -58,16 +70,48 @@ export default async function CompanyHome() {
         <div className="m-6 rounded-lg border border-dashed p-10 text-center">
           <p className="font-display text-xl font-semibold">No problems yet</p>
           <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-            Describe something your team is stuck on. It takes about five minutes, and people answer in their own words.
+            Accept an event invitation, then describe something your team is stuck on. It takes about five minutes, and people answer in their own words.
           </p>
           <Link href="/company/intake" className={`${buttonVariants({ size: "lg" })} mt-5`}>
             Bring your first problem
           </Link>
         </div>
       ) : (
+        <div className="space-y-8 py-4">
+          {groups.map(({ event, stage, table, rows: groupRows }) => (
+            <section key={event.id} aria-labelledby={`g-${event.id}`}>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 sm:px-6">
+                <h2 id={`g-${event.id}`} className="font-display text-lg font-semibold">{eventLabel(event)}</h2>
+                <StageBadge stage={stage} />
+              </div>
+              <p className="mt-1 px-4 text-sm text-muted-foreground sm:px-6">
+                {table ? `Table ${table} · ` : ""}Problem deadline {eventDay(event.problemDeadline)}
+              </p>
+              <ProblemsTable rows={groupRows} caption={`Your problems for ${event.name}. Select a title to review its answers.`} />
+            </section>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+type Row = {
+  card: ProblemCard;
+  goal: HiringGoal;
+  progress: ReturnType<typeof goalProgress>;
+  answers: number;
+  fresh: number;
+  open: number;
+  shortlisted: number;
+  accepted: number;
+};
+
+function ProblemsTable({ rows, caption }: { rows: Row[]; caption: string }) {
+  return (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[900px] text-sm">
-            <caption className="sr-only">Your problems. Select a title to review its answers.</caption>
+            <caption className="sr-only">{caption}</caption>
             <thead>
               <tr className="border-b text-left text-xs uppercase tracking-wide text-muted-foreground">
                 <th scope="col" className="px-4 py-2 font-medium sm:px-6">Problem</th>
@@ -83,7 +127,7 @@ export default async function CompanyHome() {
               </tr>
             </thead>
             <tbody>
-              {rows.map(({ card, event, goal, progress, answers, fresh, open, shortlisted, accepted }) => (
+              {rows.map(({ card, goal, progress, answers, fresh, open, shortlisted, accepted }) => (
                 <tr key={card.id} className="group relative border-b last:border-0 hover:bg-muted/50 focus-within:bg-muted/50">
                   <th scope="row" className="px-4 py-3 text-left font-medium sm:px-6">
                     <Link
@@ -92,7 +136,6 @@ export default async function CompanyHome() {
                     >
                       {card.title}
                     </Link>
-                    <span className="mt-0.5 block text-xs font-normal text-muted-foreground">{event.name} · {eventDay(event.date)}</span>
                   </th>
                   <td className="px-3 py-3">
                     <span className="rounded-full border px-2 py-0.5 text-xs">
@@ -132,7 +175,5 @@ export default async function CompanyHome() {
             </tbody>
           </table>
         </div>
-      )}
-    </div>
   );
 }

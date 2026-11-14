@@ -15,11 +15,11 @@ function makeDb(): DB {
     responses: [{ id: "r1", publicCode: "A3", cardId: "c1", talentId: "t1", text: "x", originalLanguage: "English", aiAssisted: false, createdAt: "2026-11-02T09:00:00Z" }],
     shortlists: [{ id: "s1", cardId: "c1", responseId: "r1", status: "invited", message: "Loved your approach" }],
     meetings: [],
-    events: [{ id: "e", name: "E", date: "2026-12-05", startTime: "10:00", endTime: "14:00", slotMinutes: 10, tables: 6, venue: "Hall (demo venue)" }],
+    events: [{ id: "e", name: "E", date: "2026-12-05", startTime: "10:00", endTime: "14:00", slotMinutes: 10, tables: 6, venue: "Hall (demo venue)", stage: "open" as const, problemDeadline: "2026-11-21" }],
     feedback: [],
     closures: [],
     activity: [],
-    availability: [],
+    availability: [], participations: [],
   };
 }
 const company: Account = { id: "a1", email: "c@x", role: "company", displayName: "Boss", companyId: "co1", createdAt: "" };

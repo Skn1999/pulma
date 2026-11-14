@@ -50,11 +50,25 @@ export function companiesInEvent(db: DB, eventId: string): string[] {
 }
 
 /**
+ * A company's table at an event: its confirmed participation's table. Only when it has no participation
+ * at all (older data) does the old rule apply: its index among companies with a problem there, modulo tables.
+ * Returns undefined when the company has no table here.
+ */
+export function tableOf(db: DB, eventId: string, companyId: string): number | undefined {
+  const ev = eventById(db, eventId);
+  if (!ev) return undefined;
+  const p = db.participations.find((x) => x.eventId === eventId && x.companyId === companyId);
+  if (p) return p.status === "confirmed" ? p.table : undefined;
+  const idx = companiesInEvent(db, eventId).indexOf(companyId);
+  return idx >= 0 ? (idx % ev.tables) + 1 : undefined;
+}
+
+/**
  * Greedy scheduler. Meetings are processed in id order (deterministic). Each meeting
  * takes the earliest slot where neither its table nor its talent is already busy.
  * Only booked event-day meetings are placed (see filter below).
  * Only meetings whose problem belongs to `eventId` are placed, using that event's times and tables.
- * Each company has one fixed table per event: (index among companies with a problem in that event % tables) + 1.
+ * Each company has one fixed table per event: its confirmed participation's table (see tableOf).
  */
 export function buildSchedule(db: DB, eventId: string): Schedule {
   const ev = eventById(db, eventId);
@@ -76,7 +90,6 @@ export function buildSchedule(db: DB, eventId: string): Schedule {
     })
     .sort((a, b) => byString(a.id, b.id));
 
-  const eventCompanies = companiesInEvent(db, ev.id);
   const tableBusy = new Map<number, Set<number>>();
   const talentBusy = new Map<string, Set<number>>();
   const firstSlotIndex = new Map<string, number>();
@@ -86,14 +99,13 @@ export function buildSchedule(db: DB, eventId: string): Schedule {
   for (const meeting of meetings) {
     const card = cardById.get(meeting.cardId);
     const response = responseById.get(meeting.responseId);
-    const companyIndex = card ? eventCompanies.indexOf(card.companyId) : -1;
+    const table = card ? tableOf(db, ev.id, card.companyId) : undefined;
 
-    if (!card || !response || companyIndex < 0) {
+    if (!card || !response || table === undefined) {
       unscheduled.push(meeting.id);
       continue;
     }
 
-    const table = (companyIndex % ev.tables) + 1;
     const talentId = response.talentId;
     const tBusy = tableBusy.get(table) ?? new Set<number>();
     const pBusy = talentBusy.get(talentId) ?? new Set<number>();

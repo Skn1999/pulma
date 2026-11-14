@@ -33,7 +33,9 @@ export const FILLED_REASONS = [
   "We found someone another way",
   "We solved it inside the team",
 ] as const;
-export type CardStateReason = (typeof PAUSE_REASONS)[number] | (typeof FILLED_REASONS)[number];
+/** Set by the system, never chosen by a company: it left the event. */
+export const WITHDRAWN_REASON = "The company is no longer taking part in this event" as const;
+export type CardStateReason = (typeof PAUSE_REASONS)[number] | (typeof FILLED_REASONS)[number] | typeof WITHDRAWN_REASON;
 
 /**
  * The talent's own goal. PRIVATE: never sent to a company, never used to filter or order anyone.
@@ -116,7 +118,6 @@ export interface Response {
   talentId: string;
   text: string;
   originalLanguage: string; // e.g. "Ukrainian"
-  translatedText?: string;
   aiAssisted: boolean;
   createdAt: string;
   updatedAt?: string; // set when the talent edits the answer before any shortlist
@@ -151,6 +152,10 @@ export interface Meeting {
   lastChange?: { by: "company" | "talent"; kind: "reschedule" | "cancel"; reason: MeetingChangeReason; at: string };
 }
 
+/** draft = organiser only; open = companies publish, candidates answer; locked = no changes; done = over. */
+export type EventStage = "draft" | "open" | "locked" | "done";
+export const MAX_PROBLEMS_PER_EVENT = 3;
+
 export interface Event {
   id: string;
   name: string;
@@ -163,6 +168,21 @@ export interface Event {
   address?: string;
   focus?: string; // one line, e.g. "Software, games, data and robotics"
   createdAt?: string;
+  stage: EventStage;
+  problemDeadline: string; // "YYYY-MM-DD": last day companies can publish a problem
+  description?: string; // ≤400 chars
+}
+
+/** A company's place at an event. The organiser invites; the company accepts or declines. */
+export interface Participation {
+  id: string;
+  eventId: string;
+  companyId: string;
+  status: "invited" | "confirmed" | "declined" | "withdrawn";
+  table?: number; // set when confirmed
+  invitedAt: string; // ISO
+  respondedAt?: string; // ISO
+  note?: string; // the organiser's message, ≤300 chars
 }
 
 export interface Feedback {
@@ -230,7 +250,11 @@ export type ActivityKind =
   | "stepped_back" // talent: my situation changed
   | "reschedule_requested" // company asked the talent to pick a new time
   | "meeting_rescheduled" // talent picked a new time
-  | "meeting_cancelled";
+  | "meeting_cancelled"
+  // v7
+  | "event_invited" // organiser invited a company to an event
+  | "event_joined" // company accepted
+  | "event_declined"; // company declined
 
 /**
  * Append-only log of what happened. Raw rows are NEVER sent to a client: use the
@@ -241,10 +265,11 @@ export interface Activity {
   at: string; // ISO
   kind: ActivityKind;
   actor: Role | "system"; // who did it; "system" = a deadline passed
-  cardId: string;
+  cardId: string; // "" for event-level rows (event_*)
   companyId: string;
   responseId?: string;
   talentId?: string;
+  eventId?: string; // event_* rows
 }
 
 /** One item as a specific viewer is allowed to see it. Safe to send to that viewer. */
@@ -270,6 +295,7 @@ export interface DB {
   closures: Closure[];
   activity: Activity[];
   availability: Availability[];
+  participations: Participation[];
 }
 
 /** What a company is allowed to see in the blind round. No talentId, no identity. */
@@ -278,7 +304,6 @@ export interface BlindResponse {
   publicCode: string;
   text: string;
   originalLanguage: string;
-  translatedText?: string;
   aiAssisted: boolean;
   shortlist?: { status: Shortlist["status"]; note?: string; message?: string; respondBy?: string; expired?: boolean };
   closed?: { id: string; reason?: string };

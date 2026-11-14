@@ -11,7 +11,7 @@ const event: Event = {
   endTime: "11:00",
   slotMinutes: 10,
   tables: 2,
-  venue: "Hall (demo venue)",
+  venue: "Hall (demo venue)", stage: "open" as const, problemDeadline: "2026-11-21",
 };
 
 const companies = [
@@ -68,6 +68,7 @@ function makeDb(overrides: Partial<DB>): DB {
     ...overrides,
     accounts: overrides.accounts ?? [],
     availability: overrides.availability ?? [],
+    participations: overrides.participations ?? [],
   };
 }
 
@@ -167,5 +168,29 @@ describe("buildSchedule", () => {
     const result = buildSchedule(broken, "ev-test");
     expect(result.slots).toHaveLength(0);
     expect(result.unscheduled).toEqual(["mz"]);
+  });
+});
+
+describe("buildSchedule with participations", () => {
+  it("uses the confirmed participation's table, not the index rule", () => {
+    const db = makeDb({
+      cards: [card("c1", "co1")],
+      responses: [response("r1", "c1", "t1", "A1")],
+      meetings: [meeting("m1", "c1", "r1")],
+      participations: [{ id: "p1", eventId: "ev-test", companyId: "co1", status: "confirmed", table: 2, invitedAt: "2026-11-01T09:00:00Z" }],
+    });
+    expect(buildSchedule(db, "ev-test").slots[0].table).toBe(2);
+  });
+
+  it("leaves a meeting unscheduled when the company has a participation that is not confirmed", () => {
+    const db = makeDb({
+      cards: [card("c1", "co1")],
+      responses: [response("r1", "c1", "t1", "A1")],
+      meetings: [meeting("m1", "c1", "r1")],
+      participations: [{ id: "p1", eventId: "ev-test", companyId: "co1", status: "withdrawn", invitedAt: "2026-11-01T09:00:00Z" }],
+    });
+    const s = buildSchedule(db, "ev-test");
+    expect(s.slots).toHaveLength(0);
+    expect(s.unscheduled).toEqual(["m1"]);
   });
 });
