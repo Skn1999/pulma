@@ -29,7 +29,7 @@ function useActive(item: NavItem, all: NavItem[]) {
   return pathOf(item.href).length === longest;
 }
 
-export function NavLink({ item, all, variant }: { item: NavItem; all: NavItem[]; variant: "side" | "tab" }) {
+export function NavLink({ item, all, variant, collapsed }: { item: NavItem; all: NavItem[]; variant: "side" | "tab"; collapsed?: boolean }) {
   const active = useActive(item, all);
   const Icon = ICONS[item.icon] ?? Circle;
   const badge =
@@ -74,8 +74,10 @@ export function NavLink({ item, all, variant }: { item: NavItem; all: NavItem[];
     <Link
       href={item.href}
       aria-current={active ? "page" : undefined}
+      title={collapsed ? item.label : undefined}
       className={cn(
-        "relative flex min-h-10 items-center gap-3 rounded-md px-3 text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
+        "relative flex min-h-10 items-center gap-3 rounded-md text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
+        collapsed ? "justify-center px-0" : "px-3",
         active
           ? "bg-sidebar-accent font-semibold text-sidebar-accent-foreground"
           : "text-muted-foreground hover:bg-muted hover:text-foreground",
@@ -85,9 +87,14 @@ export function NavLink({ item, all, variant }: { item: NavItem; all: NavItem[];
         aria-hidden="true"
         className={cn("absolute inset-y-2 left-0 w-0.5 rounded-r", active ? "bg-primary" : "bg-transparent")}
       />
-      <Icon className="size-4.5 shrink-0" aria-hidden="true" />
-      {item.label}
-      {badge}
+      <span className="relative">
+        <Icon className="size-4.5 shrink-0" aria-hidden="true" />
+        {collapsed && item.badge != null && (
+          <span aria-hidden="true" className="absolute -right-1.5 -top-1.5 size-2.5 rounded-full border-2 border-sidebar bg-primary" />
+        )}
+      </span>
+      <span className={collapsed ? "sr-only" : undefined}>{item.label}</span>
+      {collapsed ? (item.badge != null && <span className="sr-only">, {item.badge} new</span>) : badge}
     </Link>
   );
 }

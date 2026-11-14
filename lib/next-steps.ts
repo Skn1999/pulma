@@ -106,7 +106,6 @@ export function nextSteps(db: DB, account: Account, now: number): NextSteps {
   }
 
   if (account.role === "talent" && account.talentId) {
-    const talent = db.talents.find((t) => t.id === account.talentId);
     const mine = db.responses.filter((r) => r.talentId === account.talentId);
     for (const r of mine) {
       const card = db.cards.find((c) => c.id === r.cardId);
@@ -140,7 +139,6 @@ export function nextSteps(db: DB, account: Account, now: number): NextSteps {
         });
       }
     }
-    if (!talent?.goal) you.push({ id: "goal", text: "Set your goal, so this screen shows what matters to you", href: "/talent/home#goal" });
   }
 
   return { waitingOnYou: you.sort(byDeadline), waitingOnThem: them.sort(byDeadline) };

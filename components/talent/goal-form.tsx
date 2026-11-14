@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Lock } from "lucide-react";
@@ -15,8 +15,19 @@ const STATUSES: { value: TalentGoal["status"]; label: string; hint: string }[] =
 ];
 
 /** The talent's own, private goal. Never sent to a company; it only shapes this screen and the order of your own meeting options. */
-export function GoalForm({ initial }: { initial: TalentGoal | null }) {
+export function GoalForm({
+  initial, onDone, autoFocus,
+}: {
+  initial: TalentGoal | null;
+  /** Called after a save, clear or cancel when the form is shown in place of the goal summary. */
+  onDone?: () => void;
+  autoFocus?: boolean;
+}) {
   const router = useRouter();
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    if (autoFocus) headingRef.current?.focus();
+  }, [autoFocus]);
   const [status, setStatus] = useState<TalentGoal["status"] | "">(initial?.status ?? "");
   const [from, setFrom] = useState(initial?.availableFrom ?? "");
   const [modes, setModes] = useState<MeetMode[]>(initial?.meetModes ?? []);
@@ -47,7 +58,10 @@ export function GoalForm({ initial }: { initial: TalentGoal | null }) {
       setError("Choose where you are right now.");
       return;
     }
-    if (await save({ status, availableFrom: from || undefined, meetModes: modes })) toast.success("Goal saved. Only you can see it.");
+    if (await save({ status, availableFrom: from || undefined, meetModes: modes })) {
+      toast.success("Goal saved. Only you can see it.");
+      onDone?.();
+    }
   }
 
   async function onClear() {
@@ -56,6 +70,7 @@ export function GoalForm({ initial }: { initial: TalentGoal | null }) {
       setFrom("");
       setModes([]);
       toast("Goal cleared");
+      onDone?.();
     }
   }
 
@@ -63,7 +78,9 @@ export function GoalForm({ initial }: { initial: TalentGoal | null }) {
 
   return (
     <section id="goal" aria-labelledby="goal-h" className="scroll-mt-20 rounded-xl border border-border bg-card p-4">
-      <h2 id="goal-h" className="font-display text-lg font-semibold">Your goal</h2>
+      <h2 id="goal-h" ref={headingRef} tabIndex={-1} className="font-display text-lg font-semibold outline-none">
+        {initial ? "Edit your goal" : "Start here: what are you looking for?"}
+      </h2>
       <p className="mt-1 flex items-start gap-1.5 text-sm text-muted-foreground">
         <Lock className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
         Only you see this. Companies never see it, and it never changes who sees your answers.
@@ -119,6 +136,11 @@ export function GoalForm({ initial }: { initial: TalentGoal | null }) {
           {initial && (
             <Button type="button" variant="outline" className="min-h-11 px-5" disabled={busy} onClick={onClear}>
               Clear goal
+            </Button>
+          )}
+          {onDone && (
+            <Button type="button" variant="ghost" className="min-h-11 px-5" disabled={busy} onClick={onDone}>
+              Cancel
             </Button>
           )}
         </div>

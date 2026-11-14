@@ -16,12 +16,14 @@ function initials(name: string) {
 }
 
 export function AccountMenu({
-  displayName, email, role, compact,
+  displayName, email, role, compact, side, align,
 }: {
   displayName: string;
   email: string;
   role: keyof typeof ROLE_LABEL;
   compact?: boolean;
+  side?: "top" | "bottom";
+  align?: "start" | "end";
 }) {
   const router = useRouter();
 
@@ -59,7 +61,7 @@ export function AccountMenu({
           </>
         )}
       </DropdownMenuTrigger>
-      <DropdownMenuContent align={compact ? "end" : "start"} side={compact ? "bottom" : "top"} className="w-64">
+      <DropdownMenuContent align={align ?? (compact ? "end" : "start")} side={side ?? (compact ? "bottom" : "top")} className="w-64">
         <div className="px-2 py-2">
           <p className="truncate text-sm font-medium">{displayName}</p>
           <p className="mt-1 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs">

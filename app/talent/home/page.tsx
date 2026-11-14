@@ -5,6 +5,7 @@ import { nextSteps } from "@/lib/next-steps";
 import { PageTitle } from "@/components/shell/page-title";
 import { NextStepsPanel } from "@/components/next-steps-list";
 import { GoalForm } from "@/components/talent/goal-form";
+import { GoalSummary } from "@/components/talent/goal-summary";
 import { SituationChanged } from "@/components/talent/situation-changed";
 import { isOpen } from "@/lib/deadlines";
 
@@ -27,9 +28,9 @@ export default async function TalentHome() {
     <>
       <PageTitle title={`Hello, ${account.displayName.split(" ")[0]}`} subtitle="What is waiting on you, and what you are waiting for." />
       <div className="mx-auto max-w-3xl space-y-4 px-4 py-4 sm:px-6">
+        {talent?.goal ? <GoalSummary goal={talent.goal} /> : <GoalForm initial={null} />}
         <NextStepsPanel {...steps} />
-        <GoalForm initial={talent?.goal ?? null} />
-        <SituationChanged answers={active} minDate={minDate} />
+        {active.length > 0 && <SituationChanged answers={active} minDate={minDate} />}
       </div>
     </>
   );

@@ -1,5 +1,8 @@
 import type { Account, DB } from "./types";
 
+/** Cookie holding the desktop sidebar state: "collapsed" or "open". */
+export const SIDEBAR_COOKIE = "pulma_sidebar";
+
 export interface NavItem {
   href: string;
   label: string;

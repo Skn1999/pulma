@@ -1,10 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { CalendarClock, Briefcase, Hourglass } from "lucide-react";
+import { Briefcase, Hourglass } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { steppedBackPreview } from "./step-back";
@@ -17,9 +16,13 @@ export interface ActiveAnswer {
 
 type Mode = "role" | "away" | null;
 
-/** "My situation changed": step back from all active answers at once. Reasons are never asked for or stored. */
+/**
+ * "Took a role, or need a break?": step back from all active answers at once, so companies are not left
+ * waiting (the talent side of no ghosting). Reasons are never asked for or stored. Shown only with active answers.
+ */
 export function SituationChanged({ answers, minDate }: { answers: ActiveAnswer[]; minDate: string }) {
   const router = useRouter();
+  const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<Mode>(null);
   const [until, setUntil] = useState("");
   const [busy, setBusy] = useState(false);
@@ -55,27 +58,52 @@ export function SituationChanged({ answers, minDate }: { answers: ActiveAnswer[]
     }
     toast.success(answers.length === 1 ? "You stepped back from 1 answer" : `You stepped back from ${answers.length} answers`);
     setMode(null);
+    setOpen(false);
     router.refresh();
   }
 
-  return (
-    <section aria-labelledby="situation-h" className="rounded-xl border border-border bg-card p-4">
-      <h2 id="situation-h" className="font-display text-lg font-semibold">My situation changed</h2>
-      <p className="mt-1 text-sm text-muted-foreground">Tell the companies you answered, without giving a reason.</p>
-      <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-        <Button type="button" variant={mode === "role" ? "default" : "outline"} aria-pressed={mode === "role"} className="min-h-11 justify-start gap-1.5" disabled={none} onClick={() => { setMode("role"); setError(""); }}>
-          <Briefcase className="size-4" aria-hidden="true" /> I took another role
-        </Button>
-        <Button type="button" variant={mode === "away" ? "default" : "outline"} aria-pressed={mode === "away"} className="min-h-11 justify-start gap-1.5" disabled={none} onClick={() => { setMode("away"); setError(""); }}>
-          <Hourglass className="size-4" aria-hidden="true" /> I&apos;m not available for a while
-        </Button>
-        <Link href="/talent/meetings" className="inline-flex min-h-11 items-center justify-start gap-1.5 rounded-lg border border-input bg-background px-4 text-sm font-medium outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring">
-          <CalendarClock className="size-4" aria-hidden="true" /> I need to move a meeting
-        </Link>
-      </div>
-      {none && <p className="mt-3 text-sm text-muted-foreground">You have no active answers, so there is nothing to step back from.</p>}
+  const companies = new Set(answers.map((a) => a.companyName)).size;
 
-      {mode && !none && (
+  return (
+    <section aria-labelledby="situation-h" className="rounded-lg border border-dashed border-border px-4 py-3">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <div className="min-w-0 flex-1">
+          <h2 id="situation-h" className="text-sm font-medium">Took a role, or need a break?</h2>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            Tell the {companies === 1 ? "company" : `${companies} companies`} you answered that you&apos;re stepping back, so nobody is left
+            waiting on you. You don&apos;t give a reason.
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="min-h-9"
+          aria-expanded={open}
+          aria-controls="situation-panel"
+          onClick={() => { setOpen((o) => !o); setMode(null); setError(""); }}
+        >
+          {open ? "Close" : "Let them know"}
+        </Button>
+      </div>
+
+      {open && (
+        <div id="situation-panel" className="mt-3 space-y-3 border-t pt-3">
+          <fieldset>
+            <legend className="text-sm font-medium">What changed?</legend>
+            <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+              <Button type="button" variant={mode === "role" ? "default" : "outline"} aria-pressed={mode === "role"} className="min-h-11 justify-start gap-1.5" onClick={() => { setMode("role"); setError(""); }}>
+                <Briefcase className="size-4" aria-hidden="true" /> I took another role
+              </Button>
+              <Button type="button" variant={mode === "away" ? "default" : "outline"} aria-pressed={mode === "away"} className="min-h-11 justify-start gap-1.5" onClick={() => { setMode("away"); setError(""); }}>
+                <Hourglass className="size-4" aria-hidden="true" /> I&apos;m not available for a while
+              </Button>
+            </div>
+          </fieldset>
+        </div>
+      )}
+
+      {open && mode && !none && (
         <div className="mt-4 space-y-3 border-t pt-4">
           {mode === "away" && (
             <div>
