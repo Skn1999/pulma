@@ -109,7 +109,7 @@ const CARD_SKILLS: Record<string, string[]> = {
 for (const c of cards) c.skills = CARD_SKILLS[c.id];
 
 const talents: Talent[] = [
-  { id: "t-olena", displayName: "Olena Kovalenko", email: "olena.k@example.com", preferredLanguage: "Ukrainian", skills: [
+  { id: "t-olena", displayName: "Olena Kovalenko", email: "olena.k@example.com", preferredLanguage: "Ukrainian", saved: ["card-robotics"], skills: [
     { label: "Battery data analysis", source: "cv", addedAt: "2026-11-10T10:00:00.000Z" },
     { label: "Python", source: "cv", addedAt: "2026-11-10T10:00:00.000Z" },
     { label: "Cleaning messy sensor data", source: "cv", addedAt: "2026-11-10T10:00:00.000Z" },

@@ -12,6 +12,7 @@ import { ProblemCardView } from "@/components/problem-card";
 import { CardStateBanner } from "@/components/talent/card-state-banner";
 import { AiLabel } from "@/components/ai-label";
 import { RelatedSkills } from "@/components/talent/related-skills";
+import { BookmarkButton } from "@/components/talent/bookmark-button";
 import { relatedSkillLabels } from "@/lib/skills";
 
 export const dynamic = "force-dynamic";
@@ -32,9 +33,12 @@ export default async function TalentCardPage({ params }: { params: Promise<{ id:
   return (
     <div className="pb-24">
       <div className="mx-auto max-w-3xl px-4 pt-2 sm:px-6">
-        <Link href="/talent" className="inline-flex min-h-11 items-center gap-1 text-sm text-primary">
-          <ChevronLeft className="size-4" aria-hidden="true" /> Explore
-        </Link>
+        <div className="flex items-center justify-between">
+          <Link href="/talent" className="inline-flex min-h-11 items-center gap-1 text-sm text-primary">
+            <ChevronLeft className="size-4" aria-hidden="true" /> Explore
+          </Link>
+          <BookmarkButton cardId={card.id} saved={!!db.talents.find((t) => t.id === talentId)?.saved?.includes(card.id)} />
+        </div>
         <CardStateBanner state={cardState(card)} companyName={company?.name ?? "The company"} reason={card.stateReason} />
         <p className="mt-3 text-sm font-medium text-primary">{eventLabel(eventOf(db, card))}</p>
         <ProblemCardView card={card} company={company} />

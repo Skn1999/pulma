@@ -530,3 +530,68 @@ Seed
   note "We'd love a clean-tech problem at the International Talent Evening." (demo: accept, then publish).
 Tests: canPublishTo (each reason), freeTable/seatsLeft, schedule uses participation tables, draft events
 hidden from candidates' card list helper, respond/accept assigns a table.
+
+---
+# v8 — Calmer Explore for candidates (`/talent`)
+Goal: less to process. One glance should tell a candidate which problems are new to them, which they answered,
+which need action, and which are parked or closed. Mobile-first (375px), 44px targets, keyboard, no colour alone.
+
+## Status per problem (lib/candidate-status.ts, pure)
+`candidateStatus(db, talentId, cardId, now) → { kind, label, detail? }`, first match wins:
+1. `invited`  — shortlist "invited" and not expired → label "Invited", detail "Reply by 17 Nov" (action needed)
+2. `meeting`  — shortlist "accepted" → "Meeting booked" (detail: slot/day if booked, else "Pick a time")
+3. `stepped_back` — the talent's answer has `steppedBack` → "Stepped back" (detail "until 12 Jan" if any)
+4. `closed`   — closure on the answer, invite declined/expired, or card not open → "Not this time"
+5. `answered` — the talent has an answer → "Answered", detail "Reply by <reply due>" (or "Overdue" if past)
+6. `saved`    — card id in `Talent.saved` → "Saved"
+7. `new`      — none of the above (no badge)
+Visual treatment (tokens only; each also has an icon + word):
+- invited: primary left rule (4px) + filled primary badge "Invited · Reply by …" — the only loud one.
+- meeting: primary outline badge with CalendarCheck.
+- answered: accent badge with CheckCircle2; tile otherwise normal.
+- saved: Bookmark icon badge (accent).
+- stepped_back: muted badge with PauseCircle; tile at reduced emphasis (muted text, no shadow).
+- closed: muted badge with XCircle; tile at reduced emphasis.
+- new: no badge.
+
+## Saved for later (candidate-private)
+- `Talent.saved?: string[]` (card ids, max 50). PUT `/api/saved` `{cardId, saved: boolean}` (talent only, card
+  must exist). Never shown to companies or organisers.
+- A Bookmark toggle button on every tile (grid and list) and on the card detail page: aria-pressed,
+  aria-label "Save for later" / "Remove from saved". Tiles must not nest interactive elements inside a link:
+  use an `<article>` with the title as the link (stretched-link pattern via `after:absolute after:inset-0`) and
+  the bookmark button above it (`relative z-10`).
+
+## Layout: grid or list
+- `?view=list` | default grid. A two-button segmented control (LayoutGrid / List icons, text labels visible on
+  ≥sm, sr-only on phones, aria-pressed). Keep other params when switching.
+- Grid tile (trimmed): status badge (if any) + bookmark; company · sector (one line); title; context (2 lines);
+  one meta line: event short label "Tech Talent Day · Sat 5 Dec"; chips: needed languages only + format;
+  "Uses your skills: …" only when there are matches; "Help for international hires" as ONE small chip
+  ("International support") with the full list in `title` + sr-only text. Remove the 4-line promise block from
+  tiles; keep one line "Replies within N days" only. (The full promise and record stay on the card page.)
+- List row: one line on desktop / two lines on phones: title (link), company, event day, status badge,
+  bookmark. No context, no chips.
+
+## Filters (replace the four chip rows)
+- Always visible, one row: a **status** segmented filter `?show=` — All · To answer (status new or saved) ·
+  Answered (answered, invited, meeting) · Saved — plus a "Filters" button with a count of active filters, the
+  sort select and the layout toggle.
+- "Filters" opens a panel (Dialog on phones as a bottom sheet is fine; a popover/sheet on desktop) with
+  groups: Event, Sector, Language, Format, and checkboxes "International support" (`?intl=1`) and
+  "Uses my skills" (`?skills=1`, only when the talent has skills). Radio-style per group (one value, as now),
+  "Clear all", "Show N problems". Applying writes URL params (`router.replace`, scroll false).
+- Active filters show as removable chips under the bar ("Clean-tech ✕"), so state is visible without opening.
+- Sort: a small select "Newest" | "Uses my skills" (only with skills) — replaces the sort chip row.
+- Counts: "7 problems" (one short line). Empty state: "No problems match." + "Clear filters".
+
+## Remove explainer text that adds no value
+- PageTitle subtitle → none (title "Explore" only).
+- Remove "Only you see this. Every problem stays listed." (move that sentence into the Filters panel next to
+  "Uses my skills", where it explains the control).
+- Remove the always-on "Add your skills…" link; instead the Filters panel shows it when the talent has no skills.
+- Keep sr-only labels where needed.
+
+## Tests
+- candidateStatus: each kind and its priority (invited beats answered; closed beats answered; saved only
+  when unanswered). Saved list never appears in company-facing payloads (blind responses / company thread).

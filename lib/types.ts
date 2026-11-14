@@ -117,6 +117,7 @@ export interface Talent {
   preferredLanguage?: string;
   goal?: TalentGoal; // private to the talent
   skills?: TalentSkill[]; // private to the talent: never sent to a company or organiser
+  saved?: string[]; // card ids saved for later (max 50). PRIVATE: never sent to a company or organiser
 }
 
 /** A skill the talent chose to keep, phrased as work. PRIVATE. The CV it came from is never stored. */
