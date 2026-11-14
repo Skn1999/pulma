@@ -2,12 +2,74 @@
 
 export type Format = "onsite" | "online" | "hybrid";
 
+/** How two people can meet. "event" = a 10-minute table slot on the event day. */
+export type MeetMode = "event" | "office" | "video";
+export const MEET_MODES: MeetMode[] = ["event", "office", "video"];
+export const MEET_MODE_LABEL: Record<MeetMode, string> = {
+  event: "Event day table",
+  office: "Office visit",
+  video: "Video call",
+};
+
+/**
+ * The company's stated goal for one problem. It is a PUBLIC promise: talent see the reply promise
+ * and decide-by date on the card. It drives deadlines and next steps, never who is shown.
+ */
+export interface HiringGoal {
+  decideBy: string; // "YYYY-MM-DD"
+  replyWithinDays: number; // 1–14: every answer gets a reply (shortlist or "not this time") within this
+  inviteDays: number; // 1–7: how long an invite stays open before it expires
+  meetModes: MeetMode[]; // non-empty
+}
+
+export type CardState = "open" | "paused" | "filled";
+export const PAUSE_REASONS = [
+  "Budget is on hold",
+  "Team priorities changed",
+  "We need to rethink the problem",
+] as const;
+export const FILLED_REASONS = [
+  "We found someone through Pulma",
+  "We found someone another way",
+  "We solved it inside the team",
+] as const;
+export type CardStateReason = (typeof PAUSE_REASONS)[number] | (typeof FILLED_REASONS)[number];
+
+/**
+ * The talent's own goal. PRIVATE: never sent to a company, never used to filter or order anyone.
+ * It only shapes the talent's own home screen and which meeting options are offered first.
+ */
+export interface TalentGoal {
+  status: "active" | "open" | "exploring"; // actively looking / open to the right thing / just exploring
+  availableFrom?: string; // "YYYY-MM-DD"
+  meetModes: MeetMode[]; // ways the talent is happy to meet (may be empty = any)
+  updatedAt: string;
+}
+
+/** A window when a company can meet outside the event day. Times are local, "YYYY-MM-DDTHH:MM:00" without Z. */
+export interface Availability {
+  id: string;
+  companyId: string;
+  mode: Exclude<MeetMode, "event">;
+  start: string;
+  end: string;
+}
+
+export const MEETING_CHANGE_REASONS = [
+  "Something urgent came up",
+  "I'm unwell",
+  "Travel or transport problem",
+  "A clash in my calendar",
+] as const;
+export type MeetingChangeReason = (typeof MEETING_CHANGE_REASONS)[number];
+
 export interface Company {
   id: string;
   name: string;
   sector: string; // e.g. "Clean-tech"
   size: string; // e.g. "40 people"
   about: string;
+  office?: string; // fictional visiting address for office meetings
 }
 
 export interface ProblemCard {
@@ -23,6 +85,10 @@ export interface ProblemCard {
   format: Format;
   status: "draft" | "published";
   createdAt: string; // ISO
+  goal?: HiringGoal; // missing on old data: use goalOf() from lib/deadlines.ts for defaults
+  state?: CardState; // missing = "open". Paused/filled cards take no new answers.
+  stateReason?: CardStateReason; // fixed list, chosen by a human
+  stateAt?: string; // ISO, when state last changed
 }
 
 export interface Talent {
@@ -30,6 +96,7 @@ export interface Talent {
   displayName: string;
   email: string; // fake
   preferredLanguage?: string;
+  goal?: TalentGoal; // private to the talent
 }
 
 export interface Response {
@@ -43,6 +110,8 @@ export interface Response {
   aiAssisted: boolean;
   createdAt: string;
   updatedAt?: string; // set when the talent edits the answer before any shortlist
+  /** The talent stepped back ("my situation changed"). The reason is NOT stored; only an optional return date, which the company may see. */
+  steppedBack?: { at: string; until?: string };
 }
 
 export interface Shortlist {
@@ -52,14 +121,22 @@ export interface Shortlist {
   status: "invited" | "accepted" | "declined";
   note?: string; // private to the company
   message?: string; // optional one line from the company to the talent, shown with the invite (≤200 chars)
+  createdAt?: string; // ISO
+  respondBy?: string; // ISO; invite expires after this if still "invited" (see inviteStatus in lib/deadlines.ts)
 }
 
 export interface Meeting {
   id: string;
   cardId: string;
   responseId: string;
-  slotStart: string; // ISO, assigned by schedule
-  table: number; // 1-based
+  slotStart: string; // local "YYYY-MM-DDTHH:MM:00". Event meetings: assigned by schedule. Others: picked by the talent.
+  table: number; // 1-based; event meetings only (0 otherwise)
+  mode?: MeetMode; // missing = "event" (older data)
+  /** pending = accepted, waiting for the talent to pick a time; reschedule = the company asked for a new time. Missing = booked. */
+  status?: "pending" | "booked" | "reschedule" | "cancelled";
+  durationMin?: number; // 10 for event, 30 for office/video
+  place?: string; // office address or (fake) video link
+  lastChange?: { by: "company" | "talent"; kind: "reschedule" | "cancel"; reason: MeetingChangeReason; at: string };
 }
 
 export interface Event {
@@ -126,7 +203,18 @@ export type ActivityKind =
   | "answer_closed"
   | "answer_reopened"
   | "meeting_scheduled"
-  | "mutual_next_step";
+  | "mutual_next_step"
+  // v5
+  | "reply_overdue" // system: the company's reply promise passed for an answer
+  | "invite_expired" // system: an invite passed its respondBy
+  | "reinvited" // company re-opened an expired invite
+  | "card_paused"
+  | "card_filled"
+  | "card_reopened"
+  | "stepped_back" // talent: my situation changed
+  | "reschedule_requested" // company asked the talent to pick a new time
+  | "meeting_rescheduled" // talent picked a new time
+  | "meeting_cancelled";
 
 /**
  * Append-only log of what happened. Raw rows are NEVER sent to a client: use the
@@ -136,7 +224,7 @@ export interface Activity {
   id: string;
   at: string; // ISO
   kind: ActivityKind;
-  actor: Role; // who did it
+  actor: Role | "system"; // who did it; "system" = a deadline passed
   cardId: string;
   companyId: string;
   responseId?: string;
@@ -165,6 +253,7 @@ export interface DB {
   feedback: Feedback[];
   closures: Closure[];
   activity: Activity[];
+  availability: Availability[];
 }
 
 /** What a company is allowed to see in the blind round. No talentId, no identity. */
@@ -175,8 +264,10 @@ export interface BlindResponse {
   originalLanguage: string;
   translatedText?: string;
   aiAssisted: boolean;
-  shortlist?: { status: Shortlist["status"]; note?: string; message?: string };
+  shortlist?: { status: Shortlist["status"]; note?: string; message?: string; respondBy?: string; expired?: boolean };
   closed?: { id: string; reason?: string };
+  replyDue?: string; // ISO; the company's reply promise for this answer
+  steppedBack?: { until?: string };
 }
 
 /** Problem card fields the AI generates from the intake. */

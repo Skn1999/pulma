@@ -89,11 +89,11 @@ export function MatchThread({ responseId, viewer = "talent" }: { responseId: str
         </section>
       )}
 
-      {t.meeting && (
+      {t.meeting && t.meeting.status === "booked" && t.meeting.start && (
         <section className="rounded-lg border border-primary/40 bg-accent p-3" aria-labelledby="thread-meeting">
           <h3 id="thread-meeting" className="text-sm font-semibold">Meeting booked</h3>
           <p className="mt-1 text-sm">
-            Table {t.meeting.table} · {fmt(t.meeting.start)}
+            {t.meeting.table ? `Table ${t.meeting.table} · ` : ""}{fmt(t.meeting.start)}
             {t.counterpartName ? ` · with ${t.counterpartName}` : ""}
           </p>
         </section>

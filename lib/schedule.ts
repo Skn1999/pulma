@@ -44,6 +44,7 @@ function byString(a: string, b: string): number {
 /**
  * Greedy scheduler. Meetings are processed in id order (deterministic). Each meeting
  * takes the earliest slot where neither its table nor its talent is already busy.
+ * Only booked event-day meetings are placed (see filter below).
  * Each company has one fixed table: (index in db.companies % tables) + 1.
  */
 export function buildSchedule(db: DB): Schedule {
@@ -55,7 +56,11 @@ export function buildSchedule(db: DB): Schedule {
   const cardById = new Map(db.cards.map((c) => [c.id, c]));
   const responseById = new Map(db.responses.map((r) => [r.id, r]));
 
-  const meetings = [...db.meetings].sort((a, b) => byString(a.id, b.id));
+  // Only event-day meetings that are booked. Office/video meetings have their own picked times, and
+  // pending / rescheduling / cancelled meetings hold no table slot.
+  const meetings = db.meetings
+    .filter((m) => (m.mode ?? "event") === "event" && (m.status === undefined || m.status === "booked"))
+    .sort((a, b) => byString(a.id, b.id));
 
   const tableBusy = new Map<number, Set<number>>();
   const talentBusy = new Map<string, Set<number>>();

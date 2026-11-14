@@ -76,6 +76,7 @@ const db: DB = {
   feedback: [],
   closures: [],
   activity: [],
+  availability: [],
 };
 
 describe("getStats", () => {

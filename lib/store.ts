@@ -1,8 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
-import { seed } from "@/data/seed";
+import { addRelativeSeed, seed } from "@/data/seed";
 import type { DB } from "./types";
 import { buildSchedule } from "./schedule";
+import { sweepDeadlines } from "./sweep";
 
 const FILE = path.join(process.cwd(), "data", "db.json");
 const memoryOnly = !!process.env.VERCEL;
@@ -31,7 +32,7 @@ export function getDB(): DB {
       db = undefined;
     }
   }
-  if (db && (!Array.isArray(db.accounts) || !Array.isArray(db.closures) || !Array.isArray(db.activity))) db = undefined; // older db.json: re-seed
+  if (db && (!Array.isArray(db.accounts) || !Array.isArray(db.closures) || !Array.isArray(db.activity) || !Array.isArray(db.availability))) db = undefined; // older db.json: re-seed
   if (!db) {
     db = freshDB();
     persist(db);
@@ -75,6 +76,7 @@ function shiftSeedIntoPast(db: DB): void {
     ...db.closures.map((c) => c.createdAt),
     ...db.activity.map((a) => a.at),
     ...db.accounts.map((a) => a.createdAt),
+    ...db.shortlists.map((s) => s.createdAt ?? ""),
   ].filter(Boolean);
   const latest = Math.max(...stamps.map((s) => Date.parse(s)).filter((n) => !Number.isNaN(n)));
   const target = Date.now() - 60 * 60 * 1000;
@@ -89,15 +91,21 @@ function shiftSeedIntoPast(db: DB): void {
   for (const c of db.closures) c.createdAt = shift(c.createdAt);
   for (const a of db.activity) a.at = shift(a.at);
   for (const a of db.accounts) a.createdAt = shift(a.createdAt);
+  for (const s of db.shortlists) if (s.createdAt) s.createdAt = shift(s.createdAt);
+  for (const c of db.cards) if (c.stateAt) c.stateAt = shift(c.stateAt);
+  for (const r of db.responses) if (r.steppedBack) r.steppedBack.at = shift(r.steppedBack.at);
 }
 
 function freshDB(): DB {
   const db = structuredClone(seed) as DB;
+  const now = Date.now();
   shiftSeedIntoPast(db);
+  addRelativeSeed(db, now);
   applySchedule(db);
+  sweepDeadlines(db, now, "due"); // deadlines already passed in seed history, dated when they passed
   // Start with a clean bell: only activity from now on counts as new.
-  const now = new Date().toISOString();
-  for (const a of db.accounts) a.notificationsSeenAt = now;
+  const seenAt = new Date(now).toISOString();
+  for (const a of db.accounts) a.notificationsSeenAt = seenAt;
   return db;
 }
 

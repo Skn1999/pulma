@@ -19,6 +19,7 @@ function makeDb(): DB {
     feedback: [],
     closures: [],
     activity: [],
+    availability: [],
   };
 }
 const company: Account = { id: "a1", email: "c@x", role: "company", displayName: "Boss", companyId: "co1", createdAt: "" };

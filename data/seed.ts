@@ -1,13 +1,14 @@
 // Synthetic seed data. Every person and company here is fictional.
-import type { DB, Account, Activity, Closure, Company, ProblemCard, Shortlist, Meeting, Talent, Response } from "@/lib/types";
+import type { DB, Account, Activity, Availability, Closure, Company, HiringGoal, ProblemCard, Shortlist, Meeting, Talent, Response } from "@/lib/types";
+import { localNow, placeFor } from "@/lib/slots";
 
 const companies: Company[] = [
-  { id: "co-game", name: "Nordlight Games", sector: "Games", size: "35 people", about: "A small studio in Otaniemi making cooperative mobile puzzle games played by a few hundred thousand people." },
-  { id: "co-cleantech", name: "Kiertovolt", sector: "Clean-tech", size: "40 people", about: "Keilaniemi start-up that recovers metals from used EV batteries and sells the recovered material back to cell makers." },
-  { id: "co-medtech", name: "Pulssi Medical", sector: "Medtech", size: "120 people", about: "Makes bedside monitoring devices for hospital wards, with a design lab in Otaniemi." },
-  { id: "co-saas", name: "Ledgerleaf", sector: "B2B SaaS", size: "60 people", about: "Accounting automation software for small and mid-sized Nordic businesses." },
-  { id: "co-logistics", name: "Karavaani Freight", sector: "Logistics", size: "220 people", about: "Regional freight and warehousing company with a large cross-dock depot near Espoo." },
-  { id: "co-robotics", name: "Tarmo Robotics", sector: "Robotics", size: "18 people", about: "Otaniemi spin-out building robotic arms that sort parcels in small warehouses." },
+  { id: "co-game", name: "Nordlight Games", sector: "Games", size: "35 people", about: "A small studio in Otaniemi making cooperative mobile puzzle games played by a few hundred thousand people.", office: "Nordlight Games, Studio 2, Otakaari 99 B, Espoo (demo address)" },
+  { id: "co-cleantech", name: "Kiertovolt", sector: "Clean-tech", size: "40 people", about: "Keilaniemi start-up that recovers metals from used EV batteries and sells the recovered material back to cell makers.", office: "Kiertovolt, Hall C reception, Keilaranta 99, Espoo (demo address)" },
+  { id: "co-medtech", name: "Pulssi Medical", sector: "Medtech", size: "120 people", about: "Makes bedside monitoring devices for hospital wards, with a design lab in Otaniemi.", office: "Pulssi Medical design lab, Tietotie 99, Espoo (demo address)" },
+  { id: "co-saas", name: "Ledgerleaf", sector: "B2B SaaS", size: "60 people", about: "Accounting automation software for small and mid-sized Nordic businesses.", office: "Ledgerleaf, 4th floor, Keilaniementie 99, Espoo (demo address)" },
+  { id: "co-logistics", name: "Karavaani Freight", sector: "Logistics", size: "220 people", about: "Regional freight and warehousing company with a large cross-dock depot near Espoo.", office: "Karavaani Freight depot, Gate 3, Varastotie 99, Espoo (demo address)" },
+  { id: "co-robotics", name: "Tarmo Robotics", sector: "Robotics", size: "18 people", about: "Otaniemi spin-out building robotic arms that sort parcels in small warehouses.", office: "Tarmo Robotics, Lab 0.12, Otaniementie 99, Espoo (demo address)" },
 ];
 
 const cards: ProblemCard[] = [
@@ -19,6 +20,7 @@ const cards: ProblemCard[] = [
     hardPart: "Nobody wrote down what the sensors were supposed to measure, and the people who set them up have left. Some oddities are real batteries behaving strangely, others are broken cables, and we cannot yet tell which is which.",
     niceToHave: ["Has worked with noisy hardware data", "Comfortable standing on a shop floor", "Can explain findings to non-technical operators"],
     languages: ["English", "Finnish"], languagesNeeded: ["English"], format: "onsite", status: "published", createdAt: "2026-11-14T09:30:00.000Z",
+    goal: { decideBy: "2026-12-12", replyWithinDays: 7, inviteDays: 3, meetModes: ["event", "office", "video"] } satisfies HiringGoal,
   },
   {
     id: "card-game", companyId: "co-game",
@@ -28,6 +30,7 @@ const cards: ProblemCard[] = [
     hardPart: "The level is hard and slow at once, and the two effects are tangled together. A fix for one can easily hide the other.",
     niceToHave: ["Has watched people use something and learned from it", "Likes puzzle games"],
     languages: ["English"], languagesNeeded: ["English"], format: "hybrid", status: "published", createdAt: "2026-11-12T14:10:00.000Z",
+    goal: { decideBy: "2026-12-10", replyWithinDays: 5, inviteDays: 3, meetModes: ["event", "video"] } satisfies HiringGoal,
   },
   {
     id: "card-game2", companyId: "co-game",
@@ -37,6 +40,8 @@ const cards: ProblemCard[] = [
     hardPart: "Translators work in a spreadsheet without seeing the screen, and the developers cannot read most of the languages.",
     niceToHave: ["Speaks or writes a language other than English or Finnish", "Has done QA of any kind"],
     languages: ["English", "Finnish"], languagesNeeded: ["English"], format: "online", status: "published", createdAt: "2026-11-19T10:00:00.000Z",
+    goal: { decideBy: "2026-12-19", replyWithinDays: 7, inviteDays: 3, meetModes: ["video"] } satisfies HiringGoal,
+    state: "paused", stateReason: "Team priorities changed", stateAt: "2026-11-22T09:00:00.000Z",
   },
   {
     id: "card-medtech", companyId: "co-medtech",
@@ -46,6 +51,7 @@ const cards: ProblemCard[] = [
     hardPart: "Fewer alarms is not automatically safer. We need to cut noise without ever hiding something critical, and the people who know the truth are very busy.",
     niceToHave: ["Has worked in a care, hospital or emergency setting", "Experience writing safety-sensitive instructions"],
     languages: ["English", "Finnish", "Swedish"], languagesNeeded: ["English", "Finnish"], format: "onsite", status: "published", createdAt: "2026-11-10T08:45:00.000Z",
+    goal: { decideBy: "2026-12-05", replyWithinDays: 4, inviteDays: 3, meetModes: ["event", "office"] } satisfies HiringGoal,
   },
   {
     id: "card-saas", companyId: "co-saas",
@@ -55,6 +61,7 @@ const cards: ProblemCard[] = [
     hardPart: "Customers describe symptoms, not causes. 'It does not work' can mean five different things, and the loudest complaints are rarely the most common.",
     niceToHave: ["Has taught or trained non-experts", "Comfortable with spreadsheets or basic SQL"],
     languages: ["English", "Finnish"], languagesNeeded: ["English"], format: "hybrid", status: "published", createdAt: "2026-11-13T11:20:00.000Z",
+    goal: { decideBy: "2026-12-08", replyWithinDays: 5, inviteDays: 3, meetModes: ["event", "video"] } satisfies HiringGoal,
   },
   {
     id: "card-saas2", companyId: "co-saas",
@@ -64,6 +71,7 @@ const cards: ProblemCard[] = [
     hardPart: "Every fix for one customer's file risks breaking another's, and customers do not tell us what their old system was.",
     niceToHave: ["Has cleaned up messy data before", "Patience with edge cases"],
     languages: ["English"], languagesNeeded: ["English"], format: "online", status: "published", createdAt: "2026-11-17T13:40:00.000Z",
+    goal: { decideBy: "2026-12-15", replyWithinDays: 7, inviteDays: 3, meetModes: ["video"] } satisfies HiringGoal,
   },
   {
     id: "card-logistics", companyId: "co-logistics",
@@ -73,6 +81,7 @@ const cards: ProblemCard[] = [
     hardPart: "The scanning process looks fine on paper. The gaps are in habits, shift handovers and a few awkward corners of the building, so they only show up if you watch.",
     niceToHave: ["Has worked on a warehouse, shop or factory floor", "Can talk to a night shift and a manager on the same day"],
     languages: ["English", "Finnish"], languagesNeeded: ["English", "Finnish"], format: "onsite", status: "published", createdAt: "2026-11-16T07:55:00.000Z",
+    goal: { decideBy: "2026-11-28", replyWithinDays: 3, inviteDays: 2, meetModes: ["event", "office"] } satisfies HiringGoal,
   },
   {
     id: "card-robotics", companyId: "co-robotics",
@@ -82,6 +91,7 @@ const cards: ProblemCard[] = [
     hardPart: "Failures depend on lighting, humidity and how the parcel lands, so results are noisy. We need a test that is fair enough to trust a result from.",
     niceToHave: ["Likes tinkering with hardware", "Has run careful experiments in a lab or workshop"],
     languages: ["English"], languagesNeeded: ["English"], format: "onsite", status: "published", createdAt: "2026-11-21T09:00:00.000Z",
+    goal: { decideBy: "2026-12-12", replyWithinDays: 5, inviteDays: 3, meetModes: ["event", "office"] } satisfies HiringGoal,
   },
 ];
 
@@ -128,18 +138,18 @@ const FLUFF_3 = "Data is the new oil, and I am uniquely positioned to harness it
 
 const responses: Response[] = [
   // ---- card-cleantech: 7 seeded (3 strong, 1 vague, 3 fluff). Olena has none here. ----
-  mk({ id: "r-c1", code: "A7", card: "card-cleantech", talent: "t-mika", date: "15",
+  mk({ id: "r-c1", code: "A7", card: "card-cleantech", talent: "t-mika", date: "19",
     text: "I ran a goods-in warehouse for six years, and scanners lie in predictable ways: dirty lenses, a cable that only fails when the forklift passes. I would first log every reading next to the operator's own verdict for one shift, then look for sensors that disagree with people in the same direction every time. Those are probably hardware, not batteries. I would fix one cable problem quickly so the operators see their feedback matters." }),
-  mk({ id: "r-c2", code: "B3", card: "card-cleantech", talent: "t-priya", date: "16",
+  mk({ id: "r-c2", code: "B3", card: "card-cleantech", talent: "t-priya", date: "19",
     text: "I left a physics PhD after two years of calibrating noisy detectors, which is roughly this problem. I would start by plotting each sensor generation separately and checking whether the oddities cluster by device, time of day or battery type. If they cluster by device it is the instrument. I would also ask the leavers' old colleagues what the sensors were meant to do and write that down, even if it is only half remembered." }),
-  mk({ id: "r-c3", code: "C2", card: "card-cleantech", talent: "t-ville", date: "17", lang: "Finnish", ai: true,
+  mk({ id: "r-c3", code: "C2", card: "card-cleantech", talent: "t-ville", date: "20", lang: "Finnish", ai: true,
     text: "Olen työskennellyt sähköasentajana ja huoltotehtävissä kahdeksan vuotta. Menisin ensin linjalle ja katsoisin, miten operaattorit käyttävät mittareita oikeasti. Tarkistaisin kaapeloinnit ja liittimet ennen kuin epäilisin dataa, koska kymmenen ongelmasta kahdeksan on yleensä johdoissa. Sen jälkeen kirjaisin viikon lukemat ja vertaisin niitä operaattorien arvioihin.",
     tr: "I have worked as an electrician and in maintenance roles for eight years. I would go to the line first and watch how the operators really use the readings. I would check the cabling and connectors before suspecting the data, because eight problems in ten are usually in the wires. After that I would log a week of readings and compare them with the operators' judgements." }),
-  mk({ id: "r-c4", code: "D5", card: "card-cleantech", talent: "t-noor", date: "18",
+  mk({ id: "r-c4", code: "D5", card: "card-cleantech", talent: "t-noor", date: "20",
     text: "I think data quality is really important and I would look at the sensors and try to make the data better. Communication with the team is key. I am a quick learner and would work hard to understand the problem." }),
-  mk({ id: "r-c5", code: "F1", card: "card-cleantech", talent: "t-kasper", date: "18", text: FLUFF_1 }),
-  mk({ id: "r-c6", code: "G8", card: "card-cleantech", talent: "t-omar", date: "19", text: FLUFF_2 }),
-  mk({ id: "r-c7", code: "H4", card: "card-cleantech", talent: "t-nina", date: "20", text: FLUFF_3 }),
+  mk({ id: "r-c5", code: "F1", card: "card-cleantech", talent: "t-kasper", date: "21", text: FLUFF_1 }),
+  mk({ id: "r-c6", code: "G8", card: "card-cleantech", talent: "t-omar", date: "21", text: FLUFF_2 }),
+  mk({ id: "r-c7", code: "H4", card: "card-cleantech", talent: "t-nina", date: "22", text: FLUFF_3 }),
 
   // ---- card-game ----
   mk({ id: "r-g1", code: "A2", card: "card-game", talent: "t-leena", date: "13",
@@ -264,6 +274,15 @@ const shortlists: Shortlist[] = [
   { id: "sl-14", cardId: "card-game2", responseId: "r-h1", status: "declined" },
 ];
 
+const HOUR_MS = 3600_000;
+for (const sl of shortlists) {
+  const r = responses.find((x) => x.id === sl.responseId)!;
+  sl.createdAt = new Date(Date.parse(r.createdAt) + 26 * HOUR_MS).toISOString();
+}
+
+// Amara stepped back from the medtech problem ("my situation changed"). The reason is never stored.
+responses.find((r) => r.id === "r-m4")!.steppedBack = { at: "2026-11-15T08:00:00.000Z", until: "2027-01-12" };
+
 // Slot times and tables are filled in by applySchedule when the store is created.
 const meetings: Meeting[] = shortlists
   .filter((sl) => sl.status === "accepted")
@@ -299,6 +318,14 @@ function buildActivity(): Activity[] {
       add({ at: plus(shortlistedAt, 20), kind: "invite_declined", actor: "talent", ...ids });
     }
   }
+  // Nordlight paused its translation problem: one row for the company, one per answer so each person is told.
+  const paused = cards.find((c) => c.id === "card-game2")!;
+  add({ at: paused.stateAt!, kind: "card_paused", actor: "company", cardId: paused.id, companyId: paused.companyId });
+  for (const r of responses.filter((x) => x.cardId === paused.id)) {
+    add({ at: paused.stateAt!, kind: "card_paused", actor: "company", cardId: paused.id, companyId: paused.companyId, responseId: r.id, talentId: r.talentId });
+  }
+  const amara = responses.find((r) => r.id === "r-m4")!;
+  add({ at: amara.steppedBack!.at, kind: "stepped_back", actor: "talent", cardId: amara.cardId, companyId: companyOf(amara.cardId), responseId: amara.id, talentId: amara.talentId });
   for (const cl of closures) {
     const r = responses.find((x) => x.id === cl.responseId)!;
     add({ at: cl.createdAt, kind: "answer_closed", actor: "company", cardId: cl.cardId, companyId: companyOf(cl.cardId), responseId: r.id, talentId: r.talentId });
@@ -318,4 +345,56 @@ export const seed: DB = {
   feedback: [],
   closures,
   activity: buildActivity(),
+  availability: [],
 };
+
+/**
+ * Seed parts that must sit relative to the real clock: meeting windows in the coming weekdays, two
+ * invites that are still open, one video call booked, and one meeting the company asked to move.
+ * Called by the store after seed timestamps are shifted into the past.
+ */
+export function addRelativeSeed(db: DB, now: number): void {
+  const today = localNow(now).slice(0, 10);
+  const weekdays: string[] = [];
+  for (let i = 1; weekdays.length < 5 && i < 14; i++) {
+    const d = new Date(`${today}T12:00:00Z`);
+    d.setUTCDate(d.getUTCDate() + i);
+    if (d.getUTCDay() !== 0 && d.getUTCDay() !== 6) weekdays.push(d.toISOString().slice(0, 10));
+  }
+  const win = (id: string, companyId: string, mode: Availability["mode"], day: string, from: string, to: string): Availability =>
+    ({ id, companyId, mode, start: `${day}T${from}:00`, end: `${day}T${to}:00` });
+  db.availability = [
+    win("av-1", "co-cleantech", "office", weekdays[1], "13:00", "15:00"),
+    win("av-2", "co-cleantech", "video", weekdays[2], "09:00", "11:00"),
+    win("av-3", "co-game", "video", weekdays[0], "14:00", "16:00"),
+    win("av-4", "co-saas", "video", weekdays[0], "09:00", "11:00"),
+    win("av-5", "co-saas", "video", weekdays[3], "13:00", "15:00"),
+    win("av-6", "co-robotics", "office", weekdays[2], "10:00", "12:00"),
+  ];
+
+  const inDays = (d: number) => new Date(now + d * 24 * HOUR_MS).toISOString();
+  for (const [id, d] of [["sl-2", 2], ["sl-4", 1]] as const) {
+    const sl = db.shortlists.find((x) => x.id === id);
+    if (sl) sl.respondBy = inDays(d);
+  }
+
+  // Yuki booked a video call with Ledgerleaf.
+  const video = db.meetings.find((m) => m.responseId === "r-i2");
+  if (video) {
+    Object.assign(video, { mode: "video", status: "booked", table: 0, durationMin: 30, slotStart: `${weekdays[1]}T10:00:00` });
+    video.place = placeFor("video", undefined, video.id);
+  }
+  // Ledgerleaf asked Petra to move their video call.
+  const moved = db.meetings.find((m) => m.responseId === "r-s1");
+  if (moved) {
+    const at = new Date(now - 3 * HOUR_MS).toISOString();
+    Object.assign(moved, {
+      mode: "video", status: "reschedule", table: 0, durationMin: 30, slotStart: "",
+      lastChange: { by: "company", kind: "reschedule", reason: "A clash in my calendar", at },
+    });
+    const r = db.responses.find((x) => x.id === "r-s1")!;
+    db.activity.push({ id: "act-resched-1", at, kind: "reschedule_requested", actor: "company", cardId: r.cardId, companyId: "co-saas", responseId: r.id, talentId: r.talentId });
+  }
+  const yuki = db.talents.find((t) => t.id === "t-yuki");
+  if (yuki) yuki.goal = { status: "open", meetModes: ["video"], updatedAt: inDays(-2) };
+}

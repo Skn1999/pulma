@@ -235,3 +235,103 @@ Intake Q5 asks which languages are realistic AND which are truly needed for the 
 editor lets the human set each language to Needed / Nice to have; ProblemCardView shows "Needed for the work" vs
 "Nice to have" (text labels, not colour alone). If Finnish is marked needed, the editor shows a gentle human-facing hint
 "Is Finnish needed for the work itself, or for the team's social life? Many teams start in English." — dismissible, never automatic.
+
+---
+
+# v5: Goals, no ghosting, changes on either side, meeting beyond the event day
+
+Principle: **intent drives your own workflow, never decisions about other people.** Goals and deadlines are
+promises people make; nothing is ranked, filtered, rejected or closed automatically. Expired invites can be re-opened.
+
+Core (already written, do not rewrite; import from them):
+- `lib/types.ts`: `MeetMode`, `MEET_MODE_LABEL`, `HiringGoal`, `CardState`, `PAUSE_REASONS`, `FILLED_REASONS`, `TalentGoal`
+  (PRIVATE), `Availability`, `MEETING_CHANGE_REASONS`, new fields on Company (`office`), ProblemCard (`goal`, `state`,
+  `stateReason`, `stateAt`), Talent (`goal`), Response (`steppedBack`), Shortlist (`createdAt`, `respondBy`), Meeting
+  (`mode`, `status`, `durationMin`, `place`, `lastChange`), `db.availability`, new ActivityKinds, actor `"system"`.
+- `lib/deadlines.ts`: `goalOf`, `defaultGoal`, `GOAL_LIMITS`, `isOpen`, `cardState`, `replyStatus`, `inviteStatus`,
+  `inviteRespondBy`, `companyRecord` (+`MIN_RECORD`), `goalProgress`, `decideByDays`, `addDays`.
+- `lib/next-steps.ts`: `nextSteps(db, account, now) → { waitingOnYou, waitingOnThem }` (privacy-safe), `shortDate`.
+- `lib/slots.ts`: `slotOptions(db, meetingId, now)`, `isOptionFree`, `placeFor`, `meetingMode`, `meetingStatus`,
+  `meetingEnd`, `localNow`, `addMinutesLocal`, `OFF_EVENT_MINUTES`.
+- `lib/sweep.ts`: `sweepDeadlines` (already called from GET /api/notifications).
+- `lib/activity.ts`: texts for all new kinds, `formatLocalSlot(local)`. `lib/thread.ts`: ThreadView now has `goal`,
+  `reply`, `invite?`, `cardState?`, `steppedBack?`, `companyRecord?` (talent only), and `meeting?` {id, mode, status,
+  start?, end?, table?, place?, lastChange?}.
+- `lib/schedule.ts` only places booked event-day meetings.
+Always pass `Date.now()` as `now` from routes/pages. Log activity inside `mutate()` with `logActivity`.
+Local meeting times are wall-clock Helsinki strings "YYYY-MM-DDTHH:MM:00": format with `formatLocalSlot`, never `new Date(local)`.
+
+## Step 0: Goals + Next steps
+- Company goal per problem (public promise): `decideBy`, `replyWithinDays` (1–14), `inviteDays` (1–7), `meetModes` (≥1).
+  - Intake: the card editor gets a "Your goal for this problem" section before Publish (defaults from `defaultGoal`).
+    POST /api/cards accepts optional `goal` (validated; invalid → 400).
+  - PATCH `/api/cards/[id]/goal` (company, own card) with a full or partial HiringGoal; validate; returns the card.
+  - Company card page header shows the goal ("Deciding by 12 Dec · Replying within 7 days · Office, video, event day")
+    and an "Edit goal" dialog.
+- Talent goal (PRIVATE): PATCH `/api/profile` accepts `goal: {status, availableFrom?, meetModes} | null`. It is never
+  included in any company-facing payload. UI copy: "Only you see this. Companies never see it, and it never changes who
+  sees your answers."
+- GET `/api/next-steps` → `nextSteps(db, viewer, Date.now())` (organiser → both lists empty).
+- Talent **Home** `/talent/home` (new first nav item "Home", icon "House"; `roleHome` for talent → `/talent/home`):
+  goal card (id="goal"), "Waiting on you", "Waiting on them" (each item: text, due date, an "Overdue" text badge when
+  overdue, link). Empty states. Mobile-first.
+- Company home `/company`: "Waiting on you" / "Waiting on them" panel above the table; table gains "Decide by" and
+  "Replies" (e.g. "3/7 · 1 overdue") columns from `goalProgress`.
+- Explore cards and the card detail show the promise: "Replies within 7 days", "Deciding by 12 Dec", ways to meet, and
+  the company record: rate !== null → "On time for 93% of answers (14)"; else "New on Pulma, no record yet".
+  Explore lists only `isOpen` cards.
+
+## Step 1: No ghosting
+- GET `/api/cards/[id]/responses` adds `replyDue`, `shortlist.respondBy`, `shortlist.expired`, `steppedBack` (see BlindResponse).
+- POST `/api/shortlists` sets `createdAt = now`, `respondBy = now + inviteDays`.
+- POST `/api/shortlists/[id]/reinvite` (company, own): only when status "invited" and expired → `respondBy = now + inviteDays`,
+  log `reinvited`; else 409.
+- POST `/api/shortlists/[id]/respond`: 409 "This invite has expired" when expired.
+- Triage: each list item and the reader show the reply promise as text: "Reply by 17 Nov" / "Overdue · 2 days" (icon +
+  text, not colour alone). Shortlisted+expired shows "Invite expired" with a **Re-invite** button.
+- Talent inbox: "Reply by 17 Nov" on each invite; expired invites read "This invite expired on 16 Nov" with no Accept.
+- Talent answers list + thread: promise state ("Kiertovolt promised a reply by 17 Nov" / "…is 2 days past its reply date.
+  You can keep waiting or withdraw.").
+- MatchThread renders the new ThreadView fields (promise, invite deadline, card state banner, stepped back, meeting
+  mode/place/status).
+- Organiser overview: "Promises kept" panel: every company in ALPHABETICAL order (never sorted by score) with on-time
+  rate (or "Not enough answers yet"), answers counted, overdue now; plus problems past their decide-by date.
+
+## Step 2: Changes on either side
+- PATCH `/api/cards/[id]/state` `{state, reason?}` (company, own). paused → reason ∈ PAUSE_REASONS, filled → reason ∈
+  FILLED_REASONS (else 400), open → reason cleared. Sets `stateAt`. Logs ONE card-level row (no responseId) plus one row
+  per response on the card (with responseId/talentId) of kind card_paused / card_filled / card_reopened.
+- Paused/filled cards: POST /api/responses → 409 "This problem isn't taking new answers right now"; POST /api/shortlists
+  → 409. Talent card/answer pages show a banner ("Kiertovolt paused this problem: Budget is on hold") and no form.
+- Company card page: "Problem status" control (Open / Pause… / Mark as filled…) with a reason dialog that says
+  "Everyone who answered will be told: '<reason>'".
+- POST `/api/responses/[id]/step-back` `{until?: "YYYY-MM-DD"}` (talent, own): sets `steppedBack {at: now, until}`;
+  invited shortlist → "declined"; pending/booked meeting → status "cancelled", slotStart "", table 0, then applySchedule;
+  logs `stepped_back`. DELETE same path undoes it (only `steppedBack` is cleared). The reason is NEVER sent or stored.
+- POST /api/shortlists on a stepped-back answer → 409 "This person has stepped back".
+- Talent Home: "My situation changed" card: "I took another role" (step back from all active answers),
+  "I'm not available for a while" + date (step back all, with `until`), "I need to move a meeting" (links to
+  meetings). Shows exactly what each company will see: "#A7 stepped back" (+ "available again from …").
+- Company triage shows "Stepped back · available from 12 Jan" on such answers.
+
+## Step 3: Meeting beyond the event day
+- Availability (company): GET/POST `/api/availability` `{mode: "office"|"video", date, from, to}` (future, from<to,
+  30-minute multiples, ≤10 h); DELETE `/api/availability/[id]` (own).
+- Accept (POST /api/shortlists/[id]/respond accept): if the card's goal meetModes is exactly ["event"] → as before
+  (mode "event", booked, applySchedule). Otherwise create the meeting with `status: "pending"` and return
+  `{ status: "accepted", needsSlot: true, meetingId }`; the client sends the talent to their answer thread to pick.
+- GET `/api/meetings/[id]/options` (talent who owns it) → `slotOptions(...)`.
+- POST `/api/meetings/[id]/book` `{mode, start?, reason?}` (talent, own): allowed when pending, reschedule or booked
+  (booked = the talent moves it: `reason` ∈ MEETING_CHANGE_REASONS required). Check `isOptionFree` (409 "That time was
+  just taken"). Event → mode event, slotStart "", status booked, applySchedule. Office/video → slotStart=start,
+  durationMin=30, table 0, place=placeFor(...). Log meeting_scheduled (first booking) or meeting_rescheduled.
+- POST `/api/meetings/[id]/reschedule` `{reason}` (company, own card): status "reschedule", clear slot, lastChange
+  {by:"company"}, applySchedule, log reschedule_requested.
+- POST `/api/meetings/[id]/cancel` `{reason}` (either party): status "cancelled", clear slot, lastChange, applySchedule,
+  log meeting_cancelled.
+- GET `/api/meetings/[id]/ics` (either party, booked with a start) → `text/calendar` download, TZID Europe/Helsinki.
+- Talent thread: "Pick a time" (options grouped by mode; modes in the talent's own goal listed first — that only orders
+  the talent's own options). Booked: mode, time, place or link, "Add to calendar", "Move meeting" (reason + pick),
+  "Cancel" (reason). Company reader: same booked details + "Ask to move" + "Cancel".
+- `/company/meetings` (nav "Meetings", icon "CalendarClock"): availability windows editor + upcoming meetings (all modes).
+- `/talent/meetings` (nav "Meetings" replaces "My day"): all meetings by date; event-day ones link to `/event`.

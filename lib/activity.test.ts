@@ -26,6 +26,7 @@ function makeDb(): DB {
     feedback: [],
     closures: [],
     activity: [],
+    availability: [],
   };
 }
 

@@ -3,7 +3,14 @@
 // and words each item so it contains no identity that viewer may not know.
 
 import { newId } from "./store";
-import type { Account, Activity, ActivityView, DB } from "./types";
+import { meetingMode } from "./slots";
+import { MEET_MODE_LABEL, type Account, type Activity, type ActivityView, type DB } from "./types";
+
+const slotFmt = new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "UTC" });
+/** Local "YYYY-MM-DDTHH:MM:00" → "Tue 18 Nov, 14:00" (formatted as UTC so wall-clock time is kept). */
+export function formatLocalSlot(local: string): string {
+  return slotFmt.format(new Date(`${local.slice(0, 16)}:00Z`));
+}
 
 export function logActivity(db: DB, a: Omit<Activity, "id" | "at"> & { at?: string }): void {
   db.activity.push({ ...a, id: newId("act"), at: a.at ?? new Date().toISOString() });
@@ -11,8 +18,15 @@ export function logActivity(db: DB, a: Omit<Activity, "id" | "at"> & { at?: stri
 
 function slotLabel(db: DB, responseId: string | undefined): string | null {
   const m = responseId ? db.meetings.find((x) => x.responseId === responseId) : undefined;
-  if (!m || !m.slotStart || !m.table) return null;
-  return `Table ${m.table} · ${m.slotStart.slice(11, 16)}`;
+  if (!m || !m.slotStart) return null;
+  const mode = meetingMode(m);
+  if (mode === "event") return m.table ? `Table ${m.table} · ${m.slotStart.slice(11, 16)}` : null;
+  return `${MEET_MODE_LABEL[mode]} · ${formatLocalSlot(m.slotStart)}`;
+}
+
+function changeReason(db: DB, responseId: string | undefined, by: "company" | "talent"): string {
+  const m = responseId ? db.meetings.find((x) => x.responseId === responseId) : undefined;
+  return m?.lastChange && m.lastChange.by === by ? ` (${m.lastChange.reason})` : "";
 }
 
 export function viewActivity(db: DB, account: Account, a: Activity): ActivityView | null {
@@ -31,6 +45,11 @@ export function viewActivity(db: DB, account: Account, a: Activity): ActivityVie
     }
     if (a.kind === "answer_withdrawn" && !response) {
       return { ...base, text: `An answer on "${card.title}" was withdrawn`, href: cardHref };
+    }
+    if (a.kind === "card_paused" || a.kind === "card_filled" || a.kind === "card_reopened") {
+      if (response) return null; // per-answer copies exist only to tell each talent
+      const verb = a.kind === "card_paused" ? "paused" : a.kind === "card_filled" ? "marked as filled" : "reopened";
+      return { ...base, byMe: true, text: `You ${verb} "${card.title}"`, href: cardHref };
     }
     if (!response) return null;
     const code = `#${response.publicCode}`;
@@ -78,6 +97,31 @@ export function viewActivity(db: DB, account: Account, a: Activity): ActivityVie
       case "mutual_next_step":
         text = `You and ${who} both want a next step`;
         break;
+      case "reply_overdue":
+        text = `Your reply to ${code} on "${card.title}" is past your promised date`;
+        break;
+      case "invite_expired":
+        text = `Your invite to ${who} expired without a reply`;
+        break;
+      case "reinvited":
+        text = `You re-invited ${who}`;
+        break;
+      case "stepped_back": {
+        const until = response.steppedBack?.until;
+        text = `${who} stepped back from "${card.title}"${until ? `. Available again from ${until}` : ""}`;
+        break;
+      }
+      case "reschedule_requested":
+        text = `You asked ${who} to pick a new meeting time`;
+        break;
+      case "meeting_rescheduled": {
+        const slot = slotLabel(db, response.id);
+        text = `${who} moved your meeting${slot ? ` to ${slot}` : ""}${changeReason(db, response.id, "talent")}`;
+        break;
+      }
+      case "meeting_cancelled":
+        text = a.actor === "company" ? `You cancelled the meeting with ${who}` : `${who} cancelled the meeting${changeReason(db, response.id, "talent")}`;
+        break;
       default:
         return null;
     }
@@ -124,6 +168,38 @@ export function viewActivity(db: DB, account: Account, a: Activity): ActivityVie
     }
     case "mutual_next_step":
       text = `You and ${company} both want a next step`;
+      break;
+    case "reply_overdue":
+      text = `${company} is past its promised reply date for your answer ${code}`;
+      break;
+    case "invite_expired":
+      text = `Your invite from ${company} expired`;
+      break;
+    case "reinvited":
+      text = `${company} re-opened its invite on your answer ${code}`;
+      break;
+    case "card_paused":
+      text = `${company} paused "${card.title}"${card.stateReason ? `: ${card.stateReason}` : ""}`;
+      break;
+    case "card_filled":
+      text = `${company} has closed "${card.title}"${card.stateReason ? `: ${card.stateReason}` : ""}`;
+      break;
+    case "card_reopened":
+      text = `${company} reopened "${card.title}"`;
+      break;
+    case "stepped_back":
+      text = `You stepped back from ${code}`;
+      break;
+    case "reschedule_requested":
+      text = `${company} asked to move your meeting${changeReason(db, response.id, "company")}. Pick a new time.`;
+      break;
+    case "meeting_rescheduled": {
+      const slot = slotLabel(db, response.id);
+      text = `You moved your meeting${slot ? ` to ${slot}` : ""}`;
+      break;
+    }
+    case "meeting_cancelled":
+      text = a.actor === "talent" ? `You cancelled your meeting with ${company}` : `${company} cancelled the meeting${changeReason(db, response.id, "company")}`;
       break;
     default:
       return null; // card_published, answer_withdrawn, shortlist_removed (silent) are not for talent
