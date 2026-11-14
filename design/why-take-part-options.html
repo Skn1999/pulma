@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Why take part — options</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:#012169; --fg:#1B2333; --primary:#0050BB; --muted:#EEF1F5; --muted-fg:#54595D; --border:#D5DCE5;
+    --accent:#DFE5EB; --frame:#EEF2F7; --sidebar:#E4EAF1; --card:#fff; --highlight:#FFC386; --soft:#FDE6DB;
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; font:16px/1.5 "Work Sans", system-ui, sans-serif; color:var(--fg); background:#fff; }
+  h1,h2,h3 { font-family:Lato, "Work Sans", sans-serif; color:var(--navy); margin:0; letter-spacing:-.005em; }
+  .intro { max-width:1100px; margin:0 auto; padding:32px 24px 8px; }
+  .intro p { color:var(--muted-fg); max-width:70ch; }
+  .tabs { position:sticky; top:0; z-index:5; background:#fff; border-bottom:1px solid var(--border); }
+  .tabs nav { max-width:1100px; margin:0 auto; padding:10px 24px; display:flex; gap:8px; flex-wrap:wrap; }
+  .tabs a { padding:6px 12px; border:1px solid var(--border); border-radius:999px; color:var(--navy); text-decoration:none; font-size:14px; font-weight:500; }
+  .tabs a:hover { background:var(--muted); }
+  section.option { max-width:1100px; margin:0 auto; padding:32px 24px; border-bottom:1px solid var(--border); }
+  .option header { display:grid; grid-template-columns: 1fr 1fr; gap:24px; margin-bottom:16px; }
+  @media (max-width:800px){ .option header { grid-template-columns:1fr; } }
+  .tag { display:inline-block; font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--muted-fg); }
+  .pc { font-size:14px; }
+  .pc b { color:var(--navy); }
+  .pc ul { margin:4px 0 0; padding-left:18px; }
+  .reasons { margin:8px 0 0; padding-left:20px; font-size:14px; }
+  .reasons li { margin:4px 0; }
+  .reasons a, .links a { color:var(--primary); }
+  .links { font-size:12px; margin-top:8px; display:flex; flex-wrap:wrap; gap:4px 14px; }
+  .reasons-sm { list-style:none; margin:8px 0 0; padding:0; font-size:13px; }
+  .reasons-sm li { margin:3px 0; padding-left:18px; position:relative; }
+  .reasons-sm li::before { content:'✓'; position:absolute; left:0; color:var(--primary); font-weight:700; }
+
+  /* Mini app frame */
+  .app { display:flex; background:var(--frame); border:1px solid var(--border); border-radius:8px; overflow:hidden; min-height:420px; position:relative; }
+  .side { width:180px; background:var(--sidebar); border-right:1px solid var(--border); padding:16px 12px; font-size:13px; flex-shrink:0; }
+  .side .logo { font-family:Lato; font-weight:700; font-size:20px; color:var(--navy); }
+  .side .role { display:inline-block; margin-top:4px; font-size:10px; font-weight:600; letter-spacing:.06em; padding:1px 8px; border-radius:999px; background:var(--accent); color:var(--navy); border:1px solid #b9c6d6; }
+  .side ul { list-style:none; padding:0; margin:16px 0 0; }
+  .side li { padding:6px 8px; border-radius:6px; color:var(--muted-fg); }
+  .side li.on { background:#D3DDE8; color:var(--navy); font-weight:600; box-shadow: inset 3px 0 0 var(--primary); }
+  .main { flex:1; padding:12px; min-width:0; }
+  .panel { background:#fff; border:1px solid var(--border); border-radius:8px; min-height:100%; }
+  .ptitle { padding:16px 20px; border-bottom:1px solid var(--border); }
+  .ptitle h2 { font-size:22px; }
+  .ptitle p { margin:2px 0 0; font-size:13px; color:var(--muted-fg); }
+  .body { padding:16px 20px 20px; }
+  .h3row { display:flex; align-items:center; gap:10px; margin:4px 0 10px; }
+  .h3row h3 { font-size:17px; }
+  .linkbtn { background:none; border:0; padding:0; font:inherit; font-size:13px; color:var(--primary); text-decoration:underline; text-underline-offset:2px; cursor:pointer; }
+  .card { background:#fff; border:1px solid var(--border); border-radius:8px; padding:14px 16px; max-width:460px; }
+  .card h4 { font-family:Lato; color:var(--navy); margin:0; font-size:17px; }
+  .facts { font-size:13px; color:var(--muted-fg); margin-top:2px; }
+  .badge { float:right; font-size:11px; font-weight:600; padding:1px 8px; border:1px solid var(--border); border-radius:999px; color:var(--navy); }
+  .note { margin-top:10px; background:var(--muted); border-radius:6px; padding:8px 10px; font-size:13px; }
+  .note small { color:var(--muted-fg); display:block; }
+  .btns { margin-top:12px; display:flex; gap:8px; }
+  .btn { font:inherit; font-size:13px; font-weight:500; border-radius:6px; padding:6px 12px; border:1px solid #A7ACB0; background:#fff; color:var(--navy); cursor:pointer; }
+  .btn.primary { background:var(--primary); color:#fff; border-color:var(--primary); }
+  .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  .stat { background:var(--muted); border-radius:6px; padding:8px 10px; }
+  .stat dt { font-size:11px; color:var(--muted-fg); }
+  .stat dd { margin:0; font-family:Lato; font-weight:700; font-size:22px; color:var(--navy); }
+  blockquote { margin:0; }
+  .quote { border-left:3px solid var(--primary); padding-left:12px; font-size:13px; }
+  .quote small { color:var(--muted-fg); display:block; }
+  .strip { margin-top:10px; display:flex; flex-wrap:wrap; gap:6px 14px; font-size:12px; color:var(--navy); }
+  .strip span b { font-family:Lato; font-size:14px; }
+  details { margin-top:8px; font-size:13px; }
+  summary { cursor:pointer; color:var(--primary); }
+  .banner { display:flex; gap:16px; align-items:flex-start; background:var(--soft); border:1px solid #f3cbb4; border-radius:8px; padding:12px 14px; margin-bottom:14px; }
+  .banner ol { margin:4px 0 0; padding-left:18px; font-size:13px; }
+  .banner .x { margin-left:auto; }
+  .drawer { position:absolute; top:0; right:0; bottom:0; width:340px; background:#fff; border-left:1px solid var(--border); box-shadow:-8px 0 24px -12px rgb(1 33 105 / .25); padding:18px; transform:translateX(100%); transition:transform .2s; overflow:auto; }
+  .drawer.open { transform:none; }
+  @media (prefers-reduced-motion: reduce) { .drawer { transition:none; } }
+  .drawer h3 { font-size:18px; }
+  .drawer .stats { grid-template-columns:1fr; }
+  .muted { color:var(--muted-fg); font-size:13px; }
+  :focus-visible { outline:2px solid var(--primary); outline-offset:2px; }
+</style>
+</head>
+<body>
+<div class="intro">
+  <h1>Why take part in a City of Espoo recruitment event</h1>
+  <p>Version 2: the message is now about the <b>City of Espoo's events and employer services</b>, with Pulma as <i>how</i> the event works.
+     Same content in every option, only placement and timing change. Claims link to the city's own pages (fetched 14 Nov 2026); terms and
+     eligibility belong to the city, so the app links out instead of restating amounts. Pick one; nothing in the app changes until you do.</p>
+  <div class="card" style="max-width:none;margin-top:12px">
+    <span class="tag">The message (shared by all options)</span>
+    <ol class="reasons">
+      <li><b>Meet people you won't find on job boards.</b> Jobseekers from Espoo's employment services and international professionals already living in the region, including experienced career changers.</li>
+      <li><b>Free, with the city behind you.</b> The city's recruitment services for employers are free of charge, and Business Espoo's specialists help with recruiting, including from abroad (Talent Boost).</li>
+      <li><b>Support with hiring costs.</b> You may be eligible for a pay subsidy or the Espoo supplement for employment, and for EU recruits the Targeted Mobility Scheme. <a href="https://www.espoo.fi/en/business-espoo-helping-companies-thrive/financial-support-and-employment">Check the terms</a>.</li>
+      <li><b>An hour well spent.</b> With Pulma you bring one real problem, read short answers written for it, and meet only the people you choose at your own table. So far: <b>4</b> answers per problem, <b>90%</b> replied to on time, <b>8</b> conversations booked.</li>
+    </ol>
+  </div>
+</div>
+<div class="tabs"><nav aria-label="Options">
+  <a href="#now">Now (for reference)</a><a href="#a">A · On the invitation</a><a href="#b">B · First-visit welcome</a><a href="#c">C · On request</a>
+</nav></div>
+
+<!-- Shared bits -->
+<template id="sidebar">
+  <aside class="side"><div class="logo">Pulma</div><span class="role">EMPLOYER</span><div class="muted" style="font-size:11px;margin-top:2px">Kiertovolt</div>
+    <ul><li>Problems</li><li class="on">Events</li><li>New problem</li><li>Meetings</li><li>Event day</li></ul></aside>
+</template>
+<template id="invite">
+  <div class="card"><span class="badge">Invited</span><h4>Espoo International Talent Evening</h4>
+    <div class="facts">Thursday 21 January 2027 · 16:00–19:00<br>Espoo Centre Library Hall (demo venue)</div>
+    <div class="note"><small>Message from the event team</small>We’d love a clean-tech problem at the International Talent Evening.</div>
+    <div class="btns"><button class="btn primary">Accept</button><button class="btn">Decline</button></div></div>
+</template>
+
+<!-- NOW -->
+<section class="option" id="now">
+  <header><div><span class="tag">Reference</span><h2>Now: a full block on top of the page</h2></div>
+    <div class="pc">Always first on the Events page while an invitation is open. Pushes the actual invitation below the fold.</div></header>
+  <div class="app"><slot-side></slot-side><div class="main"><div class="panel">
+    <div class="ptitle"><h2>Events</h2><p>The organisers invite you. Once you accept, you get a table and can publish up to 3 problems.</p></div>
+    <div class="body">
+      <div class="card" style="max-width:none"><h4>Why take part</h4>
+        <p class="muted" style="margin:4px 0 10px">(Current version: only about Pulma.) You bring one real problem. People from the City of Espoo’s talent pool answer it in their own words, and you meet only the ones you choose. No CVs to sift, and it’s free.</p>
+        <dl class="stats" style="margin:0"><div class="stat"><dt>answers per problem</dt><dd>4</dd></div><div class="stat"><dt>replied on time</dt><dd>90%</dd></div><div class="stat"><dt>conversations booked</dt><dd>8</dd></div></dl>
+        <blockquote class="quote" style="margin-top:10px"><small>An anonymous answer</small>I was a forklift driver for six years…</blockquote></div>
+      <div class="h3row" style="margin-top:16px"><h3>Invitations</h3></div><slot-invite></slot-invite>
+    </div></div></div></div>
+</section>
+
+<!-- A -->
+<section class="option" id="a">
+  <header><div><span class="tag">Option A</span><h2>Proof on the invitation itself</h2></div>
+    <div class="pc"><b>How:</b> the three figures become one quiet line inside each invitation card, right above Accept; the example answer is behind “What would we read?”.
+      <ul><li><b>+</b> Information appears exactly at the decision, nothing else on the page.</li><li><b>+</b> Gone once accepted; no new component to dismiss.</li><li><b>–</b> Repeats if there are several invitations; the “what you get” sentence is shorter.</li></ul></div></header>
+  <div class="app"><slot-side></slot-side><div class="main"><div class="panel">
+    <div class="ptitle"><h2>Events</h2><p>The organisers invite you. Once you accept, you get a table and can publish up to 3 problems.</p></div>
+    <div class="body"><div class="h3row"><h3>Invitations</h3></div>
+      <div class="card"><span class="badge">Invited</span><h4>Espoo International Talent Evening</h4>
+        <div class="facts">Thursday 21 January 2027 · 16:00–19:00<br>Espoo Centre Library Hall (demo venue)</div>
+        <div class="note"><small>Message from the event team</small>We’d love a clean-tech problem at the International Talent Evening.</div>
+        <ul class="reasons-sm" aria-label="Why take part">
+          <li>Meet jobseekers and international professionals from Espoo you won’t find on job boards</li>
+          <li>Free, with Business Espoo’s recruitment specialists behind you</li>
+          <li>You may be eligible for support with hiring costs (pay subsidy, Espoo supplement)</li>
+        </ul>
+        <div class="strip" aria-label="At Pulma events so far"><span><b>4</b> answers per problem</span><span><b>90%</b> replied on time</span><span><b>8</b> conversations booked</span></div>
+        <div class="links"><a href="https://www.espoo.fi/en/business-espoo-helping-companies-thrive/recruitment-assistance-0">Recruitment assistance</a><a href="https://www.espoo.fi/en/business-espoo-helping-companies-thrive/financial-support-and-employment">Financial support</a><a href="https://www.espoo.fi/en/business-espoo-helping-companies-thrive/contacts-employers-and-businesses">Contact an employer specialist</a></div>
+        <details><summary>What would we read?</summary><blockquote class="quote" style="margin-top:6px"><small>An anonymous answer to “Trucks wait in the yard…”</small>I was a forklift driver for six years. I know pallets get left temporarily in places the system does not know about…</blockquote></details>
+        <div class="btns"><button class="btn primary">Accept</button><button class="btn">Decline</button></div></div>
+    </div></div></div></div>
+</section>
+
+<!-- B -->
+<section class="option" id="b">
+  <header><div><span class="tag">Option B</span><h2>A welcome only on the first visit</h2></div>
+    <div class="pc"><b>How:</b> a slim, warm banner with how it works in three steps and the figures in one sentence. Shown until the company accepts its first invitation or closes it, then never again.
+      <ul><li><b>+</b> Speaks to newcomers, which is where the brief’s doubt lives; veterans never see it.</li><li><b>+</b> Explains the flow, not just numbers.</li><li><b>–</b> Needs a remembered “dismissed” flag per account.</li></ul></div></header>
+  <div class="app"><slot-side></slot-side><div class="main"><div class="panel">
+    <div class="ptitle"><h2>Events</h2><p>The organisers invite you. Once you accept, you get a table and can publish up to 3 problems.</p></div>
+    <div class="body">
+      <div class="banner" id="welcome" role="region" aria-label="New to Pulma">
+        <div><h3 style="font-size:16px">New to City of Espoo recruitment events?</h3>
+          <p style="margin:2px 0 0;font-size:13px">Meet jobseekers and international professionals from Espoo you won’t find on job boards. It’s free, the city’s employer specialists help you hire (also from abroad), and you may be eligible for support with hiring costs.</p>
+          <ol><li>Bring one real problem, not a job ad.</li><li>People answer it in their own words. So far about <b>4 answers per problem</b>.</li><li>You pick who to meet; they book a slot at your table.</li></ol>
+          <div class="links"><a href="https://www.espoo.fi/en/business-espoo-helping-companies-thrive/recruitment-assistance-0">Recruitment assistance</a><a href="https://www.espoo.fi/en/business-espoo-helping-companies-thrive/financial-support-and-employment">Financial support</a><a href="https://www.espoo.fi/en/business-espoo-helping-companies-thrive/contacts-employers-and-businesses">Contact an employer specialist</a></div>
+          <button class="linkbtn" style="margin-top:6px" onclick="document.getElementById('ex-b').hidden=!document.getElementById('ex-b').hidden">See an example answer</button>
+          <blockquote class="quote" id="ex-b" hidden style="margin-top:6px"><small>Anonymous</small>I was a forklift driver for six years…</blockquote></div>
+        <button class="btn x" aria-label="Close the welcome" onclick="document.getElementById('welcome').hidden=true">✕</button></div>
+      <div class="h3row"><h3>Invitations</h3></div><slot-invite></slot-invite>
+    </div></div></div></div>
+</section>
+
+<!-- C -->
+<section class="option" id="c">
+  <header><div><span class="tag">Option C</span><h2>On request: a side panel</h2></div>
+    <div class="pc"><b>How:</b> the page is only actions. A quiet “Why take part?” link next to the Invitations heading opens a side panel with the full story, figures and example.
+      <ul><li><b>+</b> Cleanest page; nothing pushes the invitation down.</li><li><b>+</b> Room for more (how it works, privacy, international support) without clutter.</li><li><b>–</b> Only seen by people who look for it; weakest at persuading a doubtful company.</li></ul></div></header>
+  <div class="app" id="app-c"><slot-side></slot-side><div class="main"><div class="panel">
+    <div class="ptitle"><h2>Events</h2><p>The organisers invite you. Once you accept, you get a table and can publish up to 3 problems.</p></div>
+    <div class="body"><div class="h3row"><h3>Invitations</h3><button class="linkbtn" aria-expanded="false" aria-controls="drawer-c" id="open-c">Why take part?</button></div><slot-invite></slot-invite></div></div></div>
+    <aside class="drawer" id="drawer-c" aria-label="Why take part">
+      <div style="display:flex;justify-content:space-between;align-items:center"><h3>Why take part</h3><button class="btn" id="close-c" aria-label="Close panel">✕</button></div>
+      <ol class="reasons">
+        <li><b>Meet people you won't find on job boards:</b> jobseekers from Espoo's employment services and international professionals already in the region.</li>
+        <li><b>Free, with the city behind you:</b> Business Espoo's specialists help with recruiting, including from abroad (Talent Boost).</li>
+        <li><b>Support with hiring costs:</b> pay subsidy or the Espoo supplement for employment, if eligible; the Targeted Mobility Scheme for EU recruits.</li>
+        <li><b>An hour well spent:</b> one real problem, short answers written for it, and you meet only the people you choose.</li>
+      </ol>
+      <div class="links"><a href="https://www.espoo.fi/en/business-espoo-helping-companies-thrive/recruitment-assistance-0">Recruitment assistance</a><a href="https://www.espoo.fi/en/business-espoo-helping-companies-thrive/financial-support-and-employment">Financial support</a><a href="https://www.espoo.fi/en/business-espoo-helping-companies-thrive/contacts-employers-and-businesses">Contact an employer specialist</a></div>
+      <dl class="stats" style="margin-top:12px"><div class="stat"><dt>answers per problem</dt><dd>4</dd></div><div class="stat"><dt>replied on time</dt><dd>90%</dd></div><div class="stat"><dt>conversations booked</dt><dd>8</dd></div></dl>
+      <blockquote class="quote" style="margin-top:12px"><small>An anonymous answer</small>I was a forklift driver for six years. I know pallets get left temporarily in places the system does not know about when it is busy…</blockquote>
+      <p class="muted" style="margin-top:12px">Anonymous counts across Pulma events. Names are shared only when both sides agree.</p>
+    </aside></div>
+</section>
+
+<script>
+  const side = document.getElementById('sidebar').content, inv = document.getElementById('invite').content;
+  document.querySelectorAll('slot-side').forEach(s => s.replaceWith(side.cloneNode(true)));
+  document.querySelectorAll('slot-invite').forEach(s => s.replaceWith(inv.cloneNode(true)));
+  const d = document.getElementById('drawer-c'), o = document.getElementById('open-c');
+  o.addEventListener('click', () => { d.classList.add('open'); o.setAttribute('aria-expanded','true'); document.getElementById('close-c').focus(); });
+  document.getElementById('close-c').addEventListener('click', () => { d.classList.remove('open'); o.setAttribute('aria-expanded','false'); o.focus(); });
+</script>
+</body>
+</html>
