@@ -23,7 +23,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
   const collapsed = (await cookies()).get(SIDEBAR_COOKIE)?.value === "collapsed";
 
   const shell = (
-    <div data-role={account.role} className="fixed inset-0 flex flex-col bg-(--role-tint) md:flex-row">
+    <div data-role={account.role} className="fixed inset-0 flex flex-col bg-frame md:flex-row">
       <Sidebar nav={nav} roleLabel={roleLabel} context={context} showBell={showBell} menu={menu} initialCollapsed={collapsed} />
 
       <header className="flex h-12 shrink-0 items-center justify-between border-b bg-sidebar px-4 md:hidden">
@@ -39,7 +39,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
       </header>
 
       <main id="main" className="min-w-0 flex-1 overflow-y-auto pb-20 md:p-4 md:pb-4">
-        <div className="mx-auto min-h-full max-w-6xl bg-background md:rounded-xl md:border md:shadow-sm">
+        <div className="mx-auto min-h-full max-w-6xl bg-card md:rounded-lg md:border md:shadow-card">
           {children}
         </div>
       </main>

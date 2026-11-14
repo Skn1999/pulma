@@ -43,7 +43,11 @@ export function ProblemStatus({ cardId, state, reason }: { cardId: string; state
   return (
     <>
       <div role="group" aria-label="Problem status" className="flex items-center gap-1.5">
-        <span className="text-xs text-muted-foreground">Problem status: <span className="font-medium text-foreground">{STATE_LABEL[state]}</span></span>
+        <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs font-semibold text-navy">
+          <span className="sr-only">Problem status: </span>
+          <span aria-hidden="true" className={state === "open" ? "size-1.5 rounded-full bg-primary" : "size-1.5 rounded-full bg-muted-foreground"} />
+          {STATE_LABEL[state]}
+        </span>
         {state !== "open" && (
           <Button variant="outline" size="sm" disabled={busy} onClick={() => void send("open")}>
             <CirclePlay aria-hidden="true" /> Reopen

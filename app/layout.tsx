@@ -1,14 +1,12 @@
 import type { Metadata } from "next";
-import { Inter, Fraunces } from "next/font/google";
+import { Work_Sans, Lato } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 
-const inter = Inter({ variable: "--font-inter", subsets: ["latin", "cyrillic"] });
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
-  subsets: ["latin"],
-  axes: ["opsz"],
-});
+// Type inspired by espoo.fi: Work Sans for text and UI, Lato for headings (see DESIGN.md).
+// Neither has Cyrillic; Ukrainian text falls back to the system sans-serif.
+const workSans = Work_Sans({ variable: "--font-work-sans", subsets: ["latin", "latin-ext"] });
+const lato = Lato({ variable: "--font-lato", subsets: ["latin", "latin-ext"], weight: ["400", "700", "900"] });
 
 export const metadata: Metadata = {
   title: "Pulma — bring a problem, not a job ad",
@@ -18,7 +16,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${inter.variable} ${fraunces.variable} h-full antialiased`}>
+    <html lang="en" className={`${workSans.variable} ${lato.variable} h-full antialiased`}>
       <body className="h-full">
         <a
           href="#main"

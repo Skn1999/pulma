@@ -7,13 +7,23 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-work-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
-  --font-display: var(--font-fraunces), Georgia, serif;
-  --font-heading: var(--font-fraunces), Georgia, serif;
+  --font-display: var(--font-lato), var(--font-work-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-lato), var(--font-work-sans), ui-sans-serif, system-ui, sans-serif;
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: 1.4;
+  --color-navy: var(--navy);
+  --color-frame: var(--frame);
+  --color-highlight: var(--highlight);
+  --color-highlight-soft: var(--highlight-soft);
+  --color-pair: var(--pair);
+  --color-note: var(--note);
+  --color-primary-hover: var(--primary-hover);
+  --color-card-rule: var(--card-rule);
+  --shadow-card: var(--shadow-card);
   --color-paper: var(--paper);
   --color-ink: var(--foreground);
-  --color-margin-red: var(--margin-red);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -53,78 +63,73 @@
 }
 
 :root {
-  --background: oklch(0.968 0.014 88);
-  --foreground: oklch(0.22 0.03 255);
-  --card: oklch(0.99 0.008 90);
-  --card-foreground: oklch(0.22 0.03 255);
-  --popover: oklch(0.99 0.008 90);
-  --popover-foreground: oklch(0.22 0.03 255);
-  --primary: oklch(0.4 0.08 205);
-  --primary-foreground: oklch(0.985 0.01 90);
-  --secondary: oklch(0.93 0.02 88);
-  --secondary-foreground: oklch(0.25 0.03 255);
-  --muted: oklch(0.94 0.018 88);
-  --muted-foreground: oklch(0.44 0.025 255);
-  --accent: oklch(0.92 0.03 200);
-  --accent-foreground: oklch(0.28 0.06 205);
-  --destructive: oklch(0.5 0.2 27);
-  --border: oklch(0.86 0.02 85);
-  --input: oklch(0.8 0.02 85);
-  --ring: oklch(0.4 0.08 205);
-  --paper: oklch(0.99 0.012 92);
-  --margin-red: oklch(0.62 0.17 25);
-  --chart-1: oklch(0.4 0.08 205);
-  --chart-2: oklch(0.55 0.07 205);
-  --chart-3: oklch(0.7 0.06 205);
-  --chart-4: oklch(0.45 0.03 255);
-  --chart-5: oklch(0.3 0.03 255);
-  --radius: 0.5rem;
-  --sidebar: oklch(0.968 0.014 88);
-  --sidebar-foreground: oklch(0.22 0.03 255);
-  --sidebar-primary: oklch(0.4 0.08 205);
-  --sidebar-primary-foreground: oklch(0.985 0.01 90);
-  --sidebar-accent: oklch(0.92 0.03 200);
-  --sidebar-accent-foreground: oklch(0.28 0.06 205);
-  --sidebar-border: oklch(0.86 0.02 85);
-  --sidebar-ring: oklch(0.4 0.08 205);
-  --role-tint: color-mix(in oklch, var(--muted) 60%, var(--background));
+  /* Base tokens — see DESIGN.md. Inspired by espoo.fi's public palette; not an official city design. */
+  --navy: #012169;
+  --background: #FFFFFF;
+  --frame: #F3F5F8;
+  --foreground: #1B2333;
+  --card: #FFFFFF;
+  --card-foreground: #1B2333;
+  --popover: #FFFFFF;
+  --popover-foreground: #1B2333;
+  --primary: #0050BB;
+  --primary-hover: #012169;
+  --primary-foreground: #FFFFFF;
+  --secondary: #EEF1F5;
+  --secondary-foreground: #012169;
+  --muted: #EEF1F5;
+  --muted-foreground: #54595D;
+  --accent: #DFE5EB;
+  --accent-foreground: #012169;
+  --highlight: #FFC386;
+  --highlight-soft: #FDE6DB;
+  --pair: #FCA5C7;
+  --note: #FFDC47;
+  --destructive: #C8102E;
+  --border: #D5DCE5;
+  --input: #A7ACB0;
+  --ring: #0050BB;
+  --paper: #FFFFFF;
+  --card-rule: #0050BB;
+  --chart-1: #0050BB;
+  --chart-2: #012169;
+  --chart-3: #5B8BD6;
+  --chart-4: #A7ACB0;
+  --chart-5: #FFC386;
+  --radius: 0.375rem;
+  --shadow-card: 0 1px 2px rgb(1 33 105 / 0.06), 0 4px 12px -4px rgb(1 33 105 / 0.12);
+  --sidebar: #EEF1F5;
+  --sidebar-foreground: #1B2333;
+  --sidebar-primary: #0050BB;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #DFE5EB;
+  --sidebar-accent-foreground: #012169;
+  --sidebar-border: #D5DCE5;
+  --sidebar-ring: #0050BB;
 }
 
 /*
- * Role looks. Same civic base (paper, ink, Fraunces); each side gets its own accent and a tinted frame so
- * people can tell at a glance which side they are on. The shell root carries data-role; :has() lets
- * portalled dialogs and menus pick it up too. Every role also shows a text label (never colour alone).
- * Employers: steady ink-blue, cooler frame. Candidates: warm green, warmer frame. Event team: base teal.
+ * Role variants (subtle): same civic blue and type for everyone; the frame tint, accent surfaces and
+ * highlight change, and each side shows a text label next to the logo (never colour alone).
+ * Scoped with :has() so portalled dialogs and menus pick them up.
  */
 :root:has([data-role="company"]) {
-  --primary: oklch(0.38 0.09 262);
-  --ring: oklch(0.38 0.09 262);
-  --accent: oklch(0.93 0.025 262);
-  --accent-foreground: oklch(0.3 0.08 262);
-  --chart-1: oklch(0.38 0.09 262);
-  --chart-2: oklch(0.52 0.08 262);
-  --chart-3: oklch(0.68 0.06 262);
-  --sidebar: oklch(0.955 0.012 250);
-  --sidebar-primary: oklch(0.38 0.09 262);
-  --sidebar-accent: oklch(0.91 0.03 262);
-  --sidebar-accent-foreground: oklch(0.3 0.08 262);
-  --sidebar-ring: oklch(0.38 0.09 262);
-  --role-tint: oklch(0.94 0.014 250);
+  --frame: #EEF2F7;
+  --sidebar: #E4EAF1;
+  --sidebar-accent: #D3DDE8;
+  --sidebar-accent-foreground: #012169;
+  --accent: #DFE5EB;
+  --accent-foreground: #012169;
+  --highlight: #FFC386;
 }
 :root:has([data-role="talent"]) {
-  --primary: oklch(0.42 0.085 160);
-  --ring: oklch(0.42 0.085 160);
-  --accent: oklch(0.93 0.035 155);
-  --accent-foreground: oklch(0.3 0.07 160);
-  --chart-1: oklch(0.42 0.085 160);
-  --chart-2: oklch(0.56 0.08 160);
-  --chart-3: oklch(0.7 0.06 160);
-  --sidebar: oklch(0.965 0.02 85);
-  --sidebar-primary: oklch(0.42 0.085 160);
-  --sidebar-accent: oklch(0.92 0.04 155);
-  --sidebar-accent-foreground: oklch(0.3 0.07 160);
-  --sidebar-ring: oklch(0.42 0.085 160);
-  --role-tint: oklch(0.95 0.022 85);
+  --frame: #FBF3EE;
+  --sidebar: #FBEAE1;
+  --sidebar-accent: #F8D9C8;
+  --sidebar-accent-foreground: #5A2A10;
+  --accent: #FDE6DB;
+  --accent-foreground: #5A2A10;
+  --highlight: #FCA5C7;
 }
 
 .dark {
@@ -166,7 +171,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-frame text-foreground;
   }
   html {
     @apply font-sans;
@@ -174,11 +179,18 @@
   }
   h1, h2, h3 {
     font-family: var(--font-display);
-    letter-spacing: -0.01em;
+    font-weight: 700;
+    color: var(--navy);
+    letter-spacing: -0.005em;
+  }
+  a:not([class]) {
+    color: var(--primary);
+    text-decoration: underline;
+    text-underline-offset: 2px;
   }
   :focus-visible {
     outline: 2px solid var(--ring);
-    outline-offset: 3px;
+    outline-offset: 2px;
   }
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }

@@ -359,16 +359,16 @@ export function TriageView({
 
   return (
     <div className="flex h-[calc(100dvh-8rem)] flex-col md:h-[calc(100dvh-2rem-2px)]">
-      <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b px-4 py-3 sm:px-6">
-        <div className="min-w-0">
+      <header className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3 border-b px-4 py-4 sm:px-6">
+        <div className="min-w-0 flex-1 basis-80">
           <Link href="/company" className="text-xs text-muted-foreground underline-offset-4 hover:underline">
             All problems
           </Link>
-          <h1 className="truncate font-display text-xl font-semibold">{card.title}</h1>
+          <h1 className="mt-0.5 font-display text-xl leading-tight">{card.title}</h1>
           <p className="mt-0.5 text-xs text-muted-foreground">{eventLabel}</p>
           <p className="text-xs text-muted-foreground">{goalLine(goal)}</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2">
           <ProblemStatus cardId={card.id} state={card.state ?? "open"} reason={card.stateReason} />
           <EditGoal cardId={card.id} goal={goal} />
           <EditEvent cardId={card.id} eventId={eventId} events={eventChoices} locked={eventLocked} />

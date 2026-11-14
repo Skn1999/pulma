@@ -75,15 +75,15 @@ export function ProblemCardView({
 
   return (
     <article
-      className="relative overflow-hidden rounded-md border border-border bg-paper pb-6 pl-6 pr-5 pt-5 shadow-[0_1px_2px_rgba(30,40,60,0.08),0_6px_16px_-6px_rgba(30,40,60,0.15)] transition-transform duration-200 motion-safe:hover:-rotate-[0.4deg] motion-safe:hover:-translate-y-0.5"
+      className="relative overflow-hidden rounded-md border border-border bg-paper pb-6 pl-6 pr-5 pt-5 shadow-card transition-transform duration-200 motion-safe:hover:-rotate-[0.4deg] motion-safe:hover:-translate-y-0.5"
       style={{
         backgroundImage:
-          "linear-gradient(var(--margin-red), var(--margin-red)), repeating-linear-gradient(transparent, transparent 27px, oklch(0.88 0.03 230 / 0.5) 27px, oklch(0.88 0.03 230 / 0.5) 28px)",
-        backgroundSize: "100% 3px, 100% 100%",
+          "linear-gradient(var(--card-rule), var(--card-rule))",
+        backgroundSize: "100% 4px",
         backgroundRepeat: "no-repeat",
       }}
     >
-      <span aria-hidden="true" className="absolute inset-y-0 left-3 w-px bg-margin-red/40" />
+      <span aria-hidden="true" className="absolute inset-y-0 left-3 w-px bg-card-rule/30" />
       {company && (
         <p className="text-sm text-muted-foreground">
           <span className="font-medium text-foreground">{company.name}</span> · {company.sector}

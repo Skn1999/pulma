@@ -85,7 +85,7 @@ export function NavLink({ item, all, variant, collapsed }: { item: NavItem; all:
     >
       <span
         aria-hidden="true"
-        className={cn("absolute inset-y-2 left-0 w-0.5 rounded-r", active ? "bg-primary" : "bg-transparent")}
+        className={cn("absolute inset-y-1.5 left-0 w-[3px] rounded-r", active ? "bg-primary" : "bg-transparent")}
       />
       <span className="relative">
         <Icon className="size-4.5 shrink-0" aria-hidden="true" />

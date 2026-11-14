@@ -35,15 +35,15 @@ export default async function EventCardPage({ params }: { params: Promise<{ meet
     <div className="mx-auto max-w-xl space-y-4">
       <article
         aria-labelledby="meet-title"
-        className="relative overflow-hidden rounded-md border border-border bg-paper pb-6 pl-8 pr-5 pt-5 shadow-[0_1px_2px_rgba(30,40,60,0.08),0_6px_16px_-6px_rgba(30,40,60,0.15)] print:shadow-none"
+        className="relative overflow-hidden rounded-md border border-border bg-paper pb-6 pl-8 pr-5 pt-5 shadow-card print:shadow-none"
         style={{
           backgroundImage:
-            "linear-gradient(var(--margin-red), var(--margin-red)), repeating-linear-gradient(transparent, transparent 27px, oklch(0.88 0.03 230 / 0.5) 27px, oklch(0.88 0.03 230 / 0.5) 28px)",
-          backgroundSize: "100% 3px, 100% 100%",
+            "linear-gradient(var(--card-rule), var(--card-rule))",
+          backgroundSize: "100% 4px",
           backgroundRepeat: "no-repeat",
         }}
       >
-        <span aria-hidden="true" className="absolute inset-y-0 left-4 w-px bg-margin-red/40" />
+        <span aria-hidden="true" className="absolute inset-y-0 left-4 w-px bg-card-rule/30" />
         <p className="font-sans text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Event card · {card.eventName}</p>
         <h1 id="meet-title" className="mt-1 font-display text-2xl font-semibold leading-tight sm:text-3xl">{card.problemTitle}</h1>
 
