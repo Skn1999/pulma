@@ -1,5 +1,5 @@
 // Synthetic seed data. Every person and company here is fictional.
-import type { DB, Company, ProblemCard, Talent, Response } from "@/lib/types";
+import type { DB, Account, Company, ProblemCard, Talent, Response } from "@/lib/types";
 
 const companies: Company[] = [
   { id: "co-game", name: "Nordlight Games", sector: "Games", size: "35 people", about: "A small studio in Otaniemi making cooperative mobile puzzle games played by a few hundred thousand people." },
@@ -217,7 +217,38 @@ const responses: Response[] = [
     ai: true }),
 ];
 
+const SEED_AT = "2026-11-01T09:00:00.000Z";
+const CONTACTS: Record<string, string> = {
+  "co-game": "Riikka Halonen",
+  "co-cleantech": "Taneli Aaltonen",
+  "co-medtech": "Sanna Peltola",
+  "co-saas": "Jonas Berg",
+  "co-logistics": "Eero Mattila",
+  "co-robotics": "Helmi Kask",
+};
+const slug = (n: string) => n.toLowerCase().replace(/[^a-z0-9]+/g, "");
+const accounts: Account[] = [
+  ...companies.map((c): Account => ({
+    id: `acc-${c.id.replace("co-", "co-")}`,
+    email: `hiring@${slug(c.name)}.example`,
+    role: "company",
+    displayName: CONTACTS[c.id] ?? "Hiring contact",
+    companyId: c.id,
+    createdAt: SEED_AT,
+  })),
+  ...talents.map((t): Account => ({
+    id: `acc-${t.id}`,
+    email: t.email.trim().toLowerCase(),
+    role: "talent",
+    displayName: t.displayName,
+    talentId: t.id,
+    createdAt: SEED_AT,
+  })),
+  { id: "acc-organiser", email: "events@talentday.example", role: "organiser", displayName: "Event team", createdAt: SEED_AT },
+];
+
 export const seed: DB = {
+  accounts,
   companies,
   cards,
   talents,

@@ -31,6 +31,7 @@ export function getDB(): DB {
       db = undefined;
     }
   }
+  if (db && !Array.isArray(db.accounts)) db = undefined; // pre-accounts db.json: re-seed
   if (!db) {
     db = freshDB();
     persist(db);

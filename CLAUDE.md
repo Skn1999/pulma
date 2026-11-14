@@ -30,7 +30,7 @@ Judges care about: better matching, discovery and communication; privacy; transp
 
 ## Stack
 - Next.js (App Router) + TypeScript + Tailwind + shadcn/ui
-- State: a simple server-side JSON store (`/data/db.json`) behind route handlers, seeded from `/data/seed.ts`. No auth; a **role switcher** in the header (Company / Talent / Organiser) so one laptop can demo every side.
+- State: a simple server-side JSON store (`/data/db.json`) behind route handlers, seeded from `/data/seed.ts`. Email-only accounts (no passwords): **one email = one account type (Company / Talent / Organiser), fixed forever**; to act in another role, use another email. The sign-in page lists one-click demo accounts so one laptop can demo every side. Each role gets its own app shell (see CONTRACT.md v2).
 - LLM: Anthropic SDK (`@anthropic-ai/sdk`), model `claude-sonnet-5-5`, key from `ANTHROPIC_API_KEY`. All prompts live in `/lib/prompts.ts`.
 - Voice (optional): the browser Web Speech API for dictation in the company intake. Fall back to text input.
 - Deploy: Vercel.
@@ -41,6 +41,7 @@ Company      { id, name, sector, size, about }
 ProblemCard  { id, companyId, title, context, weekOneReality, hardPart,
                niceToHave[], languages[], format: "onsite"|"online"|"hybrid",
                status: "draft"|"published", createdAt }
+Account      { id, email, role, displayName, companyId?, talentId?, createdAt }   // role immutable
 Talent       { id, displayName, email, preferredLanguage? }        // never shown in round 1
 Response     { id, publicCode /* "A7" */, cardId, talentId, text, originalLanguage,
                translatedText?, aiAssisted: boolean, createdAt }

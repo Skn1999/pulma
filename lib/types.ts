@@ -77,7 +77,23 @@ export interface Feedback {
   note?: string;
 }
 
+/**
+ * A signed-in identity. One email = one account = one role, forever.
+ * The role is set at registration and can never be changed (to act in another
+ * role, register a different email). Email is stored lowercased + trimmed.
+ */
+export interface Account {
+  id: string;
+  email: string;
+  role: Role;
+  displayName: string; // person's name (for a company account: the hiring contact)
+  companyId?: string; // role === "company"
+  talentId?: string; // role === "talent"
+  createdAt: string;
+}
+
 export interface DB {
+  accounts: Account[];
   companies: Company[];
   cards: ProblemCard[];
   talents: Talent[];

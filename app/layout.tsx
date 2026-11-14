@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Fraunces } from "next/font/google";
 import "./globals.css";
-import { SiteHeader } from "@/components/site-header";
+import { Toaster } from "@/components/ui/sonner";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin", "cyrillic"] });
 const fraunces = Fraunces({
@@ -19,17 +19,15 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${inter.variable} ${fraunces.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">
+      <body className="h-full">
         <a
           href="#main"
           className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"
         >
           Skip to content
         </a>
-        <SiteHeader />
-        <main id="main" className="flex-1">
-          {children}
-        </main>
+        {children}
+        <Toaster />
       </body>
     </html>
   );

@@ -49,6 +49,7 @@ function response(id: string, cardId: string, talentId: string, publicCode: stri
 }
 
 const db: DB = {
+  accounts: [],
   companies: [
     { id: "co1", name: "One", sector: "Clean-tech", size: "10", about: "" },
     { id: "co2", name: "Two", sector: "Medtech", size: "10", about: "" },

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { apiAccount } from "@/lib/session";
 import { getDB } from "@/lib/store";
 import type { BlindResponse } from "@/lib/types";
 
@@ -14,9 +15,13 @@ function mulberry32(a: number) {
 }
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const acc = await apiAccount("company");
+  if (acc instanceof NextResponse) return acc;
   const { id } = await params;
   const db = getDB();
-  if (!db.cards.some((c) => c.id === id)) return NextResponse.json({ error: "Card not found" }, { status: 404 });
+  const card = db.cards.find((c) => c.id === id);
+  if (!card) return NextResponse.json({ error: "Card not found" }, { status: 404 });
+  if (card.companyId !== acc.companyId) return NextResponse.json({ error: "Not your card" }, { status: 403 });
 
   const jar = await cookies();
   let seedVal = Number(jar.get("pulma_seed")?.value);

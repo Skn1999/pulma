@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 import { getDB, mutate, newId, nextPublicCode } from "@/lib/store";
-import { getTalentId } from "@/lib/persona";
+import { apiAccount } from "@/lib/session";
 import type { Response as Resp } from "@/lib/types";
 
 export async function POST(req: Request) {
+  const acc = await apiAccount("talent");
+  if (acc instanceof NextResponse) return acc;
   const b = await req.json().catch(() => null);
   if (!b || typeof b !== "object") return NextResponse.json({ error: "Invalid body" }, { status: 400 });
-  const talentId = await getTalentId();
+  const talentId = acc.talentId ?? "";
   const db = getDB();
   if (!db.talents.some((t) => t.id === talentId)) return NextResponse.json({ error: "Unknown talent" }, { status: 401 });
   const card = db.cards.find((c) => c.id === b.cardId && c.status === "published");

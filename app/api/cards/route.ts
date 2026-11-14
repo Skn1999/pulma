@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { apiAccount } from "@/lib/session";
 import { getDB, mutate, newId } from "@/lib/store";
 import type { CardDraft, Format, ProblemCard } from "@/lib/types";
 
@@ -14,9 +15,11 @@ const str = (v: unknown) => (typeof v === "string" ? v.trim() : "");
 const strs = (v: unknown) => (Array.isArray(v) ? v.map(str).filter(Boolean) : []);
 
 export async function POST(req: Request) {
+  const acc = await apiAccount("company");
+  if (acc instanceof NextResponse) return acc;
   const body = await req.json().catch(() => null);
   const d = body?.draft as Partial<CardDraft> | undefined;
-  const companyId = str(body?.companyId);
+  const companyId = acc.companyId ?? "";
   if (!d || !companyId) return NextResponse.json({ error: "draft and companyId required" }, { status: 400 });
   if (!getDB().companies.some((c) => c.id === companyId)) return NextResponse.json({ error: "Unknown company" }, { status: 400 });
   const title = str(d.title);

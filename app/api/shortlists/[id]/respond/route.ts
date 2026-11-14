@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 import { applySchedule, getDB, mutate, newId } from "@/lib/store";
-import { getTalentId } from "@/lib/persona";
+import { apiAccount } from "@/lib/session";
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const acc = await apiAccount("talent");
+  if (acc instanceof NextResponse) return acc;
   const { id } = await params;
   const b = await req.json().catch(() => null);
   if (!b || typeof b.accept !== "boolean") return NextResponse.json({ error: "accept (boolean) required" }, { status: 400 });
-  const talentId = await getTalentId();
+  const talentId = acc.talentId ?? "";
   const db0 = getDB();
   const sl = db0.shortlists.find((s) => s.id === id);
   if (!sl) return NextResponse.json({ error: "Not found" }, { status: 404 });

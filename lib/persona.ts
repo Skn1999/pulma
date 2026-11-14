@@ -1,13 +1,13 @@
-import { cookies } from "next/headers";
+import { getAccount } from "./session";
 import type { Role } from "./types";
 
+// Thin wrappers over the signed-in account (see lib/session.ts).
 export async function getRole(): Promise<Role> {
-  const v = (await cookies()).get("pulma_role")?.value;
-  return v === "company" || v === "talent" || v === "organiser" ? v : "talent";
+  return (await getAccount())?.role ?? "talent";
 }
 export async function getCompanyId(): Promise<string> {
-  return (await cookies()).get("pulma_company")?.value || "co-cleantech";
+  return (await getAccount())?.companyId ?? "";
 }
 export async function getTalentId(): Promise<string> {
-  return (await cookies()).get("pulma_talent")?.value || "t-olena";
+  return (await getAccount())?.talentId ?? "";
 }
