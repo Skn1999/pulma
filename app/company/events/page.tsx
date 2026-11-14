@@ -2,8 +2,8 @@ import Link from "next/link";
 import { PageTitle } from "@/components/shell/page-title";
 import { StageBadge, ParticipationBadge } from "@/components/events/stage-badge";
 import { InvitationActions, LeaveEvent } from "@/components/company/invitation-actions";
-import { WhyJoin } from "@/components/company/why-join";
-import { exampleAnswer, platformOutcomes } from "@/lib/outcomes";
+import { InvitationReasons } from "@/components/company/invitation-reasons";
+import { exampleAnswer } from "@/lib/outcomes";
 import { fmtDay } from "@/components/event/format";
 import { buttonVariants } from "@/components/ui/button";
 import { getDB } from "@/lib/store";
@@ -46,9 +46,6 @@ export default async function CompanyEventsPage() {
     <>
       <PageTitle title="Events" subtitle="The organisers invite you. Once you accept, you get a table and can publish up to 3 problems." />
       <div className="space-y-8 px-4 py-6 sm:px-6">
-        {(invitations.length > 0 || current.length === 0) && (
-          <WhyJoin outcomes={platformOutcomes(db, now)} example={exampleAnswer(db)} />
-        )}
         <section aria-labelledby="inv-h" className="space-y-3">
           <h2 id="inv-h" className="font-display text-lg font-semibold">Invitations</h2>
           {invitations.length === 0 ? (
@@ -70,6 +67,7 @@ export default async function CompanyEventsPage() {
                       <blockquote className="mt-1">{p.note}</blockquote>
                     </figure>
                   )}
+                  <InvitationReasons example={exampleAnswer(db)} />
                   <div className="mt-4">
                     <InvitationActions participationId={p.id} eventName={ev.name} />
                   </div>

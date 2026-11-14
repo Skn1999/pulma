@@ -10,7 +10,7 @@ Ratings: **Strong** (built and demoable), **Partial** (some of it, or only as a 
 | # | What the brief asks | Rating |
 |---|---|---|
 | Goal | More relevant, efficient, meaningful connections at Espoo events | Strong |
-| 1 | Companies hard to engage; doubt the city's candidates and a free service | Strong (since 14 Nov: "Why take part") |
+| 1 | Companies hard to engage; doubt the city's candidates and a free service | Strong (since 14 Nov: reasons on the invitation) |
 | 2 | Companies describe needs unclearly and too late | Strong |
 | 3 | Organisers can't see applicants' real capabilities vs. company needs (esp. tech) | **Partial** |
 | 4 | Companies overwhelmed by irrelevant approaches during events | Strong |
@@ -36,10 +36,11 @@ real problem replace CVs, and a blind, random-order first round replaces AI scre
 - Demo: Olena answers → Kiertovolt shortlists → Olena accepts → names revealed → slot booked → event card.
 
 ### 1. Engaging companies; doubts about candidate quality and a free service — Strong (updated)
-- Added: a **"Why take part"** block on the company Events page whenever an invitation is open — anonymous
-  counts (answers per problem, % of answers replied to on time, conversations booked), a one-line promise of what
-  the company gets (one real problem, people from the city's talent pool, no CV sifting, free), and one anonymous
-  example answer.
+- Added: each invitation now says **why to take part in a City of Espoo event**, right above Accept: meet
+  jobseekers and international professionals you won't find on job boards; free, with Business Espoo's recruitment
+  specialists; possible support with hiring costs (pay subsidy, Espoo supplement). It links to the city's own
+  recruitment-assistance, financial-support and employer-contact pages, and "What would we read?" shows one
+  anonymous example answer.
 - Built: the organiser **invites** companies to a named event with a personal note; accepting gives a **table**
   and lets them publish up to 3 problems. Companies get a clear, low-effort way in (5 questions, dictation).
 - Built: once answers arrive, companies *see* quality for themselves (specific answers vs. obvious AI fluff).
