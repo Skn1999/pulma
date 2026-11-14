@@ -12,6 +12,19 @@ function slotLabel(iso: string) {
   return new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Helsinki" }).format(new Date(iso));
 }
 
+/** The company's optional, human-written line, shown as a quote from them. */
+export function InviteMessage({ message, companyName }: { message: string; companyName: string }) {
+  return (
+    <figure className="mt-3 border-l-2 border-primary pl-3">
+      <figcaption className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        Why they&apos;d like to talk
+      </figcaption>
+      <blockquote className="mt-1 text-sm leading-6">“{message}”</blockquote>
+      <p className="mt-1 text-xs text-muted-foreground">— {companyName}</p>
+    </figure>
+  );
+}
+
 export function InviteActions({ shortlistId, companyName }: { shortlistId: string; companyName: string }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);

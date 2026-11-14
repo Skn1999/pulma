@@ -39,7 +39,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
         originalLanguage: r.originalLanguage,
         translatedText: r.translatedText,
         aiAssisted: r.aiAssisted,
-        shortlist: s ? { status: s.status, note: s.note } : undefined,
+        shortlist: s ? { status: s.status, note: s.note, message: s.message } : undefined,
       };
     })
     // Stable base order, then seeded shuffle (Fisher-Yates). No AI ordering.

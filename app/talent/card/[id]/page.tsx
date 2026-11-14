@@ -15,6 +15,7 @@ export default async function TalentCardPage({ params }: { params: Promise<{ id:
   if (!card) notFound();
   const talentId = await getTalentId();
   const mine = db.responses.find((r) => r.cardId === card.id && r.talentId === talentId);
+  const locked = !!mine && db.shortlists.some((s) => s.responseId === mine.id);
   const company = db.companies.find((c) => c.id === card.companyId);
 
   return (
@@ -37,12 +38,23 @@ export default async function TalentCardPage({ params }: { params: Promise<{ id:
       </div>
       <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 border-t bg-background/95 p-3 backdrop-blur md:sticky md:bottom-0 md:mx-auto md:max-w-3xl md:border-t-0 md:bg-transparent">
         {mine ? (
-          <Link
-            href="/talent/answers"
-            className="flex min-h-12 items-center justify-center rounded-xl border border-primary/40 bg-accent px-4 text-sm font-medium text-accent-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring"
-          >
-            You answered · #{mine.publicCode} · See status
-          </Link>
+          <div className="flex items-center gap-2 rounded-xl border border-primary/40 bg-accent p-2 pl-4 text-accent-foreground">
+            <p className="min-w-0 flex-1 text-sm font-medium">You answered · #{mine.publicCode}</p>
+            {!locked && (
+              <Link
+                href={`/talent/card/${card.id}/answer`}
+                className="inline-flex min-h-11 items-center rounded-lg border border-primary/40 bg-background px-4 text-sm font-medium outline-none focus-visible:ring-3 focus-visible:ring-ring"
+              >
+                Edit
+              </Link>
+            )}
+            <Link
+              href="/talent/answers"
+              className="inline-flex min-h-11 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring"
+            >
+              Status
+            </Link>
+          </div>
         ) : (
           <Link
             href={`/talent/card/${card.id}/answer`}

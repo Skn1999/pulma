@@ -138,3 +138,31 @@ Account menu: initials avatar, name, role badge with a lock icon, Profile, Sign 
 Role layouts `app/{company,talent,organiser,event,profile}/layout.tsx` wrap children in `AppShell`;
 company/talent/organiser layouts call `requireAccount(role)`; event/profile allow any role.
 Toasts: `import { toast } from "sonner"`; `<Toaster />` is mounted once in the root layout.
+
+---
+
+# v3: Follow-up, invite message, edit/withdraw
+
+## A. Post-meeting follow-up (uses existing `Feedback` type, `db.feedback`)
+- POST `/api/feedback` `{meetingId, outcome: "next-step"|"not-now", note?}`; side comes from the session
+  (company account must own the meeting's card; talent must own the meeting's response); one row per
+  (meetingId, side) — re-posting replaces it (people can change their mind). 403/404 otherwise.
+- Visibility: each side sees only its own choice, EXCEPT when both chose "next-step": then both see
+  "You both want a next step", and the company sees the talent's email (mutual consent — the only
+  place an email is ever shown). The other side's "not-now" is never revealed (show nothing / "No reply yet").
+- Organiser sees aggregates only: conversations held (meetings), follow-ups answered, mutual next steps.
+  Add to `getStats(db)`: `followUps: { meetings, answered, mutualNextSteps }`.
+- For the demo, follow-up buttons are available for any scheduled meeting (no time gating).
+
+## B. Invite message from the company
+- POST `/api/shortlists` and PATCH `/api/shortlists/[id]` accept optional `message` (trim, ≤200 chars, else 400).
+  Editable only while status is "invited". GET `/api/cards/[id]/responses` includes `shortlist.message`.
+- Talent sees it in Invites as a quote from the company: "Why we'd like to talk: …".
+- Human-written only. No AI drafting of this message.
+
+## C. Talent edits or withdraws an answer
+- PATCH `/api/responses/[id]` `{text, originalLanguage, translatedText?, aiAssisted}`; DELETE `/api/responses/[id]`.
+  Talent must own it. Only allowed while NO shortlist row exists for the response → else 409
+  "The company has already shortlisted this answer, so it can't be changed." PATCH sets `updatedAt`, keeps
+  `publicCode`. DELETE hard-deletes the response (data minimisation).
+- After a shortlist exists, the talent can still decline the invite (existing flow).

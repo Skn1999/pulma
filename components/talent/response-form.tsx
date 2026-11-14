@@ -14,15 +14,18 @@ const SOFT_LIMIT = 600;
 const btn = "min-h-11 px-4 text-sm";
 
 export function ResponseForm({
-  cardId, cardTitle, companyName, defaultLanguage,
-}: { cardId: string; cardTitle: string; companyName: string; defaultLanguage: string }) {
+  cardId, cardTitle, companyName, defaultLanguage, existing,
+}: {
+  cardId: string; cardTitle: string; companyName: string; defaultLanguage: string;
+  existing?: { id: string; text: string; language: string; translatedText?: string; aiAssisted: boolean };
+}) {
   const router = useRouter();
-  const [text, setText] = useState("");
-  const [language, setLanguage] = useState(LANGS.includes(defaultLanguage) ? defaultLanguage : "Other");
+  const [text, setText] = useState(existing?.text ?? "");
+  const [language, setLanguage] = useState(LANGS.includes(existing?.language ?? defaultLanguage) ? (existing?.language ?? defaultLanguage) : "Other");
   const [suggestion, setSuggestion] = useState<string | null>(null);
   const [clarityMsg, setClarityMsg] = useState("");
-  const [clarityAccepted, setClarityAccepted] = useState(false);
-  const [translation, setTranslation] = useState<string | null>(null);
+  const [clarityAccepted, setClarityAccepted] = useState(existing?.aiAssisted ?? false);
+  const [translation, setTranslation] = useState<string | null>(existing?.translatedText ?? null);
   const [translateMsg, setTranslateMsg] = useState("");
   const [busy, setBusy] = useState<"" | "clarity" | "translate" | "submit">("");
   const [error, setError] = useState("");
@@ -41,8 +44,8 @@ export function ResponseForm({
     setTranslateMsg("");
   }
 
-  async function post(url: string, body: unknown) {
-    const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  async function post(url: string, body: unknown, method = "POST") {
+    const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     if (!res.ok) throw new Error(((await res.json().catch(() => null)) as { error?: string } | null)?.error ?? "Something went wrong");
     return res.json();
   }
@@ -80,15 +83,12 @@ export function ResponseForm({
     setBusy("submit");
     setError("");
     try {
-      const r = await post("/api/responses", {
-        cardId,
-        text,
-        originalLanguage: language,
-        translatedText: translation ?? undefined,
-        aiAssisted,
-      });
+      const payload = { text, originalLanguage: language, translatedText: translation ?? undefined, aiAssisted };
+      const r = existing
+        ? await post(`/api/responses/${existing.id}`, payload, "PATCH")
+        : await post("/api/responses", { cardId, ...payload });
       setSent(true);
-      toast.success(`Sent as Response #${r.publicCode}`);
+      toast.success(existing ? "Answer updated" : `Sent as Response #${r.publicCode}`);
       router.push("/talent/answers");
       router.refresh();
     } catch (err) {
@@ -105,8 +105,9 @@ export function ResponseForm({
         <Button type="button" variant="ghost" className="min-h-11 gap-1 px-3" onClick={() => router.push(`/talent/card/${cardId}`)}>
           <X className="size-4" aria-hidden="true" /> Close
         </Button>
+        {existing && <h1 className="text-sm font-semibold">Edit your answer</h1>}
         <Button type="submit" className="min-h-11 px-5" disabled={!trimmed || busy !== "" || sent}>
-          {busy === "submit" ? "Sending…" : "Send"}
+          {busy === "submit" ? (existing ? "Saving…" : "Sending…") : existing ? "Save changes" : "Send"}
         </Button>
       </div>
 

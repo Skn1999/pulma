@@ -3,6 +3,7 @@ import { apiAccount } from "@/lib/session";
 import { getDB, mutate, newId } from "@/lib/store";
 
 const MAX = 5;
+const MESSAGE_MAX = 200;
 
 export async function POST(req: Request) {
   const acc = await apiAccount("company");
@@ -10,6 +11,14 @@ export async function POST(req: Request) {
   const b = await req.json().catch(() => null);
   if (!b || typeof b.cardId !== "string" || typeof b.responseId !== "string")
     return NextResponse.json({ error: "cardId and responseId required" }, { status: 400 });
+  let message: string | undefined;
+  if (b.message != null) {
+    if (typeof b.message !== "string") return NextResponse.json({ error: "message must be text" }, { status: 400 });
+    const t = b.message.trim();
+    if (t.length > MESSAGE_MAX)
+      return NextResponse.json({ error: `Message must be ${MESSAGE_MAX} characters or fewer` }, { status: 400 });
+    message = t || undefined;
+  }
   const db = getDB();
   const card = db.cards.find((c) => c.id === b.cardId);
   if (!card) return NextResponse.json({ error: "Card not found" }, { status: 404 });
@@ -22,7 +31,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: `You can shortlist at most ${MAX} responses per card` }, { status: 409 });
   const note = typeof b.note === "string" && b.note.trim() ? b.note.trim() : undefined;
   const item = mutate((d) => {
-    const s = { id: newId("sl"), cardId: b.cardId as string, responseId: b.responseId as string, status: "invited" as const, note };
+    const s = {
+      id: newId("sl"),
+      cardId: b.cardId as string,
+      responseId: b.responseId as string,
+      status: "invited" as const,
+      note,
+      message,
+    };
     d.shortlists.push(s);
     return s;
   });

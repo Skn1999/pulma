@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getDB } from "@/lib/store";
 import { getTalentId } from "@/lib/persona";
 import { PageTitle } from "@/components/shell/page-title";
-import { InviteActions } from "@/components/talent/invite-actions";
+import { InviteActions, InviteMessage } from "@/components/talent/invite-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -55,6 +55,10 @@ export default async function InboxPage() {
               </p>
               <h2 className="mt-1 font-display text-lg font-semibold leading-snug">{card?.title}</h2>
               <p className="mt-1 text-sm">Your answer: Response #{resp.publicCode}</p>
+
+              {s.message && (s.status === "invited" || s.status === "accepted") && (
+                <InviteMessage message={s.message} companyName={company?.name ?? "the company"} />
+              )}
 
               {s.status === "invited" && (
                 <div className="mt-3">

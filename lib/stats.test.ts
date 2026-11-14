@@ -110,4 +110,22 @@ describe("getStats", () => {
       { responseId: "r3", publicCode: "A1", cardTitle: "Sensor drift", talentId: "t3" },
     ]);
   });
+
+  it("counts follow-ups: answered meetings and mutual next steps only", () => {
+    const withFeedback: DB = {
+      ...db,
+      meetings: [
+        ...db.meetings,
+        { id: "m2", cardId: "c2", responseId: "r3", slotStart: "", table: 2 },
+      ],
+      feedback: [
+        { id: "f1", meetingId: "m1", side: "company", outcome: "next-step" },
+        { id: "f2", meetingId: "m1", side: "talent", outcome: "next-step" },
+        { id: "f3", meetingId: "m2", side: "company", outcome: "next-step" },
+        { id: "f4", meetingId: "m2", side: "talent", outcome: "not-now" },
+      ],
+    };
+    expect(getStats(withFeedback).followUps).toEqual({ meetings: 2, answered: 2, mutualNextSteps: 1 });
+    expect(stats.followUps).toEqual({ meetings: 1, answered: 0, mutualNextSteps: 0 });
+  });
 });

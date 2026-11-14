@@ -20,6 +20,21 @@ export default async function EventPage() {
   const responseById = new Map(db.responses.map((r) => [r.id, r]));
   const codeOf = (id: string) => responseById.get(id)?.publicCode ?? "?";
 
+  // Per-meeting follow-up state, limited to what this side may see. The other side's
+  // "not-now" is never exposed; the talent email only appears when both chose next-step.
+  function followUpFor(meetingId: string, side: "company" | "talent") {
+    const mine = db.feedback.find((f) => f.meetingId === meetingId && f.side === side)?.outcome ?? null;
+    const other = db.feedback.find((f) => f.meetingId === meetingId && f.side !== side)?.outcome;
+    const mutual = mine === "next-step" && other === "next-step";
+    const talentId = responseById.get(meetingById.get(meetingId)?.responseId ?? "")?.talentId;
+    return {
+      meetingId,
+      mine,
+      mutual,
+      ...(mutual && side === "company" ? { talentEmail: db.talents.find((t) => t.id === talentId)?.email } : {}),
+    };
+  }
+
   let title = "Event";
   let body: React.ReactNode;
 
@@ -41,6 +56,7 @@ export default async function EventPage() {
         rows={mine.map((s) => ({
           time: fmtTime(s.start),
           responseCode: codeOf(s.responseId),
+          followUp: followUpFor(s.meetingId, "company"),
           talentName: db.talents.find((t) => t.id === s.talentId)?.displayName ?? "Talent",
         }))}
       />
@@ -63,6 +79,7 @@ export default async function EventPage() {
           companyName: db.companies.find((c) => c.id === s.companyId)?.name ?? "Company",
           problemTitle: cardById.get(s.cardId)?.title ?? "",
           responseCode: codeOf(s.responseId),
+          followUp: followUpFor(s.meetingId, "talent"),
         }))}
       />
     );

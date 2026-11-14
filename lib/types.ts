@@ -41,6 +41,7 @@ export interface Response {
   translatedText?: string;
   aiAssisted: boolean;
   createdAt: string;
+  updatedAt?: string; // set when the talent edits the answer before any shortlist
 }
 
 export interface Shortlist {
@@ -49,6 +50,7 @@ export interface Shortlist {
   responseId: string;
   status: "invited" | "accepted" | "declined";
   note?: string; // private to the company
+  message?: string; // optional one line from the company to the talent, shown with the invite (≤200 chars)
 }
 
 export interface Meeting {
@@ -112,7 +114,7 @@ export interface BlindResponse {
   originalLanguage: string;
   translatedText?: string;
   aiAssisted: boolean;
-  shortlist?: { status: Shortlist["status"]; note?: string };
+  shortlist?: { status: Shortlist["status"]; note?: string; message?: string };
 }
 
 /** Problem card fields the AI generates from the intake. */

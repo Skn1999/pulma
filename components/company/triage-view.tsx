@@ -135,6 +135,31 @@ export function TriageView({
     }
   }
 
+  async function saveMessage(r: BlindResponse, message: string) {
+    const sid = meta[r.id]?.shortlistId;
+    const next = message.trim();
+    if (!sid || next === (r.shortlist?.message ?? "")) return;
+    try {
+      const res = await fetch(`/api/shortlists/${sid}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: next }),
+      });
+      if (res.status === 409) {
+        toast.error("This message is locked because the person has already responded.");
+        await load();
+        return;
+      }
+      if (!res.ok) throw new Error();
+      setItems((p) =>
+        p && p.map((x) => (x.id === r.id && x.shortlist ? { ...x, shortlist: { ...x.shortlist, message: next || undefined } } : x)),
+      );
+      toast.success("Message saved");
+    } catch {
+      toast.error("Couldn't save the message. Try again.");
+    }
+  }
+
   const move = useCallback(
     (delta: number) => {
       if (visible.length === 0) return;
@@ -331,6 +356,7 @@ export function TriageView({
               onShowOriginal={(v) => setShowOriginal((s) => ({ ...s, [selected.id]: v }))}
               onToggle={() => void toggle(selected)}
               onNote={(n) => void saveNote(selected, n)}
+              onMessage={(m) => void saveMessage(selected, m)}
               onBack={() => setMobileOpen(false)}
             />
           ) : (
@@ -354,8 +380,49 @@ export function TriageView({
   );
 }
 
+const MESSAGE_MAX = 200;
+
+function MessageField({
+  id, initial, lockedReason, onSave,
+}: {
+  id: string;
+  initial: string;
+  lockedReason?: string;
+  onSave: (m: string) => void;
+}) {
+  const [draft, setDraft] = useState(initial);
+  const helpId = `${id}-help`;
+  const countId = `${id}-count`;
+  return (
+    <div className="mt-5">
+      <label htmlFor={id} className="text-sm font-medium">
+        Message to this person <span className="font-normal text-muted-foreground">(optional)</span>
+      </label>
+      <Textarea
+        id={id}
+        className="mt-1"
+        rows={3}
+        maxLength={MESSAGE_MAX}
+        value={draft}
+        disabled={!!lockedReason}
+        aria-describedby={`${helpId} ${countId}`}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={(e) => onSave(e.target.value)}
+      />
+      <div className="mt-1 flex items-start justify-between gap-3 text-xs text-muted-foreground">
+        <p id={helpId}>
+          {lockedReason ?? "They'll see this with your invite. Say what caught your eye — no AI help here."}
+        </p>
+        <p id={countId} className="shrink-0 tabular-nums">
+          {draft.length}/{MESSAGE_MAX}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function Reader({
-  r, name, full, busy, showOriginal, onShowOriginal, onToggle, onNote, onBack,
+  r, name, full, busy, showOriginal, onShowOriginal, onToggle, onNote, onMessage, onBack,
 }: {
   r: BlindResponse;
   name?: string;
@@ -365,6 +432,7 @@ function Reader({
   onShowOriginal: (v: boolean) => void;
   onToggle: () => void;
   onNote: (n: string) => void;
+  onMessage: (m: string) => void;
   onBack: () => void;
 }) {
   const sl = r.shortlist;
@@ -418,6 +486,22 @@ function Reader({
         {!sl && full && <span className="text-sm text-muted-foreground">Five already shortlisted. Remove one first.</span>}
         {locked && <span className="text-sm text-muted-foreground">Accepted, so it can&apos;t be removed.</span>}
       </div>
+
+      {sl && (
+        <MessageField
+          key={r.id}
+          id={`message-${r.id}`}
+          initial={sl.message ?? ""}
+          lockedReason={
+            sl.status === "accepted"
+              ? "They've accepted, so this message is locked."
+              : sl.status === "declined"
+                ? "They've declined, so this message is locked."
+                : undefined
+          }
+          onSave={onMessage}
+        />
+      )}
 
       {sl && (
         <div className="mt-5">

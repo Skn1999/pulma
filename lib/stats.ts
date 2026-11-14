@@ -8,6 +8,7 @@ export interface Stats {
   sectors: { name: string; count: number }[];
   languages: { name: string; count: number }[];
   timeline: { cardId: string; title: string; createdAt: string; daysBeforeEvent: number }[];
+  followUps: { meetings: number; answered: number; mutualNextSteps: number };
   noInvite: { responseId: string; publicCode: string; cardTitle: string; talentId: string }[];
 }
 
@@ -76,6 +77,20 @@ export function getStats(db: DB): Stats {
       talentId: r.talentId,
     }));
 
+  const meetingIds = new Set(meetings.map((m) => m.id));
+  const answeredIds = new Set<string>();
+  const nextStepSides = new Map<string, Set<string>>();
+  for (const f of db.feedback ?? []) {
+    if (!meetingIds.has(f.meetingId)) continue;
+    answeredIds.add(f.meetingId);
+    if (f.outcome === "next-step") {
+      const sides = nextStepSides.get(f.meetingId) ?? new Set<string>();
+      sides.add(f.side);
+      nextStepSides.set(f.meetingId, sides);
+    }
+  }
+  const mutualNextSteps = [...nextStepSides.values()].filter((s) => s.size === 2).length;
+
   return {
     counts: {
       cards: published.length,
@@ -86,6 +101,7 @@ export function getStats(db: DB): Stats {
     sectors: toSortedCounts(sectorCounts),
     languages: toSortedCounts(languageCounts),
     timeline,
+    followUps: { meetings: meetings.length, answered: answeredIds.size, mutualNextSteps },
     noInvite,
   };
 }

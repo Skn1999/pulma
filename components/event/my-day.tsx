@@ -1,4 +1,6 @@
+import { Fragment } from "react";
 import { CalendarClock } from "lucide-react";
+import { FollowUp, type FollowUpState } from "./follow-up";
 
 export function ScheduleNotice({ count }: { count: number }) {
   return (
@@ -20,6 +22,7 @@ export function EmptyDay({ title, body }: { title: string; body: string }) {
 }
 
 export interface CompanyDayRow {
+  followUp: FollowUpState;
   time: string;
   responseCode: string;
   talentName: string;
@@ -66,11 +69,18 @@ export function CompanyDay({
             </thead>
             <tbody>
               {rows.map((r) => (
-                <tr key={r.time} className="border-b border-border last:border-0">
-                  <th scope="row" className="px-4 py-3 font-display text-base font-semibold tabular-nums">{r.time}</th>
-                  <td className="px-4 py-3">Response #{r.responseCode}</td>
-                  <td className="px-4 py-3 font-medium">{r.talentName}</td>
-                </tr>
+                <Fragment key={r.time}>
+                  <tr>
+                    <th scope="row" className="px-4 pt-3 font-display text-base font-semibold tabular-nums">{r.time}</th>
+                    <td className="px-4 pt-3">Response #{r.responseCode}</td>
+                    <td className="px-4 pt-3 font-medium">{r.talentName}</td>
+                  </tr>
+                  <tr className="border-b border-border last:border-0">
+                    <td colSpan={3} className="px-4 pb-3">
+                      <FollowUp side="company" state={r.followUp} />
+                    </td>
+                  </tr>
+                </Fragment>
               ))}
             </tbody>
           </table>
@@ -82,6 +92,7 @@ export function CompanyDay({
 }
 
 export interface TalentDayRow {
+  followUp: FollowUpState;
   time: string;
   table: number;
   companyName: string;
@@ -124,6 +135,7 @@ export function TalentDay({
                 <p className="mt-1 font-medium">{r.companyName}, table {r.table}</p>
                 <p className="text-sm text-muted-foreground">{r.problemTitle}</p>
                 <p className="mt-1 text-xs text-muted-foreground">Your answer: Response #{r.responseCode}</p>
+                <FollowUp side="talent" companyName={r.companyName} state={r.followUp} />
               </li>
             ))}
           </ol>

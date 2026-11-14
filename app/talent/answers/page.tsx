@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Lock } from "lucide-react";
 import { getDB } from "@/lib/store";
 import { getTalentId } from "@/lib/persona";
 import { PageTitle } from "@/components/shell/page-title";
+import { AnswerActions } from "@/components/talent/answer-actions";
 import { StatusTrack, type TrackStage } from "@/components/talent/status-track";
 
 export const dynamic = "force-dynamic";
@@ -43,7 +44,19 @@ export default async function AnswersPage() {
                     </span>
                     <ChevronRight className="mt-1 size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
                   </Link>
+                  {r.updatedAt && (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Edited {new Date(r.updatedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                    </p>
+                  )}
                   <StatusTrack stage={stage} declined={sl?.status === "declined"} />
+                  {sl ? (
+                    <p className="mt-3 inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+                      <Lock className="size-4" aria-hidden="true" /> Locked — the company shortlisted this answer
+                    </p>
+                  ) : (
+                    <AnswerActions responseId={r.id} cardId={r.cardId} />
+                  )}
                 </li>
               );
             })}

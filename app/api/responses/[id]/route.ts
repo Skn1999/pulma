@@ -1,0 +1,50 @@
+import { NextResponse } from "next/server";
+import { getDB, mutate } from "@/lib/store";
+import { apiAccount } from "@/lib/session";
+
+const LOCKED = "The company has already shortlisted this answer, so it can't be changed.";
+
+async function guard(id: string) {
+  const acc = await apiAccount("talent");
+  if (acc instanceof NextResponse) return { err: acc };
+  const db = getDB();
+  const r = db.responses.find((x) => x.id === id);
+  if (!r) return { err: NextResponse.json({ error: "Answer not found" }, { status: 404 }) };
+  if (r.talentId !== acc.talentId) return { err: NextResponse.json({ error: "This isn't your answer" }, { status: 403 }) };
+  if (db.shortlists.some((s) => s.responseId === id)) return { err: NextResponse.json({ error: LOCKED }, { status: 409 }) };
+  return { err: null };
+}
+
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const g = await guard(id);
+  if (g.err) return g.err;
+  const b = await req.json().catch(() => null);
+  if (!b || typeof b !== "object") return NextResponse.json({ error: "Invalid body" }, { status: 400 });
+  const text = typeof b.text === "string" ? b.text.trim() : "";
+  if (!text) return NextResponse.json({ error: "text required" }, { status: 400 });
+  if (text.length > 2000) return NextResponse.json({ error: "text too long" }, { status: 400 });
+  const translated = typeof b.translatedText === "string" && b.translatedText.trim() ? b.translatedText.trim() : undefined;
+  const updated = mutate((d) => {
+    const r = d.responses.find((x) => x.id === id)!;
+    const changed = r.text !== text;
+    r.text = text;
+    if (typeof b.originalLanguage === "string" && b.originalLanguage) r.originalLanguage = b.originalLanguage;
+    if (translated !== undefined) r.translatedText = translated;
+    else if (changed) r.translatedText = undefined;
+    r.aiAssisted = b.aiAssisted === true;
+    r.updatedAt = new Date().toISOString();
+    return r;
+  });
+  return NextResponse.json({ id: updated.id, publicCode: updated.publicCode, cardId: updated.cardId });
+}
+
+export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const g = await guard(id);
+  if (g.err) return g.err;
+  mutate((d) => {
+    d.responses = d.responses.filter((x) => x.id !== id);
+  });
+  return NextResponse.json({ ok: true });
+}
