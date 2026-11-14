@@ -15,7 +15,8 @@ function ago(at: string, now: number): string {
   return new Date(at).toLocaleDateString(undefined, { day: "numeric", month: "short" });
 }
 
-export function NotificationBell({ className }: { className?: string }) {
+/** align="start" opens the panel rightwards (for the left sidebar); "end" opens leftwards (top-right header). */
+export function NotificationBell({ className, align = "end" }: { className?: string; align?: "start" | "end" }) {
   const ctx = useNotifications();
   const [open, setOpen] = useState(false);
   const [now, setNow] = useState<number | null>(null);
@@ -79,7 +80,10 @@ export function NotificationBell({ className }: { className?: string }) {
           id={panelId}
           role="region"
           aria-label="Notifications"
-          className="absolute right-0 top-full z-50 mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-lg border bg-popover text-popover-foreground shadow-lg"
+          className={cn(
+            "absolute top-full z-50 mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-lg border bg-popover text-popover-foreground shadow-lg",
+            align === "start" ? "left-0" : "right-0",
+          )}
         >
           <p className="border-b px-4 py-2.5 text-sm font-semibold">Notifications</p>
           {items.length === 0 ? (

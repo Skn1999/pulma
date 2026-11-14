@@ -25,5 +25,8 @@ export default async function CompanyCardPage({ params, searchParams }: { params
     meta[s.responseId] = { shortlistId: s.id, revealedName: name };
   }
 
-  return <TriageView card={card} company={company} initialMeta={meta} initialSelected={db.responses.some((x) => x.id === r && x.cardId === id) ? r : undefined} />;
+  const selected = db.responses.some((x) => x.id === r && x.cardId === id) ? r : undefined;
+  // Keyed on the selected answer so opening a notification link while already on this page
+  // remounts the view with that answer selected (and its list freshly loaded).
+  return <TriageView key={`${id}:${selected ?? ""}`} card={card} company={company} initialMeta={meta} initialSelected={selected} />;
 }

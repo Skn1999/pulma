@@ -63,10 +63,13 @@ export function TriageView({
     }
   }, [cardId]);
 
+  // Reload on mount and whenever the server re-renders the page (router.refresh() after a
+  // notification), so new answers and shortlist changes from the other side show up.
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMeta(initialMeta);
     void load();
-  }, [load]);
+  }, [initialMeta, load]);
 
   const count = items?.filter((i) => i.shortlist).length ?? 0;
   const full = count >= MAX;
@@ -424,6 +427,7 @@ export function TriageView({
         >
           {selected ? (
             <Reader
+              key={selected.id}
               r={selected}
               name={meta[selected.id]?.revealedName}
               full={full}
@@ -659,7 +663,6 @@ function Reader({
 
       {sl && (
         <MessageField
-          key={r.id}
           id={`message-${r.id}`}
           initial={sl.message ?? ""}
           lockedReason={
@@ -679,7 +682,6 @@ function Reader({
             Private note <span className="font-normal text-muted-foreground">(Only your team sees this)</span>
           </label>
           <Textarea
-            key={r.id}
             id={`note-${r.id}`}
             className="mt-1"
             rows={3}
@@ -689,7 +691,7 @@ function Reader({
         </div>
       )}
 
-      <details key={r.id} className="group mt-6 border-t pt-4" open={!!sl}>
+      <details className="group mt-6 border-t pt-4" open={!!sl}>
         <summary className="flex cursor-pointer items-center gap-1 text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring">
           <ChevronDown className="size-4 transition-transform group-open:rotate-180" aria-hidden="true" />
           Conversation with #{r.publicCode}

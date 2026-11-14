@@ -30,7 +30,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
             </Link>
             <p className="mt-0.5 truncate text-xs text-muted-foreground">{context}</p>
           </div>
-          {showBell && <NotificationBell className="shrink-0" />}
+          {showBell && <NotificationBell className="shrink-0" align="start" />}
         </div>
         <nav aria-label="Main" className="flex-1 overflow-y-auto px-3 py-2">
           <ul className="space-y-1">
