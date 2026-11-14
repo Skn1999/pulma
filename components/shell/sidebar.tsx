@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { SIDEBAR_COOKIE, type NavItem } from "@/lib/nav";
 import type { Role } from "@/lib/types";
 import { NavLink } from "./nav-link";
+import { RoleBadge } from "./role-badge";
 import { AccountMenu } from "./account-menu";
 import { NotificationBell } from "./notification-bell";
 
@@ -16,10 +17,11 @@ import { NotificationBell } from "./notification-bell";
  * focus stays on it after pressing it; collapsed links keep their text for screen readers.
  */
 export function Sidebar({
-  nav, context, showBell, menu, initialCollapsed,
+  nav, roleLabel, context, showBell, menu, initialCollapsed,
 }: {
   nav: NavItem[];
-  context: string;
+  roleLabel: string;
+  context?: string;
   showBell: boolean;
   menu: { displayName: string; email: string; role: Role };
   initialCollapsed: boolean;
@@ -49,7 +51,10 @@ export function Sidebar({
           >
             {collapsed ? <span aria-hidden="true">P</span> : "Pulma"}
           </Link>
-          <p className={cn("mt-0.5 truncate text-xs text-muted-foreground", collapsed && "sr-only")}>{context}</p>
+          <div className={cn("mt-1 flex min-w-0 flex-col items-start gap-1", collapsed && "sr-only")}>
+            <RoleBadge label={roleLabel} />
+            {context && <p className="max-w-full truncate text-xs text-muted-foreground">{context}</p>}
+          </div>
         </div>
         <div className={cn("flex shrink-0 gap-1", collapsed ? "flex-col items-center" : "items-center")}>
           <button

@@ -87,6 +87,44 @@
   --sidebar-accent-foreground: oklch(0.28 0.06 205);
   --sidebar-border: oklch(0.86 0.02 85);
   --sidebar-ring: oklch(0.4 0.08 205);
+  --role-tint: color-mix(in oklch, var(--muted) 60%, var(--background));
+}
+
+/*
+ * Role looks. Same civic base (paper, ink, Fraunces); each side gets its own accent and a tinted frame so
+ * people can tell at a glance which side they are on. The shell root carries data-role; :has() lets
+ * portalled dialogs and menus pick it up too. Every role also shows a text label (never colour alone).
+ * Employers: steady ink-blue, cooler frame. Candidates: warm green, warmer frame. Event team: base teal.
+ */
+:root:has([data-role="company"]) {
+  --primary: oklch(0.38 0.09 262);
+  --ring: oklch(0.38 0.09 262);
+  --accent: oklch(0.93 0.025 262);
+  --accent-foreground: oklch(0.3 0.08 262);
+  --chart-1: oklch(0.38 0.09 262);
+  --chart-2: oklch(0.52 0.08 262);
+  --chart-3: oklch(0.68 0.06 262);
+  --sidebar: oklch(0.955 0.012 250);
+  --sidebar-primary: oklch(0.38 0.09 262);
+  --sidebar-accent: oklch(0.91 0.03 262);
+  --sidebar-accent-foreground: oklch(0.3 0.08 262);
+  --sidebar-ring: oklch(0.38 0.09 262);
+  --role-tint: oklch(0.94 0.014 250);
+}
+:root:has([data-role="talent"]) {
+  --primary: oklch(0.42 0.085 160);
+  --ring: oklch(0.42 0.085 160);
+  --accent: oklch(0.93 0.035 155);
+  --accent-foreground: oklch(0.3 0.07 160);
+  --chart-1: oklch(0.42 0.085 160);
+  --chart-2: oklch(0.56 0.08 160);
+  --chart-3: oklch(0.7 0.06 160);
+  --sidebar: oklch(0.965 0.02 85);
+  --sidebar-primary: oklch(0.42 0.085 160);
+  --sidebar-accent: oklch(0.92 0.04 155);
+  --sidebar-accent-foreground: oklch(0.3 0.07 160);
+  --sidebar-ring: oklch(0.42 0.085 160);
+  --role-tint: oklch(0.95 0.022 85);
 }
 
 .dark {
