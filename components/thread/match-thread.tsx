@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Check, Circle, Hourglass, Lock, LockOpen, MinusCircle, PauseCircle, Undo2 } from "lucide-react";
+import { Hourglass, Lock, LockOpen, PauseCircle, Undo2 } from "lucide-react";
 import type { ThreadView } from "@/lib/thread";
 import { shortDate } from "@/lib/next-steps";
+import { Stepper } from "@/components/ui/stepper";
 import { goalLine, recordText } from "@/lib/promise-text";
 import { MeetingPanel } from "@/components/meetings/meeting-panel";
 
@@ -82,21 +83,10 @@ export function MatchThread({ responseId, viewer = "talent" }: { responseId: str
 
       <section aria-labelledby="thread-steps">
         <h3 id="thread-steps" className="sr-only">Progress</h3>
-        <ol className="flex gap-1 overflow-x-auto">
-          {t.steps.map((s) => (
-            <li
-              key={s.key}
-              aria-current={s.state === "current" ? "step" : undefined}
-              className={`flex min-w-[4.5rem] flex-1 flex-col items-center gap-1 rounded-md border px-1 py-1.5 text-center text-[0.7rem] leading-tight ${
-                s.state === "current" ? "border-primary bg-accent font-semibold text-accent-foreground" : s.state === "done" ? "border-border bg-muted" : "border-dashed border-border text-muted-foreground"
-              }`}
-            >
-              {s.state === "done" ? <Check className="size-4" aria-hidden="true" /> : s.state === "skipped" ? <MinusCircle className="size-4" aria-hidden="true" /> : <Circle className="size-4" aria-hidden="true" />}
-              <span>{s.label}</span>
-              <span className="sr-only">{s.state === "done" ? "(done)" : s.state === "current" ? "(current)" : s.state === "skipped" ? "(skipped)" : "(not yet)"}</span>
-            </li>
-          ))}
-        </ol>
+        <Stepper
+          steps={t.steps.map((s) => ({ label: s.label, state: s.state }))}
+          muted={t.steps.some((s) => s.key === "closed" || s.key === "declined")}
+        />
       </section>
 
       {t.cardState && (
