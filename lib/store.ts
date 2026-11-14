@@ -63,8 +63,37 @@ export function applySchedule(db: DB): void {
   }
 }
 
+/**
+ * Seed history has fixed dates. If any lie in the future relative to the real clock, move all
+ * seed timestamps back by the same amount so the newest is one hour ago. Live actions then always
+ * sort after seed history, and relative times ("2 days ago") read correctly. Event date is untouched.
+ */
+function shiftSeedIntoPast(db: DB): void {
+  const stamps: string[] = [
+    ...db.cards.map((c) => c.createdAt),
+    ...db.responses.flatMap((r) => [r.createdAt, r.updatedAt ?? ""]),
+    ...db.closures.map((c) => c.createdAt),
+    ...db.activity.map((a) => a.at),
+    ...db.accounts.map((a) => a.createdAt),
+  ].filter(Boolean);
+  const latest = Math.max(...stamps.map((s) => Date.parse(s)).filter((n) => !Number.isNaN(n)));
+  const target = Date.now() - 60 * 60 * 1000;
+  if (!Number.isFinite(latest) || latest <= target) return;
+  const delta = latest - target;
+  const shift = (s: string) => new Date(Date.parse(s) - delta).toISOString();
+  for (const c of db.cards) c.createdAt = shift(c.createdAt);
+  for (const r of db.responses) {
+    r.createdAt = shift(r.createdAt);
+    if (r.updatedAt) r.updatedAt = shift(r.updatedAt);
+  }
+  for (const c of db.closures) c.createdAt = shift(c.createdAt);
+  for (const a of db.activity) a.at = shift(a.at);
+  for (const a of db.accounts) a.createdAt = shift(a.createdAt);
+}
+
 function freshDB(): DB {
   const db = structuredClone(seed) as DB;
+  shiftSeedIntoPast(db);
   applySchedule(db);
   // Start with a clean bell: only activity from now on counts as new.
   const now = new Date().toISOString();

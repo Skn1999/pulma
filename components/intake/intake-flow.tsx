@@ -74,9 +74,8 @@ export function IntakeFlow({ company }: { company?: Company }) {
       if (!res.ok) throw new Error("bad response");
       const data: { draft: CardDraft; suggestions?: string[]; fallback?: boolean } = await res.json();
       setEditor({
-        draft: data.draft,
+        draft: { ...data.draft, languagesNeeded: data.draft.languagesNeeded ?? data.draft.languages },
         niceRaw: data.draft.niceToHave.join(", "),
-        langRaw: data.draft.languages.join(", "),
       });
       setSuggestions(data.suggestions ?? []);
       setFallback(!!data.fallback);
@@ -118,7 +117,6 @@ export function IntakeFlow({ company }: { company?: Company }) {
       const draft: CardDraft = {
         ...editor.draft,
         niceToHave: splitList(editor.niceRaw),
-        languages: splitList(editor.langRaw),
       };
       const res = await fetch("/api/cards", {
         method: "POST",
@@ -203,7 +201,7 @@ export function IntakeFlow({ company }: { company?: Company }) {
           <div className="lg:sticky lg:top-6 lg:self-start">
             <p className="mb-3 text-sm font-medium text-muted-foreground">Live preview</p>
             <ProblemCardView
-              card={{ ...editor.draft, niceToHave: splitList(editor.niceRaw), languages: splitList(editor.langRaw) }}
+              card={{ ...editor.draft, niceToHave: splitList(editor.niceRaw) }}
               company={company}
             />
           </div>

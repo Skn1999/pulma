@@ -31,13 +31,14 @@ export default async function AnswersPage() {
               const card = db.cards.find((c) => c.id === r.cardId);
               const company = db.companies.find((c) => c.id === card?.companyId);
               const sl = db.shortlists.find((s) => s.responseId === r.id);
+              const closed = db.closures.some((c) => c.responseId === r.id);
               const meeting = db.meetings.find((m) => m.responseId === r.id && m.slotStart);
               let stage: TrackStage = 0;
               if (sl) stage = 2;
               if (sl?.status === "accepted" && meeting) stage = 3;
               return (
                 <li key={r.id} className="rounded-xl border border-border bg-card p-4">
-                  <Link href={`/talent/card/${r.cardId}`} className="group flex items-start gap-2 rounded-md outline-none focus-visible:ring-3 focus-visible:ring-ring">
+                  <Link href={`/talent/answers/${r.id}`} className="group flex items-start gap-2 rounded-md outline-none focus-visible:ring-3 focus-visible:ring-ring">
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-xs text-muted-foreground">{company?.name} · Response #{r.publicCode}</span>
                       <span className="mt-0.5 block font-display text-lg font-semibold leading-snug">{card?.title}</span>
@@ -49,12 +50,12 @@ export default async function AnswersPage() {
                       Edited {new Date(r.updatedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
                     </p>
                   )}
-                  <StatusTrack stage={stage} declined={sl?.status === "declined"} />
+                  <StatusTrack stage={stage} declined={sl?.status === "declined"} closed={closed && !sl} />
                   {sl ? (
                     <p className="mt-3 inline-flex items-center gap-1.5 text-sm text-muted-foreground">
                       <Lock className="size-4" aria-hidden="true" /> Locked — the company shortlisted this answer
                     </p>
-                  ) : (
+                  ) : closed ? <AnswerActions responseId={r.id} cardId={r.cardId} withdrawOnly /> : (
                     <AnswerActions responseId={r.id} cardId={r.cardId} />
                   )}
                 </li>

@@ -1,3 +1,4 @@
+import { Briefcase, Sparkles } from "lucide-react";
 import type { CardDraft, Company, ProblemCard } from "@/lib/types";
 
 const FORMAT_LABEL = { onsite: "On-site", online: "Online", hybrid: "Hybrid" } as const;
@@ -13,12 +14,51 @@ function Section({ label, children }: { label: string; children: React.ReactNode
   );
 }
 
-function Tag({ prefix, text }: { prefix: string; text: string }) {
+function Pill({ text, prefix }: { text: string; prefix?: string }) {
   return (
     <li className="rounded-full border border-border bg-background px-2.5 py-0.5 text-xs text-foreground">
-      <span className="text-muted-foreground">{prefix}: </span>
+      {prefix && <span className="text-muted-foreground">{prefix}: </span>}
       {text}
     </li>
+  );
+}
+
+/** Old cards have no languagesNeeded: every language counts as needed. */
+function splitLanguages(card: ProblemCard | CardDraft): { needed: string[]; nice: string[] } {
+  const needed = card.languagesNeeded ?? card.languages;
+  return {
+    needed,
+    nice: card.languages.filter((l) => !needed.includes(l)),
+  };
+}
+
+function LanguageGroup({
+  kind,
+  langs,
+  emptyText,
+}: {
+  kind: "needed" | "nice";
+  langs: string[];
+  emptyText: string;
+}) {
+  const label = kind === "needed" ? "Needed for the work" : "Nice to have";
+  const Icon = kind === "needed" ? Briefcase : Sparkles;
+  return (
+    <div>
+      <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+        <Icon className="size-3.5" aria-hidden="true" />
+        {label}
+      </p>
+      {langs.length > 0 ? (
+        <ul className="mt-1.5 flex flex-wrap gap-1.5" aria-label={label}>
+          {langs.map((l) => (
+            <Pill key={l} text={l} />
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-1.5 text-xs text-muted-foreground">{emptyText}</p>
+      )}
+    </div>
   );
 }
 
@@ -31,14 +71,7 @@ export function ProblemCardView({
   company?: Company;
   compact?: boolean;
 }) {
-  const tags = (
-    <ul className="mt-4 flex flex-wrap gap-1.5" aria-label="Languages and format">
-      {card.languages.map((l) => (
-        <Tag key={l} prefix="Language" text={l} />
-      ))}
-      <Tag prefix="Format" text={FORMAT_LABEL[card.format]} />
-    </ul>
-  );
+  const { needed, nice } = splitLanguages(card);
 
   return (
     <article
@@ -62,7 +95,20 @@ export function ProblemCardView({
       {compact ? (
         <>
           <p className="mt-3 line-clamp-2 text-[0.95rem] leading-7 text-foreground">{card.context}</p>
-          {tags}
+          <div className="mt-4 space-y-1.5">
+            <ul className="flex flex-wrap gap-1.5" aria-label="Languages needed for the work">
+              {needed.map((l) => (
+                <Pill key={l} text={l} />
+              ))}
+              <Pill prefix="Format" text={FORMAT_LABEL[card.format]} />
+            </ul>
+            {nice.length > 0 && (
+              <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Sparkles className="size-3.5" aria-hidden="true" />
+                + {nice.join(", ")} nice to have
+              </p>
+            )}
+          </div>
         </>
       ) : (
         <>
@@ -84,7 +130,13 @@ export function ProblemCardView({
               </ul>
             </Section>
           )}
-          {tags}
+          <div className="mt-5 space-y-3" aria-label="Languages and format">
+            <LanguageGroup kind="needed" langs={needed} emptyText="None marked as needed" />
+            {nice.length > 0 && <LanguageGroup kind="nice" langs={nice} emptyText="" />}
+            <ul className="flex flex-wrap gap-1.5">
+              <Pill prefix="Format" text={FORMAT_LABEL[card.format]} />
+            </ul>
+          </div>
         </>
       )}
     </article>

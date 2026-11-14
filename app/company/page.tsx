@@ -17,10 +17,12 @@ export default async function CompanyHome() {
     const answers = db.responses.filter((r) => r.cardId === card.id);
     const lists = db.shortlists.filter((s) => s.cardId === card.id);
     const listed = new Set(lists.map((s) => s.responseId));
+    const closedIds = new Set(db.closures.filter((c) => c.cardId === card.id).map((c) => c.responseId));
     return {
       card,
       answers: answers.length,
       fresh: answers.filter((r) => !listed.has(r.id)).length,
+      open: answers.filter((r) => !listed.has(r.id) && !closedIds.has(r.id)).length,
       shortlisted: lists.length,
       accepted: lists.filter((s) => s.status === "accepted").length,
     };
@@ -49,7 +51,7 @@ export default async function CompanyHome() {
         </div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[640px] text-sm">
+          <table className="w-full min-w-[720px] text-sm">
             <caption className="sr-only">Your problems. Select a title to review its answers.</caption>
             <thead>
               <tr className="border-b text-left text-xs uppercase tracking-wide text-muted-foreground">
@@ -58,12 +60,13 @@ export default async function CompanyHome() {
                 <th scope="col" className="px-3 py-2 font-medium">Published</th>
                 <th scope="col" className="px-3 py-2 text-right font-medium">Answers</th>
                 <th scope="col" className="px-3 py-2 text-right font-medium">New</th>
+                <th scope="col" className="px-3 py-2 text-right font-medium">Open</th>
                 <th scope="col" className="px-3 py-2 text-right font-medium">Shortlisted</th>
                 <th scope="col" className="px-4 py-2 text-right font-medium sm:px-6">Accepted</th>
               </tr>
             </thead>
             <tbody>
-              {rows.map(({ card, answers, fresh, shortlisted, accepted }) => (
+              {rows.map(({ card, answers, fresh, open, shortlisted, accepted }) => (
                 <tr key={card.id} className="group relative border-b last:border-0 hover:bg-muted/50 focus-within:bg-muted/50">
                   <th scope="row" className="px-4 py-3 text-left font-medium sm:px-6">
                     <Link
@@ -89,6 +92,7 @@ export default async function CompanyHome() {
                       <span className="text-muted-foreground">0</span>
                     )}
                   </td>
+                  <td className="px-3 py-3 text-right tabular-nums">{open}</td>
                   <td className="px-3 py-3 text-right tabular-nums">{shortlisted}/5</td>
                   <td className="px-4 py-3 text-right tabular-nums sm:px-6">{accepted}</td>
                 </tr>

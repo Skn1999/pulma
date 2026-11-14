@@ -182,7 +182,7 @@ export interface BlindResponse {
 /** Problem card fields the AI generates from the intake. */
 export type CardDraft = Pick<
   ProblemCard,
-  "title" | "context" | "weekOneReality" | "hardPart" | "niceToHave" | "languages" | "format"
+  "title" | "context" | "weekOneReality" | "hardPart" | "niceToHave" | "languages" | "languagesNeeded" | "format"
 >;
 
 export interface IntakeAnswers {

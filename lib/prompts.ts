@@ -8,13 +8,16 @@ The card describes the WORK, not the PERSON.
 - Never put credentials about a person into the card: no years of experience, degrees, certifications, age, nationality, citizenship, "native speaker", or school names.
 - If the company's answers ask for any of those, leave them out of the card and add one short, friendly item to "suggestions" that rephrases the requirement as the actual work. Example: instead of "5 years Python", suggest: "Instead of '5 years Python', try: 'you'll be cleaning messy sensor data in Python from day one'".
 - niceToHave: optional things that would be a bonus, phrased as work or skills to learn, never as credentials.
-- languages: working languages realistic in the team, as plain names such as "English" or "Finnish". Use only what the answers say. Default ["English"].
+- languages: every working language that is realistic in the team, as plain names such as "English" or "Finnish". Use only what the answers say. Default ["English"].
+- languagesNeeded: the subset of "languages" that is genuinely NEEDED for the work itself, meaning the person could not do week one without it. Every item must also appear in "languages". The rest of "languages" are nice to have. If unclear, default ["English"].
+- Never mark a language as needed just because it is the office language, the language of meetings or the team's everyday language. Ask: could this person do the first week's real work without it? If yes, it is nice to have.
+- If the answers mark Finnish or Swedish as needed for work that is not customer-facing (for example internal engineering, research or design), add one gentle item to "suggestions" asking whether it is needed for the work itself, e.g. "Is Finnish needed for the work itself, or for the team's social life? Many teams start in English."
 - format: "onsite", "online" or "hybrid". Default "hybrid" when unclear.
 - Do not invent facts about the company that the answers do not support.
 - Keep each text field to one to three sentences. Title under 70 characters.
 
 Output ONLY a JSON object. No prose, no code fences, exactly this shape:
-{"draft": {"title": string, "context": string, "weekOneReality": string, "hardPart": string, "niceToHave": string[], "languages": string[], "format": "onsite" | "online" | "hybrid"}, "suggestions": string[]}`;
+{"draft": {"title": string, "context": string, "weekOneReality": string, "hardPart": string, "niceToHave": string[], "languages": string[], "languagesNeeded": string[], "format": "onsite" | "online" | "hybrid"}, "suggestions": string[]}`;
 
 export function cardUserMessage(a: IntakeAnswers): string {
   return [
@@ -22,7 +25,7 @@ export function cardUserMessage(a: IntakeAnswers): string {
     `2. What would this person actually do in their first week?\n${a.firstWeek || "(no answer)"}`,
     `3. What's the genuinely hard part?\n${a.hardPart || "(no answer)"}`,
     `4. What would be a bonus but isn't required?\n${a.bonus || "(no answer)"}`,
-    `5. Which working languages are realistic in the team?\n${a.languages || "(no answer)"}`,
+    `5. Which working languages are realistic in the team, and which are truly needed for the work itself?\n${a.languages || "(no answer)"}`,
   ].join("\n\n");
 }
 

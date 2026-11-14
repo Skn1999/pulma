@@ -10,7 +10,7 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 
-export function AnswerActions({ responseId, cardId }: { responseId: string; cardId: string }) {
+export function AnswerActions({ responseId, cardId, withdrawOnly = false }: { responseId: string; cardId: string; withdrawOnly?: boolean }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -33,12 +33,12 @@ export function AnswerActions({ responseId, cardId }: { responseId: string; card
 
   return (
     <div className="mt-3 flex gap-2">
-      <Link
+      {!withdrawOnly && <Link
         href={`/talent/card/${cardId}/answer`}
         className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-input bg-card px-4 text-sm font-medium outline-none focus-visible:ring-3 focus-visible:ring-ring"
       >
         <Pencil className="size-4" aria-hidden="true" /> Edit
-      </Link>
+      </Link>}
       <Button type="button" variant="outline" className="min-h-11 gap-1.5 px-4 text-sm" onClick={() => setOpen(true)}>
         <Trash2 className="size-4" aria-hidden="true" /> Withdraw
       </Button>

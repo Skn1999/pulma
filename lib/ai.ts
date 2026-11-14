@@ -76,6 +76,46 @@ function cleanList(v: unknown, maxItems: number, maxLen = 160): string[] {
     .slice(0, maxItems);
 }
 
+/** Case-insensitive de-duplication, keeping first spelling and order. */
+function dedupe(xs: string[]): string[] {
+  const seen = new Set<string>();
+  return xs.filter((x) => {
+    const k = x.toLowerCase();
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
+}
+
+/** Maps "english" or "FINNISH" to the canonical name from KNOWN_LANGUAGES; other names are kept as typed. */
+function canonLanguage(name: string): string {
+  return KNOWN_LANGUAGES.find((k) => k.toLowerCase() === name.toLowerCase()) ?? name;
+}
+
+/**
+ * Makes languages consistent: `languages` is non-empty, `languagesNeeded` is a non-empty subset of it.
+ * Unclear needs default to English (CLAUDE.md: never mark a language needed just because it is the office language).
+ */
+function resolveLanguages(
+  languagesRaw: string[],
+  neededRaw: string[] | null,
+): { languages: string[]; languagesNeeded: string[] } {
+  let languages = dedupe(languagesRaw.map(canonLanguage));
+  if (!languages.length) languages = ["English"];
+  let needed = neededRaw
+    ? dedupe(neededRaw.map(canonLanguage)).filter((l) => languages.includes(l))
+    : [];
+  if (!needed.length) {
+    needed = ["English"];
+    if (!languages.includes("English")) languages = [...languages, "English"];
+  }
+  return { languages, languagesNeeded: needed };
+}
+
+/** Gentle, human-facing question when Finnish or Swedish is needed. Shown as a suggestion, never applied. */
+const SOCIAL_LANGUAGE_NUDGE = (lang: string) =>
+  `Is ${lang} needed for the work itself, or for the team's social life? Many teams start in English.`;
+
 function validateCard(obj: Record<string, unknown>): CardResult | null {
   const d = obj.draft;
   if (!d || typeof d !== "object") return null;
@@ -86,8 +126,9 @@ function validateCard(obj: Record<string, unknown>): CardResult | null {
   const hardPart = cleanString(r.hardPart, 1000);
   if (!title || !context || !weekOneReality || !hardPart) return null;
 
-  const languages = cleanList(r.languages, 6, 40);
   const format = FORMATS.includes(r.format as Format) ? (r.format as Format) : "hybrid";
+  const declaredNeeded = Array.isArray(r.languagesNeeded) ? cleanList(r.languagesNeeded, 6, 40) : null;
+  const { languages, languagesNeeded } = resolveLanguages(cleanList(r.languages, 6, 40), declaredNeeded);
 
   return {
     draft: {
@@ -96,12 +137,32 @@ function validateCard(obj: Record<string, unknown>): CardResult | null {
       weekOneReality,
       hardPart,
       niceToHave: cleanList(r.niceToHave, 8),
-      languages: languages.length ? languages : ["English"],
+      languages,
+      languagesNeeded,
       format,
     },
     suggestions: cleanList(obj.suggestions, 4, 300),
     fallback: false,
   };
+}
+
+/**
+ * Offline parse of the free-text language answer. Clauses are split on punctuation and "but"/"while",
+ * so "English needed; Finnish nice to have" gives English needed and Finnish nice to have.
+ */
+function parseLanguageAnswer(text: string): { mentioned: string[]; needed: string[] } {
+  const mentioned: string[] = [];
+  const needed: string[] = [];
+  const NICE = /\b(nice|plus|bonus|optional|preferred|helpful)\b|\bnot\s+(strictly\s+)?(needed|required|necessary)\b/i;
+  const NEEDED = /\b(needed|need|must|required|require|requires|essential|mandatory)\b/i;
+  for (const clause of text.split(/[,;.\n]+|\bbut\b|\bwhile\b/i)) {
+    const found = KNOWN_LANGUAGES.filter((lang) => new RegExp(`\\b${lang}\\b`, "i").test(clause));
+    if (!found.length) continue;
+    mentioned.push(...found);
+    if (NICE.test(clause)) continue;
+    if (NEEDED.test(clause)) needed.push(...found);
+  }
+  return { mentioned: dedupe(mentioned), needed: dedupe(needed) };
 }
 
 function normalise(a: Partial<IntakeAnswers> | undefined): IntakeAnswers {
@@ -122,10 +183,22 @@ function fallbackCard(a: IntakeAnswers): CardResult {
     return first.length > 70 ? first.slice(0, 70).replace(/\s+\S*$/, "").replace(/[,;:]$/, "") + "…" : first;
   };
 
-  const languages = KNOWN_LANGUAGES.filter((lang) =>
-    new RegExp(`\\b${lang}\\b`, "i").test(a.languages),
+  const parsed = parseLanguageAnswer(a.languages);
+  // Nothing marked as needed: the first language mentioned is needed, or English if none is mentioned.
+  const { languages, languagesNeeded } = resolveLanguages(
+    parsed.mentioned,
+    parsed.needed.length ? parsed.needed : parsed.mentioned.slice(0, 1),
   );
   const all = [a.problem, a.firstWeek, a.hardPart, a.bonus, a.languages].join(" ");
+
+  const suggestions: string[] = [];
+  if (CREDENTIAL_HINT.test(all)) {
+    suggestions.push(
+      "Years of experience, degrees, nationality or 'native speaker' are not part of the card. Try describing the work itself: what will this person actually do in week one?",
+    );
+  }
+  const socialNeeded = languagesNeeded.find((l) => l === "Finnish" || l === "Swedish");
+  if (socialNeeded) suggestions.push(SOCIAL_LANGUAGE_NUDGE(socialNeeded));
 
   return {
     draft: {
@@ -138,14 +211,11 @@ function fallbackCard(a: IntakeAnswers): CardResult {
         .map((s) => s.trim())
         .filter(Boolean)
         .slice(0, 8),
-      languages: languages.length ? languages : ["English"],
+      languages,
+      languagesNeeded,
       format: "hybrid",
     },
-    suggestions: CREDENTIAL_HINT.test(all)
-      ? [
-          "Years of experience, degrees, nationality or 'native speaker' are not part of the card. Try describing the work itself: what will this person actually do in week one?",
-        ]
-      : [],
+    suggestions: suggestions.slice(0, 4),
     fallback: true,
   };
 }

@@ -5,8 +5,9 @@ import { TriageView, type ReviewMeta } from "@/components/company/triage-view";
 
 export const dynamic = "force-dynamic";
 
-export default async function CompanyCardPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function CompanyCardPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ r?: string }> }) {
   const { id } = await params;
+  const { r } = await searchParams;
   const companyId = await getCompanyId();
   const db = getDB();
   const card = db.cards.find((c) => c.id === id);
@@ -24,5 +25,5 @@ export default async function CompanyCardPage({ params }: { params: Promise<{ id
     meta[s.responseId] = { shortlistId: s.id, revealedName: name };
   }
 
-  return <TriageView card={card} company={company} initialMeta={meta} />;
+  return <TriageView card={card} company={company} initialMeta={meta} initialSelected={db.responses.some((x) => x.id === r && x.cardId === id) ? r : undefined} />;
 }

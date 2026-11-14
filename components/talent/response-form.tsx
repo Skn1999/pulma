@@ -8,6 +8,7 @@ import { diffWords } from "diff";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { AiLabel } from "@/components/ai-label";
+import { PreviewButton } from "@/components/thread/answer-preview";
 
 const LANGS = ["English", "Finnish", "Swedish", "Ukrainian", "Spanish", "Russian", "Arabic", "Other"];
 const SOFT_LIMIT = 600;
@@ -243,6 +244,11 @@ export function ResponseForm({
               {busy === "translate" ? "Translating…" : "Translate"}
             </Button>
           )}
+          <PreviewButton
+            companyName={companyName}
+            disabled={!trimmed}
+            answer={{ text, translatedText: translation, originalLanguage: language, aiAssisted }}
+          />
           <label htmlFor="lang" className="sr-only">Language you wrote in</label>
           <select
             id="lang"

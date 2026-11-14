@@ -23,7 +23,7 @@ export const QUESTIONS: { key: keyof IntakeAnswers; text: string; hint: string }
   },
   {
     key: "languages",
-    text: "Which working languages are realistic in the team?",
-    hint: "For example: English day to day, Finnish with some customers.",
+    text: "Which working languages are realistic in the team, and which are truly needed for the work itself?",
+    hint: "Example: English needed; Finnish nice to have.",
   },
 ];
