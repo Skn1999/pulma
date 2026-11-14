@@ -4,13 +4,14 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Link from "next/link";
-import type { CardDraft, Company, IntakeAnswers, ProblemCard } from "@/lib/types";
+import type { CardDraft, Company, HiringGoal, IntakeAnswers, ProblemCard } from "@/lib/types";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { PageTitle } from "@/components/shell/page-title";
 import { Textarea } from "@/components/ui/textarea";
 import { ProblemCardView } from "@/components/problem-card";
 import { QUESTIONS } from "./questions";
 import { DictateButton } from "./dictate-button";
+import { GoalFields } from "@/components/company/goal-fields";
 import { CardEditor, splitList, type EditorState } from "./card-editor";
 
 type Stage = "chat" | "generating" | "edit";
@@ -31,7 +32,7 @@ function Bubble({ who, children }: { who: "ai" | "me"; children: React.ReactNode
   );
 }
 
-export function IntakeFlow({ company }: { company?: Company }) {
+export function IntakeFlow({ company, defaultGoal }: { company?: Company; defaultGoal: HiringGoal }) {
   const router = useRouter();
   const [stage, setStage] = useState<Stage>("chat");
   const [answers, setAnswers] = useState<string[]>(["", "", "", "", ""]);
@@ -42,6 +43,7 @@ export function IntakeFlow({ company }: { company?: Company }) {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [fallback, setFallback] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [goal, setGoal] = useState<HiringGoal>(defaultGoal);
 
   const taRef = useRef<HTMLTextAreaElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
@@ -121,7 +123,7 @@ export function IntakeFlow({ company }: { company?: Company }) {
       const res = await fetch("/api/cards", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ draft }),
+        body: JSON.stringify({ draft, goal }),
       });
       if (!res.ok) throw new Error("bad response");
       const card: ProblemCard = await res.json();
@@ -184,6 +186,11 @@ export function IntakeFlow({ company }: { company?: Company }) {
         <div className="mt-8 grid gap-10 lg:grid-cols-2">
           <div>
             <CardEditor state={editor} onChange={setEditor} />
+            <section aria-labelledby="goal-h" className="mt-8 rounded-xl border border-border bg-card p-4">
+              <h2 id="goal-h" className="font-display text-lg font-semibold">Your goal for this problem</h2>
+              <p className="mb-4 mt-1 text-sm text-muted-foreground">What you promise to the people who answer.</p>
+              <GoalFields goal={goal} onChange={setGoal} />
+            </section>
             {error && (
               <p role="alert" className="mt-4 text-sm text-destructive">
                 {error}

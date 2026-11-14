@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { apiAccount } from "@/lib/session";
 import { getDB } from "@/lib/store";
+import { inviteStatus, replyDueAt } from "@/lib/deadlines";
 import type { BlindResponse } from "@/lib/types";
 
 function mulberry32(a: number) {
@@ -28,6 +29,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const fresh = !Number.isFinite(seedVal) || !jar.get("pulma_seed");
   if (fresh) seedVal = Math.floor(Math.random() * 2 ** 31);
 
+  const now = Date.now();
   const items: BlindResponse[] = db.responses
     .filter((r) => r.cardId === id)
     .map((r) => {
@@ -40,8 +42,15 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
         originalLanguage: r.originalLanguage,
         translatedText: r.translatedText,
         aiAssisted: r.aiAssisted,
-        shortlist: s ? { status: s.status, note: s.note, message: s.message } : undefined,
+        shortlist: s
+          ? (() => {
+              const inv = inviteStatus(db, s, now);
+              return { status: s.status, note: s.note, message: s.message, respondBy: inv.respondBy, expired: inv.expired };
+            })()
+          : undefined,
         closed: cl ? { id: cl.id, reason: cl.reason } : undefined,
+        replyDue: replyDueAt(db, r),
+        steppedBack: r.steppedBack ? { until: r.steppedBack.until } : undefined,
       };
     })
     // Stable base order, then seeded shuffle (Fisher-Yates). No AI ordering.

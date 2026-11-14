@@ -1,5 +1,9 @@
 import Link from "next/link";
+import { nowMs } from "@/lib/clock";
+import { Clock, Hourglass } from "lucide-react";
 import { getDB } from "@/lib/store";
+import { inviteStatus } from "@/lib/deadlines";
+import { shortDate } from "@/lib/next-steps";
 import { getTalentId } from "@/lib/persona";
 import { PageTitle } from "@/components/shell/page-title";
 import { InviteActions, InviteMessage } from "@/components/talent/invite-actions";
@@ -21,6 +25,7 @@ export default async function InboxPage() {
   const db = getDB();
   const talentId = await getTalentId();
   const mine = new Map(db.responses.filter((r) => r.talentId === talentId).map((r) => [r.id, r]));
+  const now = nowMs();
   const items = db.shortlists
     .filter((s) => mine.has(s.responseId))
     .map((s) => {
@@ -28,9 +33,10 @@ export default async function InboxPage() {
       const card = db.cards.find((c) => c.id === s.cardId);
       const company = db.companies.find((c) => c.id === card?.companyId);
       const meeting = db.meetings.find((m) => m.responseId === s.responseId && m.cardId === s.cardId);
-      return { s, resp, card, company, meeting };
+      const inv = inviteStatus(db, s, now);
+      return { s, resp, card, company, meeting, inv };
     })
-    .sort((a, b) => (a.s.status === "invited" ? -1 : 0) - (b.s.status === "invited" ? -1 : 0));
+    .sort((a, b) => Number(b.s.status === "invited" && !b.inv.expired) - Number(a.s.status === "invited" && !a.inv.expired));
 
   return (
     <>
@@ -45,10 +51,10 @@ export default async function InboxPage() {
             </Link>
           </div>
         ) : (
-          items.map(({ s, resp, card, company, meeting }) => (
+          items.map(({ s, resp, card, company, meeting, inv }) => (
             <article
               key={s.id}
-              className={`mx-auto max-w-xl rounded-xl border border-border p-4 ${s.status === "declined" ? "bg-muted text-muted-foreground" : "bg-card"}`}
+              className={`mx-auto max-w-xl rounded-xl border border-border p-4 ${s.status === "declined" || inv.expired ? "bg-muted text-muted-foreground" : "bg-card"}`}
             >
               <p className="text-xs text-muted-foreground">
                 {s.status === "declined" ? "Declined" : <><span className="font-medium text-foreground">{company?.name}</span> · {company?.sector}</>}
@@ -60,8 +66,19 @@ export default async function InboxPage() {
                 <InviteMessage message={s.message} companyName={company?.name ?? "the company"} />
               )}
 
-              {s.status === "invited" && (
+              {s.status === "invited" && inv.expired && (
+                <p className="mt-3 flex items-start gap-2 rounded-lg border border-border bg-background p-3 text-sm text-foreground">
+                  <Hourglass className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                  <span>
+                    This invite expired on {shortDate(inv.respondBy)}. Nothing was shared. {company?.name} can open it again if they still want to talk.
+                  </span>
+                </p>
+              )}
+              {s.status === "invited" && !inv.expired && (
                 <div className="mt-3">
+                  <p className="mb-2 inline-flex items-center gap-1.5 text-sm font-medium">
+                    <Clock className="size-4" aria-hidden="true" /> Reply by {shortDate(inv.respondBy)}
+                  </p>
                   <p className="mb-3 text-sm">
                     They&apos;d like a 10-minute conversation. Accepting shares your name with {company?.name}.
                   </p>

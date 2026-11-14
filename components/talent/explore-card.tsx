@@ -1,10 +1,19 @@
 import Link from "next/link";
 import { CheckCircle2, ChevronRight } from "lucide-react";
-import type { Company, ProblemCard } from "@/lib/types";
+import type { Company, HiringGoal, ProblemCard } from "@/lib/types";
+import { PromiseBlock } from "./promise";
 
 const FORMAT_LABEL = { onsite: "On-site", online: "Online", hybrid: "Hybrid" } as const;
 
-export function ExploreCard({ card, company, answered }: { card: ProblemCard; company?: Company; answered: boolean }) {
+export function ExploreCard({
+  card, company, answered, goal, record,
+}: {
+  card: ProblemCard;
+  company?: Company;
+  answered: boolean;
+  goal: HiringGoal;
+  record: { rate: number | null; counted: number };
+}) {
   return (
     <Link
       href={`/talent/card/${card.id}`}
@@ -27,6 +36,7 @@ export function ExploreCard({ card, company, answered }: { card: ProblemCard; co
             </li>
           )}
         </ul>
+        <PromiseBlock goal={goal} record={record} compact />
       </div>
       <ChevronRight className="mt-1 size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
     </Link>

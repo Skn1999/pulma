@@ -19,7 +19,7 @@ export function normEmail(s: string): string {
 }
 
 export function roleHome(role: Role): string {
-  return role === "company" ? "/company" : role === "talent" ? "/talent" : "/organiser";
+  return role === "company" ? "/company" : role === "talent" ? "/talent/home" : "/organiser";
 }
 
 export async function getAccount(): Promise<Account | null> {

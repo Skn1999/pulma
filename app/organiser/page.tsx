@@ -1,10 +1,13 @@
 import { PageTitle } from "@/components/shell/page-title";
+import { nowMs } from "@/lib/clock";
 import { CountTiles } from "@/components/organiser/count-tiles";
 import { NeedsTimeline } from "@/components/organiser/needs-timeline";
 import { ReplyRatePanel } from "@/components/organiser/reply-rate-panel";
 import { FollowUpPanel } from "@/components/organiser/follow-up-panel";
 import { BarList } from "@/components/organiser/bar-list";
 import { ResetDemoButton } from "@/components/organiser/reset-demo-button";
+import { PromisesPanel } from "@/components/organiser/promises-panel";
+import { promisesKept } from "@/lib/promises";
 import { getDB } from "@/lib/store";
 import { getStats } from "@/lib/stats";
 
@@ -25,6 +28,7 @@ export default function OrganiserPage() {
         <CountTiles counts={stats.counts} />
         <NeedsTimeline timeline={stats.timeline} eventDate={db.event.date} />
         <ReplyRatePanel replies={stats.replies} />
+        <PromisesPanel data={promisesKept(db, nowMs())} />
         <FollowUpPanel followUps={stats.followUps} />
         <div className="grid gap-4 md:grid-cols-2">
           <BarList id="sectors-heading" title="Sectors in demand" items={stats.sectors} unit="problem" />

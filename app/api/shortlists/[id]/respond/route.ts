@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { applySchedule, getDB, mutate, newId } from "@/lib/store";
 import { apiAccount } from "@/lib/session";
 import { logActivity } from "@/lib/activity";
+import { inviteStatus } from "@/lib/deadlines";
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const acc = await apiAccount("talent");
@@ -16,6 +17,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const resp = db0.responses.find((r) => r.id === sl.responseId);
   if (!resp || resp.talentId !== talentId) return NextResponse.json({ error: "Not your invitation" }, { status: 403 });
   if (sl.status !== "invited") return NextResponse.json({ error: `Already ${sl.status}` }, { status: 409 });
+
+  if (inviteStatus(db0, sl, Date.now()).expired) return NextResponse.json({ error: "This invite has expired" }, { status: 409 });
 
   const result = mutate((db) => {
     const s = db.shortlists.find((x) => x.id === id)!;

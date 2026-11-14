@@ -1,6 +1,10 @@
 import Link from "next/link";
+import { nowMs } from "@/lib/clock";
 import { ChevronRight, Lock } from "lucide-react";
+import { Hourglass } from "lucide-react";
 import { getDB } from "@/lib/store";
+import { replyStatus } from "@/lib/deadlines";
+import { shortDate } from "@/lib/next-steps";
 import { getTalentId } from "@/lib/persona";
 import { PageTitle } from "@/components/shell/page-title";
 import { AnswerActions } from "@/components/talent/answer-actions";
@@ -11,6 +15,7 @@ export const dynamic = "force-dynamic";
 export default async function AnswersPage() {
   const db = getDB();
   const talentId = await getTalentId();
+  const now = nowMs();
   const mine = db.responses.filter((r) => r.talentId === talentId).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
   return (
@@ -33,6 +38,7 @@ export default async function AnswersPage() {
               const sl = db.shortlists.find((s) => s.responseId === r.id);
               const closed = db.closures.some((c) => c.responseId === r.id);
               const meeting = db.meetings.find((m) => m.responseId === r.id && m.slotStart);
+              const promise = card && !r.steppedBack && (card.state ?? "open") === "open" ? replyStatus(db, r, now) : undefined;
               let stage: TrackStage = 0;
               if (sl) stage = 2;
               if (sl?.status === "accepted" && meeting) stage = 3;
@@ -48,6 +54,18 @@ export default async function AnswersPage() {
                   {r.updatedAt && (
                     <p className="mt-1 text-xs text-muted-foreground">
                       Edited {new Date(r.updatedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                    </p>
+                  )}
+                  {promise?.state === "due" && (
+                    <p className="mt-2 flex items-start gap-1.5 text-xs text-muted-foreground">
+                      <Hourglass className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
+                      {company?.name} promised a reply by {shortDate(promise.due)}
+                    </p>
+                  )}
+                  {promise?.state === "overdue" && (
+                    <p className="mt-2 flex items-start gap-1.5 text-xs font-medium text-foreground">
+                      <Hourglass className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
+                      {company?.name} is {promise.daysOver} {promise.daysOver === 1 ? "day" : "days"} past its reply date. You can keep waiting or withdraw.
                     </p>
                   )}
                   <StatusTrack stage={stage} declined={sl?.status === "declined"} closed={closed && !sl} />

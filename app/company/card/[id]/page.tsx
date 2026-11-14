@@ -1,4 +1,5 @@
 import { notFound, redirect } from "next/navigation";
+import { goalOf } from "@/lib/deadlines";
 import { getDB } from "@/lib/store";
 import { getCompanyId } from "@/lib/persona";
 import { TriageView, type ReviewMeta } from "@/components/company/triage-view";
@@ -28,5 +29,5 @@ export default async function CompanyCardPage({ params, searchParams }: { params
   const selected = db.responses.some((x) => x.id === r && x.cardId === id) ? r : undefined;
   // Keyed on the selected answer so opening a notification link while already on this page
   // remounts the view with that answer selected (and its list freshly loaded).
-  return <TriageView key={`${id}:${selected ?? ""}`} card={card} company={company} initialMeta={meta} initialSelected={selected} />;
+  return <TriageView key={`${id}:${selected ?? ""}`} card={card} company={company} initialMeta={meta} initialSelected={selected} goal={goalOf(card, db)} />;
 }

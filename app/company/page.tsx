@@ -1,6 +1,10 @@
 import Link from "next/link";
+import { nowMs } from "@/lib/clock";
 import { getDB } from "@/lib/store";
-import { getCompanyId } from "@/lib/persona";
+import { requireAccount } from "@/lib/session";
+import { goalOf, goalProgress } from "@/lib/deadlines";
+import { nextSteps, shortDate } from "@/lib/next-steps";
+import { NextStepsPanel } from "@/components/next-steps-list";
 import { PageTitle } from "@/components/shell/page-title";
 import { buttonVariants } from "@/components/ui/button";
 
@@ -9,8 +13,11 @@ export const dynamic = "force-dynamic";
 const fmt = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
 
 export default async function CompanyHome() {
-  const companyId = await getCompanyId();
+  const account = await requireAccount("company");
+  const companyId = account.companyId ?? "";
   const db = getDB();
+  const now = nowMs();
+  const steps = nextSteps(db, account, now);
   const cards = db.cards.filter((c) => c.companyId === companyId);
 
   const rows = cards.map((card) => {
@@ -18,8 +25,11 @@ export default async function CompanyHome() {
     const lists = db.shortlists.filter((s) => s.cardId === card.id);
     const listed = new Set(lists.map((s) => s.responseId));
     const closedIds = new Set(db.closures.filter((c) => c.cardId === card.id).map((c) => c.responseId));
+    const progress = goalProgress(db, card, now);
     return {
       card,
+      goal: goalOf(card, db),
+      progress,
       answers: answers.length,
       fresh: answers.filter((r) => !listed.has(r.id)).length,
       open: answers.filter((r) => !listed.has(r.id) && !closedIds.has(r.id)).length,
@@ -39,6 +49,9 @@ export default async function CompanyHome() {
           </Link>
         }
       />
+      <div className="px-4 pt-4 sm:px-6">
+        <NextStepsPanel {...steps} />
+      </div>
       {rows.length === 0 ? (
         <div className="m-6 rounded-lg border border-dashed p-10 text-center">
           <p className="font-display text-xl font-semibold">No problems yet</p>
@@ -51,13 +64,15 @@ export default async function CompanyHome() {
         </div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px] text-sm">
+          <table className="w-full min-w-[900px] text-sm">
             <caption className="sr-only">Your problems. Select a title to review its answers.</caption>
             <thead>
               <tr className="border-b text-left text-xs uppercase tracking-wide text-muted-foreground">
                 <th scope="col" className="px-4 py-2 font-medium sm:px-6">Problem</th>
                 <th scope="col" className="px-3 py-2 font-medium">Status</th>
                 <th scope="col" className="px-3 py-2 font-medium">Published</th>
+                <th scope="col" className="px-3 py-2 font-medium">Decide by</th>
+                <th scope="col" className="px-3 py-2 font-medium">Replies</th>
                 <th scope="col" className="px-3 py-2 text-right font-medium">Answers</th>
                 <th scope="col" className="px-3 py-2 text-right font-medium">New</th>
                 <th scope="col" className="px-3 py-2 text-right font-medium">Open</th>
@@ -66,7 +81,7 @@ export default async function CompanyHome() {
               </tr>
             </thead>
             <tbody>
-              {rows.map(({ card, answers, fresh, open, shortlisted, accepted }) => (
+              {rows.map(({ card, goal, progress, answers, fresh, open, shortlisted, accepted }) => (
                 <tr key={card.id} className="group relative border-b last:border-0 hover:bg-muted/50 focus-within:bg-muted/50">
                   <th scope="row" className="px-4 py-3 text-left font-medium sm:px-6">
                     <Link
@@ -78,10 +93,24 @@ export default async function CompanyHome() {
                   </th>
                   <td className="px-3 py-3">
                     <span className="rounded-full border px-2 py-0.5 text-xs">
-                      {card.status === "published" ? "Published" : "Draft"}
+                      {card.status !== "published" ? "Draft" : progress.state === "paused" ? "Paused" : progress.state === "filled" ? "Filled" : "Published"}
                     </span>
                   </td>
                   <td className="px-3 py-3 text-muted-foreground">{fmt.format(new Date(card.createdAt))}</td>
+                  <td className="px-3 py-3">
+                    {shortDate(goal.decideBy)}
+                    {progress.state === "open" && progress.decideByDays < 0 && <span className="block text-xs font-medium">Date passed</span>}
+                  </td>
+                  <td className="px-3 py-3 tabular-nums">
+                    {progress.answers === 0 ? (
+                      <span className="text-muted-foreground">No answers yet</span>
+                    ) : (
+                      <>
+                        {progress.replied}/{progress.answers}
+                        {progress.overdue > 0 && <span className="font-medium"> · {progress.overdue} overdue</span>}
+                      </>
+                    )}
+                  </td>
                   <td className="px-3 py-3 text-right tabular-nums">{answers}</td>
                   <td className="px-3 py-3 text-right tabular-nums">
                     {fresh > 0 ? (

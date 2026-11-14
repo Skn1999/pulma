@@ -3,14 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutGrid, SquarePlus, CalendarDays, Compass, PenLine, Inbox, ChartNoAxesColumn, Circle,
+  LayoutGrid, SquarePlus, CalendarDays, Compass, PenLine, Inbox, ChartNoAxesColumn, House, Circle,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { NavItem } from "@/lib/nav";
 
 const ICONS: Record<string, LucideIcon> = {
-  LayoutGrid, SquarePlus, CalendarDays, Compass, PenLine, Inbox, ChartNoAxesColumn,
+  LayoutGrid, SquarePlus, CalendarDays, Compass, PenLine, Inbox, ChartNoAxesColumn, House,
 };
 
 function pathOf(href: string) {

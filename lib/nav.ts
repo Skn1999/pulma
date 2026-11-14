@@ -28,6 +28,7 @@ export function navFor(account: Account, db: DB): NavItem[] {
     const mine = new Set(db.responses.filter((r) => r.talentId === account.talentId).map((r) => r.id));
     const invites = db.shortlists.filter((s) => s.status === "invited" && mine.has(s.responseId)).length;
     return [
+      { href: "/talent/home", label: "Home", icon: "House" },
       { href: "/talent", label: "Explore", icon: "Compass" },
       { href: "/talent/answers", label: "My answers", icon: "PenLine" },
       withBadge({ href: "/talent/inbox", label: "Invites", icon: "Inbox" }, invites),

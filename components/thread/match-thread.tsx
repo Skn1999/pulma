@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Check, Circle, Lock, LockOpen, MinusCircle } from "lucide-react";
+import { Check, Circle, Hourglass, Lock, LockOpen, MinusCircle, PauseCircle, Undo2 } from "lucide-react";
 import type { ThreadView } from "@/lib/thread";
+import { MEET_MODE_LABEL } from "@/lib/types";
+import { shortDate } from "@/lib/next-steps";
+import { goalLine, localSlotLabel, recordText } from "@/lib/promise-text";
 
 function fmt(iso: string) {
   return new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Helsinki" }).format(new Date(iso));
@@ -46,6 +49,31 @@ export function MatchThread({ responseId, viewer = "talent" }: { responseId: str
   if (!t) return <p className="text-sm text-muted-foreground">Loading…</p>;
 
   const other = viewer === "company" ? "They" : t.card.companyName;
+  const company = t.card.companyName;
+  const days = (n: number) => `${n} ${n === 1 ? "day" : "days"}`;
+  const reply = t.reply;
+  // The reply promise only matters while the answer is still waiting for a reply.
+  const replyLine =
+    t.stage === "sent" && !t.cardState && !t.steppedBack && reply.state === "due"
+      ? viewer === "company"
+        ? `You promised a reply by ${shortDate(reply.due)}.`
+        : `${company} promised a reply by ${shortDate(reply.due)}.`
+      : t.stage === "sent" && !t.cardState && !t.steppedBack && reply.state === "overdue"
+        ? viewer === "company"
+          ? `You are ${days(reply.daysOver)} past your reply date of ${shortDate(reply.due)}.`
+          : `${company} is ${days(reply.daysOver)} past its reply date. You can keep waiting or withdraw.`
+        : null;
+  const inviteLine =
+    t.stage === "shortlisted" && t.invite
+      ? t.invite.expired
+        ? viewer === "company"
+          ? `This invite expired on ${shortDate(t.invite.respondBy)}. You can re-invite from the answer list.`
+          : `This invite expired on ${shortDate(t.invite.respondBy)}. ${company} can open it again.`
+        : viewer === "company"
+          ? `They have until ${shortDate(t.invite.respondBy)} to reply to your invite.`
+          : `Reply to this invite by ${shortDate(t.invite.respondBy)}.`
+      : null;
+  const mt = t.meeting;
   return (
     <div className="space-y-5">
       <div aria-live="polite" className="sr-only">{announce}</div>
@@ -69,6 +97,40 @@ export function MatchThread({ responseId, viewer = "talent" }: { responseId: str
         </ol>
       </section>
 
+      {t.cardState && (
+        <section className="flex items-start gap-2 rounded-lg border bg-muted/60 p-3 text-sm" aria-labelledby="thread-card-state">
+          <PauseCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+          <div>
+            <h3 id="thread-card-state" className="font-semibold">
+              {t.cardState.state === "paused" ? "This problem is paused" : "This problem is filled"}
+            </h3>
+            {t.cardState.reason && <p className="text-muted-foreground">{t.cardState.reason}</p>}
+          </div>
+        </section>
+      )}
+
+      {t.steppedBack && (
+        <section className="flex items-start gap-2 rounded-lg border bg-muted/60 p-3 text-sm" aria-labelledby="thread-stepped">
+          <Undo2 className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+          <div>
+            <h3 id="thread-stepped" className="font-semibold">{viewer === "company" ? "Stepped back" : "You stepped back"}</h3>
+            {t.steppedBack.until && <p className="text-muted-foreground">Available again from {shortDate(t.steppedBack.until)}</p>}
+          </div>
+        </section>
+      )}
+
+      <section aria-labelledby="thread-promise">
+        <h3 id="thread-promise" className="text-sm font-semibold">{viewer === "company" ? "Your promise" : `${company}'s promise`}</h3>
+        <p className="mt-1 text-sm text-muted-foreground">{goalLine(t.goal)}</p>
+        {t.companyRecord && viewer === "talent" && <p className="mt-0.5 text-sm text-muted-foreground">{recordText(t.companyRecord)}</p>}
+        {(replyLine || inviteLine) && (
+          <p className="mt-2 flex items-start gap-2 text-sm font-medium">
+            <Hourglass className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+            <span>{inviteLine ?? replyLine}</span>
+          </p>
+        )}
+      </section>
+
       {t.message && (
         <figure className="border-l-2 border-primary pl-3">
           <figcaption className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -89,13 +151,32 @@ export function MatchThread({ responseId, viewer = "talent" }: { responseId: str
         </section>
       )}
 
-      {t.meeting && t.meeting.status === "booked" && t.meeting.start && (
+      {mt && mt.status === "booked" && mt.start && (
         <section className="rounded-lg border border-primary/40 bg-accent p-3" aria-labelledby="thread-meeting">
-          <h3 id="thread-meeting" className="text-sm font-semibold">Meeting booked</h3>
+          <h3 id="thread-meeting" className="text-sm font-semibold">Meeting booked · {MEET_MODE_LABEL[mt.mode]}</h3>
           <p className="mt-1 text-sm">
-            {t.meeting.table ? `Table ${t.meeting.table} · ` : ""}{fmt(t.meeting.start)}
+            {mt.table ? `Table ${mt.table} · ` : ""}{localSlotLabel(mt.start)}
             {t.counterpartName ? ` · with ${t.counterpartName}` : ""}
           </p>
+          {mt.place && <p className="mt-0.5 text-sm">{mt.place}</p>}
+        </section>
+      )}
+      {mt && mt.status === "pending" && (
+        <section className="rounded-lg border bg-muted/60 p-3 text-sm" aria-labelledby="thread-meeting-p">
+          <h3 id="thread-meeting-p" className="font-semibold">Meeting accepted · time not picked yet</h3>
+          <p className="mt-1 text-muted-foreground">{viewer === "company" ? "They are choosing a time." : "Pick a time that works for you."}</p>
+        </section>
+      )}
+      {mt && mt.status === "reschedule" && (
+        <section className="rounded-lg border bg-muted/60 p-3 text-sm" aria-labelledby="thread-meeting-r">
+          <h3 id="thread-meeting-r" className="font-semibold">A new time is needed</h3>
+          <p className="mt-1 text-muted-foreground">{viewer === "company" ? "They are choosing a new time." : `${company} asked to move the meeting. Pick a new time.`}</p>
+        </section>
+      )}
+      {mt && mt.status === "cancelled" && (
+        <section className="rounded-lg border bg-muted/60 p-3 text-sm" aria-labelledby="thread-meeting-c">
+          <h3 id="thread-meeting-c" className="font-semibold">Meeting cancelled</h3>
+          {mt.lastChange && <p className="mt-1 text-muted-foreground">{mt.lastChange.reason}</p>}
         </section>
       )}
 

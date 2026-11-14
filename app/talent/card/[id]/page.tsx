@@ -1,7 +1,10 @@
 import Link from "next/link";
+import { nowMs } from "@/lib/clock";
 import { notFound } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { getDB } from "@/lib/store";
+import { companyRecord, goalOf } from "@/lib/deadlines";
+import { PromiseBlock } from "@/components/talent/promise";
 import { getTalentId } from "@/lib/persona";
 import { ProblemCardView } from "@/components/problem-card";
 import { AiLabel } from "@/components/ai-label";
@@ -25,6 +28,7 @@ export default async function TalentCardPage({ params }: { params: Promise<{ id:
           <ChevronLeft className="size-4" aria-hidden="true" /> Explore
         </Link>
         <ProblemCardView card={card} company={company} />
+        <PromiseBlock goal={goalOf(card, db)} record={companyRecord(db, card.companyId, nowMs())} />
         {mine && (
           <section aria-labelledby="mine-h" className="mt-6 rounded-xl border border-border bg-card p-4">
             <h2 id="mine-h" className="text-sm font-semibold">Your answer · #{mine.publicCode}</h2>

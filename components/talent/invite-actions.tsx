@@ -40,8 +40,11 @@ export function InviteActions({ shortlistId, companyName }: { shortlistId: strin
       body: JSON.stringify({ accept }),
     }).catch(() => null);
     if (!res || !res.ok) {
-      setError("That didn't work. Please try again.");
+      const msg = res?.status === 409 ? ((await res.json().catch(() => null)) as { error?: string } | null)?.error : undefined;
+      setError(msg ?? "That didn't work. Please try again.");
+      setConfirm(false);
       setBusy(false);
+      if (res?.status === 409) router.refresh();
       return;
     }
     const data = (await res.json().catch(() => ({}))) as { table?: number; slotStart?: string };

@@ -3,8 +3,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { ArrowLeft, CalendarDays, ChevronDown, Eye, FileText, Languages, Sparkles, XCircle } from "lucide-react";
-import { CLOSURE_REASONS, type BlindResponse, type Company, type ProblemCard } from "@/lib/types";
+import { ArrowLeft, CalendarDays, ChevronDown, Clock, Eye, FileText, Hourglass, Languages, RotateCcw, Sparkles, XCircle } from "lucide-react";
+import { CLOSURE_REASONS, type BlindResponse, type Company, type HiringGoal, type ProblemCard } from "@/lib/types";
+import { shortDate } from "@/lib/next-steps";
+import { goalLine, replyPromise } from "@/lib/promise-text";
+import { EditGoal } from "./edit-goal";
 import { MatchThread } from "@/components/thread/match-thread";
 import { AiLabel } from "@/components/ai-label";
 import { ProblemCardView } from "@/components/problem-card";
@@ -28,13 +31,37 @@ function firstLine(r: BlindResponse) {
   return t.length > 90 ? t.slice(0, 90) + "…" : t;
 }
 
+/** What the company owes this answer, as text with an icon (never colour alone). Null once it has a reply. */
+function ReplyPromise({ r, now }: { r: BlindResponse; now: number }) {
+  const sl = r.shortlist;
+  if (sl?.status === "invited" && sl.respondBy) {
+    return sl.expired ? (
+      <span className="inline-flex items-center gap-1 text-xs font-medium">
+        <Hourglass className="size-3" aria-hidden="true" /> Invite expired · {shortDate(sl.respondBy)}
+      </span>
+    ) : (
+      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+        <Clock className="size-3" aria-hidden="true" /> Invite open until {shortDate(sl.respondBy)}
+      </span>
+    );
+  }
+  if (sl || r.closed || r.steppedBack || !r.replyDue) return null;
+  const p = replyPromise(r.replyDue, now);
+  return (
+    <span className={cn("inline-flex items-center gap-1 text-xs", p.overdue ? "font-semibold text-foreground" : "text-muted-foreground")}>
+      <Clock className="size-3" aria-hidden="true" /> {p.text}
+    </span>
+  );
+}
+
 export function TriageView({
-  card, company, initialMeta, initialSelected,
+  card, company, initialMeta, initialSelected, goal,
 }: {
   card: ProblemCard;
   company?: Company;
   initialMeta: Record<string, ReviewMeta>;
   initialSelected?: string;
+  goal: HiringGoal;
 }) {
   const cardId = card.id;
   const [items, setItems] = useState<BlindResponse[] | null>(null);
@@ -49,6 +76,7 @@ export function TriageView({
   const [closing, setClosing] = useState<BlindResponse[] | null>(null);
   const [reason, setReason] = useState<string>(NO_REASON);
   const [seeOpen, setSeeOpen] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
   const listRef = useRef<HTMLUListElement>(null);
 
   const load = useCallback(async () => {
@@ -56,6 +84,7 @@ export function TriageView({
       const res = await fetch(`/api/cards/${cardId}/responses`, { cache: "no-store" });
       if (!res.ok) throw new Error();
       setItems(await res.json());
+      setNow(Date.now());
       setLoadError(false);
     } catch {
       setLoadError(true);
@@ -117,7 +146,7 @@ export function TriageView({
           else {
             const s = await res.json();
             setMeta((m) => ({ ...m, [r.id]: { shortlistId: s.id } }));
-            setItems((p) => p && p.map((x) => (x.id === r.id ? { ...x, shortlist: { status: s.status, note: s.note } } : x)));
+            setItems((p) => p && p.map((x) => (x.id === r.id ? { ...x, shortlist: { status: s.status, note: s.note, respondBy: s.respondBy, expired: false } } : x)));
             toast.success(`Response #${r.publicCode} shortlisted`);
           }
         }
@@ -170,6 +199,28 @@ export function TriageView({
       toast(`Response #${r.publicCode} reopened`);
     } catch {
       toast.error("Couldn't reopen. Try again.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function reinvite(r: BlindResponse) {
+    const sid = meta[r.id]?.shortlistId;
+    if (!sid) return;
+    setBusy(r.id);
+    try {
+      const res = await fetch(`/api/shortlists/${sid}/reinvite`, { method: "POST" });
+      if (res.status === 409) {
+        toast.error("This invite can't be re-opened.");
+        await load();
+        return;
+      }
+      if (!res.ok) throw new Error();
+      const { respondBy } = (await res.json()) as { respondBy: string };
+      setItems((p) => p && p.map((x) => (x.id === r.id && x.shortlist ? { ...x, shortlist: { ...x.shortlist, respondBy, expired: false } } : x)));
+      toast.success(`Invite to #${r.publicCode} re-opened until ${shortDate(respondBy)}`);
+    } catch {
+      toast.error("Couldn't re-invite. Try again.");
     } finally {
       setBusy(null);
     }
@@ -292,8 +343,10 @@ export function TriageView({
             All problems
           </Link>
           <h1 className="truncate font-display text-xl font-semibold">{card.title}</h1>
+          <p className="mt-0.5 text-xs text-muted-foreground">{goalLine(goal)}</p>
         </div>
         <div className="flex items-center gap-2">
+          <EditGoal cardId={card.id} goal={goal} />
           <Button variant="outline" size="sm" onClick={() => setCardOpen(true)}>
             <FileText aria-hidden="true" /> View problem card
           </Button>
@@ -407,6 +460,7 @@ export function TriageView({
                         )}
                       </span>
                       <span className="mt-1 line-clamp-2 block text-sm text-muted-foreground">{firstLine(r)}</span>
+                      <span className="mt-1 block empty:hidden"><ReplyPromise r={r} now={now} /></span>
                     </button>
                   </li>
                 );
@@ -434,6 +488,8 @@ export function TriageView({
               busy={busy === selected.id}
               showOriginal={!!showOriginal[selected.id]}
               onShowOriginal={(v) => setShowOriginal((s) => ({ ...s, [selected.id]: v }))}
+              now={now}
+              onReinvite={() => void reinvite(selected)}
               onToggle={() => void toggle(selected)}
               onClose={() => askClose([selected])}
               onReopen={() => void reopen(selected)}
@@ -574,12 +630,14 @@ function MessageField({
 }
 
 function Reader({
-  r, name, full, busy, showOriginal, onShowOriginal, onToggle, onClose, onReopen, onSee, onNote, onMessage, onBack,
+  r, name, full, busy, now, onReinvite, showOriginal, onShowOriginal, onToggle, onClose, onReopen, onSee, onNote, onMessage, onBack,
 }: {
   r: BlindResponse;
   name?: string;
   full: boolean;
   busy: boolean;
+  now: number;
+  onReinvite: () => void;
   showOriginal: boolean;
   onShowOriginal: (v: boolean) => void;
   onToggle: () => void;
@@ -604,6 +662,7 @@ function Reader({
         {sl && <span className="rounded-full border bg-muted px-2 py-0.5 text-xs font-medium">Status: {STATUS_LABEL[sl.status]}</span>}
       </div>
       {locked && name && <p className="mt-2 text-sm font-medium">Identity shared: {name}</p>}
+      <p className="mt-2 empty:hidden"><ReplyPromise r={r} now={now} /></p>
 
       {r.translatedText ? (
         <>
@@ -647,6 +706,11 @@ function Reader({
         {closed && (
           <Button variant="outline" disabled={busy} onClick={onReopen}>
             Reopen
+          </Button>
+        )}
+        {sl?.status === "invited" && sl.expired && (
+          <Button disabled={busy} onClick={onReinvite}>
+            <RotateCcw aria-hidden="true" /> Re-invite
           </Button>
         )}
         <Button variant="ghost" onClick={onSee}>
@@ -697,7 +761,7 @@ function Reader({
           Conversation with #{r.publicCode}
         </summary>
         <div className="mt-3">
-          <MatchThread responseId={r.id} />
+          <MatchThread responseId={r.id} viewer="company" />
         </div>
       </details>
     </div>

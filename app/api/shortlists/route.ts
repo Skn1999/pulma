@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { apiAccount } from "@/lib/session";
 import { getDB, mutate, newId } from "@/lib/store";
 import { logActivity } from "@/lib/activity";
+import { addDays, goalOf } from "@/lib/deadlines";
 
 const MAX = 5;
 const MESSAGE_MAX = 200;
@@ -33,6 +34,7 @@ export async function POST(req: Request) {
   if (db.shortlists.filter((s) => s.cardId === b.cardId).length >= MAX)
     return NextResponse.json({ error: `You can shortlist at most ${MAX} responses per card` }, { status: 409 });
   const note = typeof b.note === "string" && b.note.trim() ? b.note.trim() : undefined;
+  const nowIso = new Date().toISOString();
   const item = mutate((d) => {
     const s = {
       id: newId("sl"),
@@ -41,6 +43,8 @@ export async function POST(req: Request) {
       status: "invited" as const,
       note,
       message,
+      createdAt: nowIso,
+      respondBy: addDays(nowIso, goalOf(card, d).inviteDays),
     };
     d.shortlists.push(s);
     const talentId = d.responses.find((r) => r.id === s.responseId)?.talentId;

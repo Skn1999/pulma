@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { nowMs } from "@/lib/clock";
 import { Suspense } from "react";
 import { getDB } from "@/lib/store";
+import { companyRecord, goalOf, isOpen } from "@/lib/deadlines";
 import { getTalentId } from "@/lib/persona";
 import { PageTitle } from "@/components/shell/page-title";
 import { ExploreCard } from "@/components/talent/explore-card";
@@ -28,7 +30,7 @@ export default async function TalentPage({
   const db = getDB();
   const talentId = await getTalentId();
   const published = db.cards
-    .filter((c) => c.status === "published")
+    .filter((c) => isOpen(c))
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   const companyOf = (id: string) => db.companies.find((c) => c.id === id);
 
@@ -47,6 +49,8 @@ export default async function TalentPage({
       (!format || c.format === format),
   );
 
+  const now = nowMs();
+  const records = new Map(db.companies.map((co) => [co.id, companyRecord(db, co.id, now)]));
   const answered = new Set(db.responses.filter((r) => r.talentId === talentId).map((r) => r.cardId));
 
   return (
@@ -70,7 +74,13 @@ export default async function TalentPage({
           <ul className="grid gap-3 md:grid-cols-2">
             {shown.map((c) => (
               <li key={c.id}>
-                <ExploreCard card={c} company={companyOf(c.companyId)} answered={answered.has(c.id)} />
+                <ExploreCard
+                  card={c}
+                  company={companyOf(c.companyId)}
+                  answered={answered.has(c.id)}
+                  goal={goalOf(c, db)}
+                  record={records.get(c.companyId)!}
+                />
               </li>
             ))}
           </ul>

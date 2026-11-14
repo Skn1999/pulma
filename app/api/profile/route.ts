@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getDB, mutate } from "@/lib/store";
+import { MEET_MODES, type MeetMode, type TalentGoal } from "@/lib/types";
 import { SESSION_COOKIE, apiAccount, sessionCookieOptions } from "@/lib/session";
 
 const str = (v: unknown, max = 300) => (typeof v === "string" ? v.trim().slice(0, max) : "");
@@ -16,6 +17,8 @@ function view(accId: string) {
     displayName: a.displayName,
     createdAt: a.createdAt,
     preferredLanguage: talent?.preferredLanguage ?? "",
+    // The talent's own goal. This view is only ever returned to the account itself.
+    goal: talent?.goal ?? null,
     company: company ? { name: company.name, sector: company.sector, size: company.size, about: company.about } : undefined,
   };
 }
@@ -38,6 +41,30 @@ export async function PATCH(req: Request) {
   if (co && "name" in co && !str(co.name, 80)) return NextResponse.json({ error: "Company name can't be empty" }, { status: 400 });
   if (co && "sector" in co && !SECTORS.includes(str(co.sector, 40))) return NextResponse.json({ error: "Choose a sector" }, { status: 400 });
 
+  let goal: TalentGoal | null | undefined;
+  if ("goal" in b) {
+    if (acc.role !== "talent") return NextResponse.json({ error: "Only talent accounts have a goal" }, { status: 403 });
+    if (b.goal === null) goal = null;
+    else {
+      const g = b.goal as Record<string, unknown> | undefined;
+      if (!g || typeof g !== "object") return NextResponse.json({ error: "Invalid goal" }, { status: 400 });
+      if (g.status !== "active" && g.status !== "open" && g.status !== "exploring")
+        return NextResponse.json({ error: "Choose where you are right now" }, { status: 400 });
+      const from = g.availableFrom;
+      if (from != null && from !== "" && (typeof from !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(from) || Number.isNaN(Date.parse(`${from}T12:00:00Z`))))
+        return NextResponse.json({ error: "Choose a valid date" }, { status: 400 });
+      const modes = g.meetModes ?? [];
+      if (!Array.isArray(modes) || !modes.every((m) => MEET_MODES.includes(m as MeetMode)))
+        return NextResponse.json({ error: "Invalid ways to meet" }, { status: 400 });
+      goal = {
+        status: g.status,
+        ...(typeof from === "string" && from ? { availableFrom: from } : {}),
+        meetModes: MEET_MODES.filter((m) => modes.includes(m)),
+        updatedAt: new Date().toISOString(),
+      };
+    }
+  }
+
   mutate((db) => {
     const a = db.accounts.find((x) => x.id === acc.id)!;
     if (name) a.displayName = name;
@@ -46,6 +73,7 @@ export async function PATCH(req: Request) {
       if (t) {
         if (name) t.displayName = name;
         if ("preferredLanguage" in b) t.preferredLanguage = str(b.preferredLanguage, 40) || undefined;
+        if (goal !== undefined) t.goal = goal ?? undefined;
       }
     }
     if (a.role === "company" && co) {
