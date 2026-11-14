@@ -9,9 +9,14 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { GoalFields } from "./goal-fields";
 
-export function EditGoal({ cardId, goal }: { cardId: string; goal: HiringGoal }) {
+/** With `onClose`, it is opened from elsewhere (e.g. a menu): no trigger, starts open, calls onClose when it closes. */
+export function EditGoal({ cardId, goal, onClose }: { cardId: string; goal: HiringGoal; onClose?: () => void }) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const [open, setOpenState] = useState(!!onClose);
+  const setOpen = (o: boolean) => {
+    setOpenState(o);
+    if (!o) onClose?.();
+  };
   const [draft, setDraft] = useState(goal);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -37,17 +42,19 @@ export function EditGoal({ cardId, goal }: { cardId: string; goal: HiringGoal })
 
   return (
     <>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => {
-          setDraft(goal);
-          setError("");
-          setOpen(true);
-        }}
-      >
-        <Target aria-hidden="true" /> Edit goal
-      </Button>
+      {!onClose && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            setDraft(goal);
+            setError("");
+            setOpen(true);
+          }}
+        >
+          <Target aria-hidden="true" /> Edit goal
+        </Button>
+      )}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-lg">
           <DialogHeader>

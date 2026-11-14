@@ -3,18 +3,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { ArrowLeft, CalendarDays, CirclePause, Undo2, ChevronDown, Clock, Eye, FileText, Hourglass, RotateCcw, Sparkles, XCircle } from "lucide-react";
+import { ArrowLeft, CirclePause, Undo2, ChevronDown, Clock, Eye, Hourglass, RotateCcw, Sparkles, XCircle } from "lucide-react";
 import { CLOSURE_REASONS, type BlindResponse, type Company, type HiringGoal, type ProblemCard } from "@/lib/types";
 import { shortDate } from "@/lib/next-steps";
 import { goalLine, replyPromise } from "@/lib/promise-text";
-import { EditGoal } from "./edit-goal";
-import { EditEvent } from "./edit-event";
 import type { EventChoice } from "./event-select";
-import { ProblemStatus } from "./problem-status";
+import { ProblemStatusBadge } from "./problem-status";
+import { ProblemActions } from "./problem-actions";
 import { MatchThread } from "@/components/thread/match-thread";
 import { AiLabel } from "@/components/ai-label";
 import { ProblemCardView } from "@/components/problem-card";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
@@ -363,21 +362,22 @@ export function TriageView({
           <Link href="/company" className="text-xs text-muted-foreground underline-offset-4 hover:underline">
             All problems
           </Link>
-          <h1 className="mt-0.5 font-display text-xl leading-tight">{card.title}</h1>
+          <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+            <h1 className="font-display text-xl leading-tight">{card.title}</h1>
+            <ProblemStatusBadge state={card.state ?? "open"} reason={card.stateReason} />
+          </div>
           <p className="mt-0.5 text-xs text-muted-foreground">{eventLabel}</p>
           <p className="text-xs text-muted-foreground">{goalLine(goal)}</p>
         </div>
-        <div className="flex flex-wrap items-center justify-end gap-2">
-          <ProblemStatus cardId={card.id} state={card.state ?? "open"} reason={card.stateReason} />
-          <EditGoal cardId={card.id} goal={goal} />
-          <EditEvent cardId={card.id} eventId={eventId} events={eventChoices} locked={eventLocked} />
-          <Button variant="outline" size="sm" onClick={() => setCardOpen(true)}>
-            <FileText aria-hidden="true" /> View problem card
-          </Button>
-          <Link href={`/event?event=${eventId}`} className={buttonVariants({ variant: "ghost", size: "sm" })}>
-            <CalendarDays aria-hidden="true" /> Event day
-          </Link>
-        </div>
+        <ProblemActions
+          cardId={card.id}
+          state={card.state ?? "open"}
+          goal={goal}
+          eventId={eventId}
+          events={eventChoices}
+          eventLocked={eventLocked}
+          onViewCard={() => setCardOpen(true)}
+        />
       </header>
 
       {!cardOpenState && (

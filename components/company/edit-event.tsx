@@ -10,15 +10,21 @@ import { EventSelect, type EventChoice } from "./event-select";
 
 /** Move a problem to another upcoming event. Locked once an event-day meeting is booked for it. */
 export function EditEvent({
-  cardId, eventId, events, locked,
+  cardId, eventId, events, locked, onClose,
 }: {
   cardId: string;
   eventId: string;
   events: EventChoice[];
   locked: boolean;
+  /** Opened from elsewhere (e.g. a menu): no trigger, starts open, calls onClose when it closes. */
+  onClose?: () => void;
 }) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const [open, setOpenState] = useState(!!onClose);
+  const setOpen = (o: boolean) => {
+    setOpenState(o);
+    if (!o) onClose?.();
+  };
   const [value, setValue] = useState(eventId);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -44,17 +50,19 @@ export function EditEvent({
 
   return (
     <>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => {
-          setValue(eventId);
-          setError("");
-          setOpen(true);
-        }}
-      >
-        <CalendarRange aria-hidden="true" /> Change event
-      </Button>
+      {!onClose && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            setValue(eventId);
+            setError("");
+            setOpen(true);
+          }}
+        >
+          <CalendarRange aria-hidden="true" /> Change event
+        </Button>
+      )}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
