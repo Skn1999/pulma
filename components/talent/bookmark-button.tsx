@@ -38,9 +38,9 @@ export function BookmarkButton({ cardId, saved: initial, className = "" }: { car
       disabled={busy}
       aria-pressed={saved}
       aria-label={saved ? "Remove from saved" : "Save for later"}
-      className={`relative z-10 inline-flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring ${saved ? "text-primary" : ""} ${className}`}
+      className={`relative z-10 inline-flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground outline-none transition-[color,background-color,scale] duration-160 ease-out hover:bg-muted motion-safe:active:scale-90 focus-visible:ring-3 focus-visible:ring-ring ${saved ? "text-primary" : ""} ${className}`}
     >
-      <Bookmark className="size-5" fill={saved ? "currentColor" : "none"} aria-hidden="true" />
+      <Bookmark className="size-5 transition-[fill] duration-200 ease-out" fill={saved ? "currentColor" : "none"} aria-hidden="true" />
     </button>
   );
 }

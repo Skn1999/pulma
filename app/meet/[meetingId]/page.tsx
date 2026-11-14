@@ -35,7 +35,7 @@ export default async function EventCardPage({ params }: { params: Promise<{ meet
     <div className="mx-auto max-w-xl space-y-4">
       <article
         aria-labelledby="meet-title"
-        className="relative overflow-hidden rounded-md border border-border bg-paper pb-6 pl-8 pr-5 pt-5 shadow-card print:shadow-none"
+        className="relative overflow-hidden rounded-md border border-border bg-paper pb-6 pl-8 pr-5 pt-5 shadow-card transition-[opacity,translate,scale,rotate] duration-500 ease-out starting:opacity-0 motion-safe:starting:translate-y-3 motion-safe:starting:scale-[0.97] motion-safe:starting:-rotate-1 print:shadow-none"
         style={{
           backgroundImage:
             "linear-gradient(var(--card-rule), var(--card-rule))",
@@ -87,7 +87,7 @@ export default async function EventCardPage({ params }: { params: Promise<{ meet
           </div>
         )}
 
-        <div className="mt-6 flex flex-wrap items-end justify-between gap-4 border-t border-dashed border-border pt-4">
+        <div className="mt-6 flex flex-wrap items-end justify-between gap-4 border-t border-dashed border-border pt-4 transition-[opacity,translate] delay-150 duration-300 ease-out starting:opacity-0 motion-safe:starting:translate-y-1">
           <div>
             <p className="text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Code</p>
             <p className="font-mono text-3xl font-semibold tracking-widest">PUL-{card.code}</p>

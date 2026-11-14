@@ -33,7 +33,8 @@ export function ExploreCard({
   view?: "grid" | "list";
 }) {
   const { quiet, box } = tone(status);
-  const base = `relative rounded-xl border border-border bg-paper focus-within:ring-3 focus-within:ring-ring ${box} ${quiet ? "text-muted-foreground" : "shadow-sm"}`;
+  // Hover lift is for mouse users only (Tailwind v4 gates hover: behind (hover: hover)); movement drops out under reduced motion.
+  const base = `relative rounded-xl border border-border bg-paper focus-within:ring-3 focus-within:ring-ring transition-[translate,box-shadow] duration-200 ease-out ${quiet ? "" : "hover:shadow-card motion-safe:hover:-translate-y-0.5"} ${box} ${quiet ? "text-muted-foreground" : "shadow-sm"}`;
   const titleLink = (cls: string) => (
     <Link href={`/talent/card/${card.id}`} className={`${cls} outline-none after:absolute after:inset-0 after:rounded-xl`}>
       {card.title}
@@ -50,7 +51,7 @@ export function ExploreCard({
           <p className="mt-0.5 truncate text-xs text-muted-foreground sm:mt-0 sm:w-56 sm:shrink-0">
             {company?.name} · {eventShort}
           </p>
-          {status.kind !== "new" && (
+          {status.kind !== "new" && status.kind !== "saved" && (
             <div className="mt-1 sm:mt-0 sm:shrink-0"><StatusBadge status={status} /></div>
           )}
         </div>
@@ -63,7 +64,7 @@ export function ExploreCard({
     <article className={`${base} p-4`}>
       {/* Bookmark sits in the corner; the status badge (if any) leads, otherwise the company line starts the tile. */}
       <div className="absolute right-1 top-1 z-10"><BookmarkButton cardId={card.id} saved={saved} /></div>
-      {status.kind !== "new" && <div className="mb-2 pr-10"><StatusBadge status={status} /></div>}
+      {status.kind !== "new" && status.kind !== "saved" && <div className="mb-2 pr-10"><StatusBadge status={status} /></div>}
       <p className="truncate pr-10 text-xs text-muted-foreground">
         <span className={quiet ? "" : "font-medium text-foreground"}>{company?.name}</span> · {company?.sector}
       </p>

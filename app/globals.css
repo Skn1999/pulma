@@ -4,6 +4,14 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Motion tokens (Emil Kowalski's curves; see DESIGN.md "Motion"). A plain @theme so they exist as CSS variables
+   AND drive Tailwind's ease-out / ease-in-out utilities. Never ease-in on UI. */
+@theme {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -192,11 +200,15 @@
     outline: 2px solid var(--ring);
     outline-offset: 2px;
   }
+  /*
+   * Reduced motion = fewer and gentler, not zero (Emil Kowalski's rule). Keyframe animations are cut; transitions
+   * stay so opacity and colour changes still read, while every movement (translate/scale/rotate) is written with
+   * the `motion-safe:` variant and so drops out here.
+   */
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
     *, *::before, *::after {
       animation-duration: 0.01ms !important;
-      transition-duration: 0.01ms !important;
     }
   }
 }

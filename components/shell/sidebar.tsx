@@ -38,7 +38,7 @@ export function Sidebar({
     <aside
       id="app-sidebar"
       className={cn(
-        "hidden shrink-0 flex-col border-r bg-sidebar motion-safe:transition-[width] motion-safe:duration-200 md:flex",
+        "hidden shrink-0 flex-col border-r bg-sidebar motion-safe:transition-[width] motion-safe:duration-200 motion-safe:ease-(--ease-in-out) md:flex",
         collapsed ? "w-16" : "w-60",
       )}
     >

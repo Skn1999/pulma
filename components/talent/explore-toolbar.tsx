@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { LayoutGrid, List, SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Segmented } from "@/components/ui/segmented";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 export interface FilterGroup {
@@ -61,22 +62,14 @@ export function ExploreToolbar({
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap items-center gap-2">
-        <div role="group" aria-label="Show" className="flex w-full rounded-full border border-border bg-card p-0.5 sm:inline-flex sm:w-auto">
-          {SHOW.map((o) => {
-            const on = show === o.value;
-            return (
-              <button
-                key={o.value}
-                type="button"
-                aria-pressed={on}
-                onClick={() => update({ show: o.value || null })}
-                className={`inline-flex min-h-11 flex-1 items-center justify-center whitespace-nowrap rounded-full px-2.5 text-sm sm:flex-none sm:px-3 ${ring} ${on ? "bg-primary font-semibold text-primary-foreground" : "hover:bg-muted"}`}
-              >
-                {o.label}
-              </button>
-            );
-          })}
-        </div>
+        <Segmented
+          label="Show"
+          className="flex w-full sm:inline-flex sm:w-auto"
+          itemClassName="flex-1 px-2.5 sm:flex-none sm:px-3"
+          options={SHOW.map((o) => ({ value: o.value || "all", label: o.label }))}
+          value={show || "all"}
+          onChange={(v) => update({ show: v === "all" ? null : v })}
+        />
 
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger render={<Button variant="outline" className="min-h-11 rounded-full px-4" />}>
@@ -186,20 +179,22 @@ export function ExploreToolbar({
           </label>
         )}
 
-        <div role="group" aria-label="Layout" className="ml-auto inline-flex rounded-full border border-border bg-card p-0.5">
-          {([["grid", LayoutGrid, "Grid"], ["list", List, "List"]] as const).map(([v, Icon, label]) => (
-            <button
-              key={v}
-              type="button"
-              aria-pressed={view === v}
-              onClick={() => update({ view: v === "grid" ? null : v })}
-              className={`inline-flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-full px-2.5 text-sm sm:px-3 ${ring} ${view === v ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
-            >
-              <Icon className="size-4" aria-hidden="true" />
-              <span className="sr-only sm:not-sr-only">{label}</span>
-            </button>
-          ))}
-        </div>
+        <Segmented
+          label="Layout"
+          className="ml-auto inline-flex"
+          itemClassName="min-w-11 px-2.5 sm:px-3"
+          options={([["grid", LayoutGrid, "Grid"], ["list", List, "List"]] as const).map(([v, Icon, text]) => ({
+            value: v,
+            label: (
+              <>
+                <Icon className="size-4" aria-hidden="true" />
+                <span className="sr-only sm:not-sr-only">{text}</span>
+              </>
+            ),
+          }))}
+          value={view}
+          onChange={(v) => update({ view: v === "grid" ? null : v })}
+        />
       </div>
 
       {active.length > 0 && (

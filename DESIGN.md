@@ -98,6 +98,31 @@ system sans-serif.
   title in Lato navy, shadow as above.
 - **Event card (identity card):** same paper as the problem card, the code in a monospaced face.
 
+## Motion
+Based on Emil Kowalski's animation skills (github.com/emilkowalski/skills: animate, find-animation-opportunities).
+Motion has to earn its place: feedback, spatial consistency, state indication or bridging a jarring change.
+Delight only at rare moments.
+
+Tokens (`app/globals.css`, plain `@theme` so Tailwind's `ease-out` / `ease-in-out` use them):
+`--ease-out: cubic-bezier(0.23, 1, 0.32, 1)` (enter/exit, presses), `--ease-in-out: cubic-bezier(0.77, 0, 0.175, 1)`
+(moving on screen), `--ease-drawer: cubic-bezier(0.32, 0.72, 0, 1)`. Never `ease-in`, never `transition: all`,
+never `scale(0)`. Only `opacity`, `transform` properties (`scale`, `translate`, `rotate`) and `clip-path` animate
+(sidebar width is the one tolerated exception).
+
+| Where | What | Values |
+|---|---|---|
+| Buttons | Press | `scale(0.97)`, 160ms ease-out |
+| Bookmark | Press pop + fill | `scale(0.9)` 160ms; fill 200ms |
+| Menus (dropdowns) | Grow out of the trigger | origin `--transform-origin`, `scale(0.95)` + opacity, 200ms ease-out |
+| Dialogs | Settle in, centred | `scale(0.96)` + opacity, backdrop opacity, 250ms ease-out |
+| Explore tiles | Lift on mouse hover only | `translateY(-2px)` + shadow, 200ms |
+| Segmented switches | Sliding active pill (clip-path copy) | 250ms ease-in-out |
+| Event identity card | One-time settle (delight: the match is real) | rise 12px, `scale(0.97)`, `rotate(-1deg)` → rest, 500ms; code + QR 150ms later |
+
+Deliberately still: keyboard triage (j/k/s/x), the answer reading pane, list entrances on Explore (visited many times
+a day), status badges, notification counts. Reduced motion keeps opacity and colour transitions but drops every
+movement (`motion-safe:`), and cuts keyframe animations.
+
 ## Accessibility checklist
 - Text contrast ≥ 4.5:1 (body) and ≥ 3:1 (large text, icons, borders of inputs).
 - Every interactive element reachable by keyboard with a visible focus outline.

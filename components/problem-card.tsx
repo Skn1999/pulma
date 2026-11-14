@@ -75,7 +75,7 @@ export function ProblemCardView({
 
   return (
     <article
-      className="relative overflow-hidden rounded-md border border-border bg-paper pb-6 pl-6 pr-5 pt-5 shadow-card transition-transform duration-200 motion-safe:hover:-rotate-[0.4deg] motion-safe:hover:-translate-y-0.5"
+      className="relative overflow-hidden rounded-md border border-border bg-paper pb-6 pl-6 pr-5 pt-5 shadow-card transition-[rotate,translate] duration-200 ease-out motion-safe:hover:-rotate-[0.4deg] motion-safe:hover:-translate-y-0.5"
       style={{
         backgroundImage:
           "linear-gradient(var(--card-rule), var(--card-rule))",
