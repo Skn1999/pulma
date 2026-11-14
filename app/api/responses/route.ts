@@ -1,0 +1,37 @@
+import { NextResponse } from "next/server";
+import { getDB, mutate, newId, nextPublicCode } from "@/lib/store";
+import { getTalentId } from "@/lib/persona";
+import type { Response as Resp } from "@/lib/types";
+
+export async function POST(req: Request) {
+  const b = await req.json().catch(() => null);
+  if (!b || typeof b !== "object") return NextResponse.json({ error: "Invalid body" }, { status: 400 });
+  const talentId = await getTalentId();
+  const db = getDB();
+  if (!db.talents.some((t) => t.id === talentId)) return NextResponse.json({ error: "Unknown talent" }, { status: 401 });
+  const card = db.cards.find((c) => c.id === b.cardId && c.status === "published");
+  if (!card) return NextResponse.json({ error: "Card not found" }, { status: 404 });
+  const text = typeof b.text === "string" ? b.text.trim() : "";
+  if (!text) return NextResponse.json({ error: "text required" }, { status: 400 });
+  if (text.length > 4000) return NextResponse.json({ error: "text too long" }, { status: 400 });
+  if (db.responses.some((r) => r.cardId === card.id && r.talentId === talentId))
+    return NextResponse.json({ error: "You have already responded to this card" }, { status: 409 });
+  const translated = typeof b.translatedText === "string" && b.translatedText.trim() ? b.translatedText.trim() : undefined;
+  const created = mutate((d) => {
+    const r: Resp = {
+      id: newId("resp"),
+      publicCode: nextPublicCode(d, card.id),
+      cardId: card.id,
+      talentId,
+      text,
+      originalLanguage: typeof b.originalLanguage === "string" && b.originalLanguage ? b.originalLanguage : "English",
+      translatedText: translated,
+      aiAssisted: b.aiAssisted === true,
+      createdAt: new Date().toISOString(),
+    };
+    d.responses.push(r);
+    return r;
+  });
+  // Talent's own response: safe to return their own id/code.
+  return NextResponse.json({ id: created.id, publicCode: created.publicCode, cardId: created.cardId }, { status: 201 });
+}

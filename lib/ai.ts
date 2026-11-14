@@ -1,0 +1,186 @@
+// Server-only AI helpers. Every function returns a fallback and never throws.
+// AI only helps people write; it never ranks, scores or filters people (CLAUDE.md hard rule 1).
+import Anthropic from "@anthropic-ai/sdk";
+import type { CardDraft, Format, IntakeAnswers } from "./types";
+import { CARD_SYSTEM, CLARITY_SYSTEM, cardUserMessage, translateSystem } from "./prompts";
+
+const MODEL = "claude-sonnet-5-5";
+const MAX_TOKENS = 1200;
+const TIMEOUT_MS = 8000;
+const CLARITY_MAX_CHARS = 600;
+const FORMATS: Format[] = ["onsite", "online", "hybrid"];
+const KNOWN_LANGUAGES = [
+  "English", "Finnish", "Swedish", "Ukrainian", "Spanish", "Russian", "German", "French",
+  "Estonian", "Arabic", "Chinese", "Japanese", "Italian", "Portuguese", "Polish", "Hindi",
+  "Persian", "Turkish", "Vietnamese", "Dutch",
+];
+// Patterns that signal credentials about a person (years of experience, degree, nationality, native speaker).
+const CREDENTIAL_HINT = /\b\d+\+?\s*(years?|yrs?)\b|\bdegree\b|\bnative\b|\bnationalit|\bcitizen/i;
+
+type CardResult = { draft: CardDraft; suggestions: string[]; fallback: boolean };
+
+function client(): Anthropic | null {
+  if (!process.env.ANTHROPIC_API_KEY) return null;
+  return new Anthropic({ timeout: TIMEOUT_MS, maxRetries: 0 });
+}
+
+/** One Claude call. Returns trimmed text, or null on any failure or missing key. */
+async function complete(system: string, user: string): Promise<string | null> {
+  try {
+    const api = client();
+    if (!api) return null;
+    const res = await api.messages.create({
+      model: MODEL,
+      max_tokens: MAX_TOKENS,
+      system,
+      messages: [{ role: "user", content: user }],
+    });
+    const text = res.content
+      .map((block) => (block.type === "text" ? block.text : ""))
+      .join("")
+      .trim();
+    return text || null;
+  } catch {
+    return null;
+  }
+}
+
+/** Takes the first {...} in the model output, tolerating ```json fences. */
+function parseJsonObject(raw: string): Record<string, unknown> | null {
+  const cleaned = raw.replace(/```(?:json)?/gi, "");
+  const start = cleaned.indexOf("{");
+  const end = cleaned.lastIndexOf("}");
+  if (start === -1 || end <= start) return null;
+  try {
+    const value: unknown = JSON.parse(cleaned.slice(start, end + 1));
+    return value && typeof value === "object" && !Array.isArray(value)
+      ? (value as Record<string, unknown>)
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function cleanString(v: unknown, max: number): string | null {
+  if (typeof v !== "string") return null;
+  const s = v.trim();
+  return s ? s.slice(0, max) : null;
+}
+
+function cleanList(v: unknown, maxItems: number, maxLen = 160): string[] {
+  if (!Array.isArray(v)) return [];
+  return v
+    .map((x) => cleanString(x, maxLen))
+    .filter((x): x is string => x !== null)
+    .slice(0, maxItems);
+}
+
+function validateCard(obj: Record<string, unknown>): CardResult | null {
+  const d = obj.draft;
+  if (!d || typeof d !== "object") return null;
+  const r = d as Record<string, unknown>;
+  const title = cleanString(r.title, 120);
+  const context = cleanString(r.context, 1000);
+  const weekOneReality = cleanString(r.weekOneReality, 1000);
+  const hardPart = cleanString(r.hardPart, 1000);
+  if (!title || !context || !weekOneReality || !hardPart) return null;
+
+  const languages = cleanList(r.languages, 6, 40);
+  const format = FORMATS.includes(r.format as Format) ? (r.format as Format) : "hybrid";
+
+  return {
+    draft: {
+      title,
+      context,
+      weekOneReality,
+      hardPart,
+      niceToHave: cleanList(r.niceToHave, 8),
+      languages: languages.length ? languages : ["English"],
+      format,
+    },
+    suggestions: cleanList(obj.suggestions, 4, 300),
+    fallback: false,
+  };
+}
+
+function normalise(a: Partial<IntakeAnswers> | undefined): IntakeAnswers {
+  const s = (v: unknown) => (typeof v === "string" ? v.trim() : "");
+  return {
+    problem: s(a?.problem),
+    firstWeek: s(a?.firstWeek),
+    hardPart: s(a?.hardPart),
+    bonus: s(a?.bonus),
+    languages: s(a?.languages),
+  };
+}
+
+function fallbackCard(a: IntakeAnswers): CardResult {
+  const firstSentence = (text: string) => {
+    const first = text.split(/[.!?\n]/)[0]?.trim() ?? "";
+    if (!first) return "Untitled problem";
+    return first.length > 70 ? first.slice(0, 69).trimEnd() + "…" : first;
+  };
+
+  const languages = KNOWN_LANGUAGES.filter((lang) =>
+    new RegExp(`\\b${lang}\\b`, "i").test(a.languages),
+  );
+  const all = [a.problem, a.firstWeek, a.hardPart, a.bonus, a.languages].join(" ");
+
+  return {
+    draft: {
+      title: firstSentence(a.problem),
+      context: a.problem || "The team has not described this problem yet.",
+      weekOneReality: a.firstWeek || "The first week is not described yet.",
+      hardPart: a.hardPart || "The hard part is not described yet.",
+      niceToHave: a.bonus
+        .split(/[\n,;]+|\band\b/i)
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .slice(0, 8),
+      languages: languages.length ? languages : ["English"],
+      format: "hybrid",
+    },
+    suggestions: CREDENTIAL_HINT.test(all)
+      ? [
+          "Years of experience, degrees, nationality or 'native speaker' are not part of the card. Try describing the work itself: what will this person actually do in week one?",
+        ]
+      : [],
+    fallback: true,
+  };
+}
+
+export async function generateProblemCard(
+  a: IntakeAnswers,
+): Promise<{ draft: CardDraft; suggestions: string[]; fallback: boolean }> {
+  const answers = normalise(a);
+  try {
+    const raw = await complete(CARD_SYSTEM, cardUserMessage(answers));
+    const obj = raw ? parseJsonObject(raw) : null;
+    const card = obj ? validateCard(obj) : null;
+    if (card) return card;
+  } catch {
+    // fall through to the deterministic card
+  }
+  return fallbackCard(answers);
+}
+
+export async function suggestClarity(
+  text: string,
+): Promise<{ suggestion: string | null; fallback: boolean }> {
+  const input = typeof text === "string" ? text.trim() : "";
+  if (!input) return { suggestion: null, fallback: true };
+  const out = await complete(CLARITY_SYSTEM, input);
+  if (!out || out.length > CLARITY_MAX_CHARS) return { suggestion: null, fallback: true };
+  return { suggestion: out, fallback: false };
+}
+
+export async function translate(
+  text: string,
+  from: string,
+  to: string,
+): Promise<{ text: string | null; fallback: boolean }> {
+  const input = typeof text === "string" ? text.trim() : "";
+  if (!input) return { text: null, fallback: true };
+  const out = await complete(translateSystem(from, to), input);
+  return out ? { text: out, fallback: false } : { text: null, fallback: true };
+}
