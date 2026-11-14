@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { apiAccount } from "@/lib/session";
 import { getDB, mutate, newId } from "@/lib/store";
+import { logActivity } from "@/lib/activity";
 import type { CardDraft, Format, ProblemCard } from "@/lib/types";
 
 export async function GET() {
@@ -25,6 +26,7 @@ export async function POST(req: Request) {
   const title = str(d.title);
   if (!title) return NextResponse.json({ error: "title required" }, { status: 400 });
   const format: Format = d.format === "onsite" || d.format === "online" || d.format === "hybrid" ? d.format : "hybrid";
+  const needed = (d as { languagesNeeded?: unknown }).languagesNeeded;
   const card: ProblemCard = {
     id: newId("card"),
     companyId,
@@ -34,10 +36,14 @@ export async function POST(req: Request) {
     hardPart: str(d.hardPart),
     niceToHave: strs(d.niceToHave),
     languages: strs(d.languages),
+    ...(Array.isArray(needed) ? { languagesNeeded: strs(needed).filter((l) => strs(d.languages).includes(l)) } : {}),
     format,
     status: "published",
     createdAt: new Date().toISOString(),
   };
-  mutate((db) => db.cards.push(card));
+  mutate((db) => {
+    db.cards.push(card);
+    logActivity(db, { kind: "card_published", actor: "company", cardId: card.id, companyId, at: card.createdAt });
+  });
   return NextResponse.json(card, { status: 201 });
 }

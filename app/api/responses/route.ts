@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getDB, mutate, newId, nextPublicCode } from "@/lib/store";
+import { logActivity } from "@/lib/activity";
 import { apiAccount } from "@/lib/session";
 import type { Response as Resp } from "@/lib/types";
 
@@ -32,6 +33,7 @@ export async function POST(req: Request) {
       createdAt: new Date().toISOString(),
     };
     d.responses.push(r);
+    logActivity(d, { kind: "answer_sent", actor: "talent", cardId: card.id, companyId: card.companyId, responseId: r.id, talentId, at: r.createdAt });
     return r;
   });
   // Talent's own response: safe to return their own id/code.

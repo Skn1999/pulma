@@ -18,7 +18,8 @@ export interface ProblemCard {
   weekOneReality: string;
   hardPart: string;
   niceToHave: string[];
-  languages: string[]; // e.g. ["English", "Finnish"]
+  languages: string[]; // every working language that is realistic in the team, e.g. ["English", "Finnish"]
+  languagesNeeded?: string[]; // subset of `languages` actually NEEDED for the work; the rest are nice to have
   format: Format;
   status: "draft" | "published";
   createdAt: string; // ISO
@@ -92,6 +93,64 @@ export interface Account {
   companyId?: string; // role === "company"
   talentId?: string; // role === "talent"
   createdAt: string;
+  notificationsSeenAt?: string; // ISO; activity after this counts as new for the bell
+}
+
+/** Company closes an answer it won't take forward: the person hears "not this time" instead of silence. */
+export interface Closure {
+  id: string;
+  cardId: string;
+  responseId: string;
+  reason?: ClosureReason; // chosen by a human from a fixed list; never AI-generated
+  createdAt: string;
+}
+
+export const CLOSURE_REASONS = [
+  "We went with a different approach to this problem",
+  "We had more strong answers than meetings",
+  "The problem has changed on our side",
+  "The timing isn't right for us",
+] as const;
+export type ClosureReason = (typeof CLOSURE_REASONS)[number];
+
+export type ActivityKind =
+  | "card_published"
+  | "answer_sent"
+  | "answer_edited"
+  | "answer_withdrawn"
+  | "shortlisted"
+  | "shortlist_removed"
+  | "message_updated"
+  | "invite_accepted"
+  | "invite_declined"
+  | "answer_closed"
+  | "answer_reopened"
+  | "meeting_scheduled"
+  | "mutual_next_step";
+
+/**
+ * Append-only log of what happened. Raw rows are NEVER sent to a client: use the
+ * visibility helpers in lib/activity.ts, which decide what each account may see.
+ */
+export interface Activity {
+  id: string;
+  at: string; // ISO
+  kind: ActivityKind;
+  actor: Role; // who did it
+  cardId: string;
+  companyId: string;
+  responseId?: string;
+  talentId?: string;
+}
+
+/** One item as a specific viewer is allowed to see it. Safe to send to that viewer. */
+export interface ActivityView {
+  id: string;
+  at: string;
+  kind: ActivityKind;
+  byMe: boolean;
+  text: string; // already worded for this viewer, e.g. "Kiertovolt shortlisted your answer #A3"
+  href?: string; // where this viewer should go to see it
 }
 
 export interface DB {
@@ -104,6 +163,8 @@ export interface DB {
   meetings: Meeting[];
   event: Event;
   feedback: Feedback[];
+  closures: Closure[];
+  activity: Activity[];
 }
 
 /** What a company is allowed to see in the blind round. No talentId, no identity. */
@@ -115,6 +176,7 @@ export interface BlindResponse {
   translatedText?: string;
   aiAssisted: boolean;
   shortlist?: { status: Shortlist["status"]; note?: string; message?: string };
+  closed?: { id: string; reason?: string };
 }
 
 /** Problem card fields the AI generates from the intake. */

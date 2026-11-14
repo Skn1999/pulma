@@ -62,6 +62,8 @@ function makeDb(overrides: Partial<DB>): DB {
     meetings: [],
     event,
     feedback: [],
+    closures: [],
+    activity: [],
     ...overrides,
     accounts: overrides.accounts ?? [],
   };

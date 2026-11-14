@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { apiAccount } from "@/lib/session";
 import { getDB, mutate } from "@/lib/store";
+import { logActivity } from "@/lib/activity";
 
 const MESSAGE_MAX = 200;
 
@@ -23,6 +24,9 @@ export async function DELETE(_req: Request, { params }: Ctx) {
   if (s.status === "accepted") return NextResponse.json({ error: "Already accepted by the talent" }, { status: 409 });
   mutate((db) => {
     db.shortlists = db.shortlists.filter((x) => x.id !== id);
+    const card = db.cards.find((c) => c.id === s.cardId);
+    const talentId = db.responses.find((r) => r.id === s.responseId)?.talentId;
+    if (card) logActivity(db, { kind: "shortlist_removed", actor: "company", cardId: card.id, companyId: card.companyId, responseId: s.responseId, talentId });
   });
   return NextResponse.json({ ok: true });
 }
@@ -52,7 +56,12 @@ export async function PATCH(req: Request, { params }: Ctx) {
     if (!s) return { kind: "missing" as const };
     if (hasMessage && s.status !== "invited") return { kind: "locked" as const };
     if (hasNote) s.note = (b.note as string).trim() || undefined;
-    if (hasMessage) s.message = message;
+    if (hasMessage && s.message !== message) {
+      s.message = message;
+      const card = db.cards.find((c) => c.id === s.cardId);
+      const talentId = db.responses.find((r) => r.id === s.responseId)?.talentId;
+      if (card) logActivity(db, { kind: "message_updated", actor: "company", cardId: card.id, companyId: card.companyId, responseId: s.responseId, talentId });
+    }
     return {
       kind: "ok" as const,
       body: { id: s.id, status: s.status, note: s.note, message: s.message },

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { applySchedule, getDB, mutate, newId } from "@/lib/store";
 import { apiAccount } from "@/lib/session";
+import { logActivity } from "@/lib/activity";
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const acc = await apiAccount("talent");
@@ -18,14 +19,19 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
   const result = mutate((db) => {
     const s = db.shortlists.find((x) => x.id === id)!;
+    const card = db.cards.find((c) => c.id === s.cardId);
+    const ids = { cardId: s.cardId, companyId: card?.companyId ?? "", responseId: s.responseId, talentId };
     if (!b.accept) {
       s.status = "declined";
+      logActivity(db, { kind: "invite_declined", actor: "talent", ...ids });
       return { status: s.status };
     }
     s.status = "accepted";
     const meeting = { id: newId("mtg"), cardId: s.cardId, responseId: s.responseId, slotStart: "", table: 0 };
     db.meetings.push(meeting);
+    logActivity(db, { kind: "invite_accepted", actor: "talent", ...ids });
     applySchedule(db);
+    if (meeting.slotStart) logActivity(db, { kind: "meeting_scheduled", actor: "talent", ...ids });
     return { status: s.status, table: meeting.table || null, slotStart: meeting.slotStart || null };
   });
   return NextResponse.json(result);

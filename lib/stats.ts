@@ -9,6 +9,7 @@ export interface Stats {
   languages: { name: string; count: number }[];
   timeline: { cardId: string; title: string; createdAt: string; daysBeforeEvent: number }[];
   followUps: { meetings: number; answered: number; mutualNextSteps: number };
+  replies: { answers: number; shortlisted: number; closed: number; open: number; replyRate: number };
   noInvite: { responseId: string; publicCode: string; cardTitle: string; talentId: string }[];
 }
 
@@ -91,6 +92,24 @@ export function getStats(db: DB): Stats {
   }
   const mutualNextSteps = [...nextStepSides.values()].filter((s) => s.size === 2).length;
 
+  const shortlistedIds = new Set(shortlists.map((s) => s.responseId));
+  const closedIds = new Set((db.closures ?? []).map((c) => c.responseId));
+  const responseIds = new Set(responses.map((r) => r.id));
+  let shortlistedN = 0;
+  let closedN = 0;
+  for (const id of responseIds) {
+    if (shortlistedIds.has(id)) shortlistedN++;
+    else if (closedIds.has(id)) closedN++;
+  }
+  const answeredN = shortlistedN + closedN;
+  const replies = {
+    answers: responses.length,
+    shortlisted: shortlistedN,
+    closed: closedN,
+    open: responses.length - answeredN,
+    replyRate: responses.length ? answeredN / responses.length : 0,
+  };
+
   return {
     counts: {
       cards: published.length,
@@ -102,6 +121,7 @@ export function getStats(db: DB): Stats {
     languages: toSortedCounts(languageCounts),
     timeline,
     followUps: { meetings: meetings.length, answered: answeredIds.size, mutualNextSteps },
+    replies,
     noInvite,
   };
 }

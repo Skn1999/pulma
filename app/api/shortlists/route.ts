@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { apiAccount } from "@/lib/session";
 import { getDB, mutate, newId } from "@/lib/store";
+import { logActivity } from "@/lib/activity";
 
 const MAX = 5;
 const MESSAGE_MAX = 200;
@@ -25,6 +26,8 @@ export async function POST(req: Request) {
   if (card.companyId !== acc.companyId) return NextResponse.json({ error: "Not your card" }, { status: 403 });
   if (!db.responses.some((r) => r.id === b.responseId && r.cardId === b.cardId))
     return NextResponse.json({ error: "Response not found for this card" }, { status: 404 });
+  if (db.closures.some((c) => c.responseId === b.responseId))
+    return NextResponse.json({ error: "Reopen this answer first" }, { status: 409 });
   if (db.shortlists.some((s) => s.responseId === b.responseId))
     return NextResponse.json({ error: "Already shortlisted" }, { status: 409 });
   if (db.shortlists.filter((s) => s.cardId === b.cardId).length >= MAX)
@@ -40,6 +43,8 @@ export async function POST(req: Request) {
       message,
     };
     d.shortlists.push(s);
+    const talentId = d.responses.find((r) => r.id === s.responseId)?.talentId;
+    logActivity(d, { kind: "shortlisted", actor: "company", cardId: s.cardId, companyId: card.companyId, responseId: s.responseId, talentId });
     return s;
   });
   return NextResponse.json(item, { status: 201 });

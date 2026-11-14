@@ -166,3 +166,72 @@ Toasts: `import { toast } from "sonner"`; `<Toaster />` is mounted once in the r
   "The company has already shortlisted this answer, so it can't be changed." PATCH sets `updatedAt`, keeps
   `publicCode`. DELETE hard-deletes the response (data minimisation).
 - After a shortlist exists, the talent can still decline the invite (existing flow).
+
+---
+
+# v4: Activity log, match thread, notifications, close the loop, language needs
+
+Types are in `lib/types.ts`: `Activity`, `ActivityView`, `Closure`, `CLOSURE_REASONS`,
+`ProblemCard.languagesNeeded`, `Account.notificationsSeenAt`, `db.closures`, `db.activity`.
+
+## Privacy rules for everything below (non-negotiable)
+- A company viewer NEVER receives a talent's name/email/talentId for a response unless that response's
+  shortlist is "accepted" (email only on mutual next step, as in v3). Before that it is "#A3".
+- A talent never learns another side's "not-now", and never sees other people's answers.
+- Raw `Activity` rows never leave the server. Only `ActivityView`s built for the viewer.
+
+## lib/activity.ts (server, pure helpers + one writer)
+```ts
+export function logActivity(db: DB, a: Omit<Activity, "id" | "at"> & { at?: string }): void   // call INSIDE mutate()
+export function viewActivity(db: DB, account: Account, a: Activity): ActivityView | null       // null = not for this viewer
+export function feedFor(db: DB, account: Account, opts?: { responseId?: string; limit?: number }): ActivityView[] // newest first
+export function unseenCount(db: DB, account: Account): number   // items in feedFor not byMe and after notificationsSeenAt
+```
+Who sees what (feed/notifications):
+- company (own cards only): card_published (byMe), answer_sent / answer_edited / answer_withdrawn ("New answer #A3 on
+  'Battery sensor data'"), its own shortlist actions (byMe), invite_accepted ("#A3 accepted — you'll meet Olena Kovalenko"),
+  invite_declined ("#A3 declined your invite"), meeting_scheduled, mutual_next_step.
+- talent (own responses only): answer_sent/edited (byMe), shortlisted ("Kiertovolt shortlisted your answer #A3"),
+  message_updated, answer_closed ("Kiertovolt: not this time — {reason}"), answer_reopened, invite_accepted/declined (byMe),
+  meeting_scheduled ("Meeting booked: Table 2 · 10:10"), mutual_next_step. NOT shortlist_removed (silently becomes "Sent" again).
+- organiser: none (totals only elsewhere).
+Text must contain no identity the viewer may not see. `href`: company → `/company/card/{cardId}?r={responseId}`,
+talent → `/talent/answers/{responseId}`.
+
+## Closures (close the loop)
+- POST `/api/closures` `{cardId, responseIds: string[], reason?}` (company, own card). Skips responses that have a shortlist
+  row or are already closed. Logs answer_closed per response. Returns `{closed: n}`.
+- DELETE `/api/closures/[id]` reopens (company, own card) → logs answer_reopened.
+- Closed answers cannot be shortlisted (POST /api/shortlists → 409 "Reopen this answer first") and cannot be edited by the
+  talent (409); the talent CAN still withdraw.
+- GET `/api/cards/[id]/responses` adds `closed?: { id: string; reason?: string }` to each BlindResponse.
+- Stats: `getStats(db).replies = { answers, shortlisted, closed, open, replyRate }` (replyRate = (shortlisted+closed)/answers).
+
+## Match thread
+`lib/thread.ts`: `buildThread(db, account, responseId) → ThreadView | null` (null if the viewer has no right to it).
+```ts
+interface ThreadView {
+  responseId: string; publicCode: string; card: { id; title; companyName };
+  stage: "sent" | "shortlisted" | "accepted" | "declined" | "closed" | "booked" | "withdrawn";
+  steps: { key: string; label: string; state: "done" | "current" | "todo" | "skipped"; at?: string }[]; // Sent → Shortlisted → Accepted → Meeting booked → Follow-up
+  privacy: { label: string; hiddenFrom: "company" | "talent"; unlocked: boolean; unlockHint: string }[];
+     // e.g. {label:"Your name", hiddenFrom:"company", unlocked:false, unlockHint:"Shared only if you accept an invite"}
+  events: ActivityView[]; // oldest first, for this response only
+  message?: string; closedReason?: string; meeting?: { table: number; start: string };
+  counterpartName?: string; // company: talent displayName only when accepted; talent: company name always
+}
+```
+GET `/api/thread/[responseId]` returns the viewer's ThreadView. `components/thread/match-thread.tsx` exports
+`<MatchThread responseId />` (client: fetches, renders steps + privacy lock chips + event list, polls every 5s).
+
+## Notifications
+GET `/api/notifications` → `{ unseen: number; items: ActivityView[] }` (latest 20, not byMe). POST `/api/notifications/seen`
+sets account.notificationsSeenAt = now. Bell in the shell polls every 5s; when `unseen` grows it shows a toast for the new
+item(s) and calls `router.refresh()` so the visible screen updates live.
+
+## Language needs
+Problem cards split languages: `languagesNeeded` (needed for the work) ⊆ `languages`; others are "nice to have".
+Intake Q5 asks which languages are realistic AND which are truly needed for the work; the AI/fallback fills both; the
+editor lets the human set each language to Needed / Nice to have; ProblemCardView shows "Needed for the work" vs
+"Nice to have" (text labels, not colour alone). If Finnish is marked needed, the editor shows a gentle human-facing hint
+"Is Finnish needed for the work itself, or for the team's social life? Many teams start in English." — dismissible, never automatic.

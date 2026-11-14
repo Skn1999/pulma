@@ -32,6 +32,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     .filter((r) => r.cardId === id)
     .map((r) => {
       const s = db.shortlists.find((x) => x.responseId === r.id);
+      const cl = db.closures.find((x) => x.responseId === r.id);
       return {
         id: r.id,
         publicCode: r.publicCode,
@@ -40,6 +41,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
         translatedText: r.translatedText,
         aiAssisted: r.aiAssisted,
         shortlist: s ? { status: s.status, note: s.note, message: s.message } : undefined,
+        closed: cl ? { id: cl.id, reason: cl.reason } : undefined,
       };
     })
     // Stable base order, then seeded shuffle (Fisher-Yates). No AI ordering.

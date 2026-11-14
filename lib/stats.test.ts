@@ -74,6 +74,8 @@ const db: DB = {
   meetings: [{ id: "m1", cardId: "c1", responseId: "r1", slotStart: "", table: 1 } satisfies Meeting],
   event,
   feedback: [],
+  closures: [],
+  activity: [],
 };
 
 describe("getStats", () => {
@@ -109,6 +111,18 @@ describe("getStats", () => {
       { responseId: "r2", publicCode: "A2", cardTitle: "Battery sizing", talentId: "t2" },
       { responseId: "r3", publicCode: "A1", cardTitle: "Sensor drift", talentId: "t3" },
     ]);
+  });
+
+  it("counts reply rate: shortlisted or closed answers over all answers", () => {
+    expect(stats.replies).toEqual({ answers: 3, shortlisted: 1, closed: 0, open: 2, replyRate: 1 / 3 });
+    const withClosure: DB = {
+      ...db,
+      closures: [
+        { id: "cl1", cardId: "c1", responseId: "r2", createdAt: "2026-11-10T09:00:00Z" },
+        { id: "cl2", cardId: "c3", responseId: "r4", createdAt: "2026-11-10T09:00:00Z" }, // draft card: excluded
+      ],
+    };
+    expect(getStats(withClosure).replies).toEqual({ answers: 3, shortlisted: 1, closed: 1, open: 1, replyRate: 2 / 3 });
   });
 
   it("counts follow-ups: answered meetings and mutual next steps only", () => {

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { apiAccount } from "@/lib/session";
 import { mutate, newId } from "@/lib/store";
+import { logActivity } from "@/lib/activity";
 
 export async function POST(req: Request) {
   const account = await apiAccount();
@@ -27,6 +28,11 @@ export async function POST(req: Request) {
         : !!response && !!account.talentId && response.talentId === account.talentId;
     if (!owns) return NextResponse.json({ error: "This is not your meeting" }, { status: 403 });
 
+    const wasMutual = (() => {
+      const mine = db.feedback.find((f) => f.meetingId === meetingId && f.side === side);
+      const theirs = db.feedback.find((f) => f.meetingId === meetingId && f.side !== side);
+      return mine?.outcome === "next-step" && theirs?.outcome === "next-step";
+    })();
     const existing = db.feedback.find((f) => f.meetingId === meetingId && f.side === side);
     if (existing) {
       existing.outcome = outcome;
@@ -36,6 +42,9 @@ export async function POST(req: Request) {
     }
     const other = db.feedback.find((f) => f.meetingId === meetingId && f.side !== side);
     const mutual = outcome === "next-step" && other?.outcome === "next-step";
+    if (mutual && !wasMutual && card && response) {
+      logActivity(db, { kind: "mutual_next_step", actor: side, cardId: card.id, companyId: card.companyId, responseId: response.id, talentId: response.talentId });
+    }
     const out: { outcome: typeof outcome; mutual: boolean; talentEmail?: string } = { outcome, mutual };
     if (mutual && side === "company" && response) {
       out.talentEmail = db.talents.find((t) => t.id === response.talentId)?.email;

@@ -1,5 +1,5 @@
 // Synthetic seed data. Every person and company here is fictional.
-import type { DB, Account, Company, ProblemCard, Talent, Response } from "@/lib/types";
+import type { DB, Account, Activity, Closure, Company, ProblemCard, Shortlist, Meeting, Talent, Response } from "@/lib/types";
 
 const companies: Company[] = [
   { id: "co-game", name: "Nordlight Games", sector: "Games", size: "35 people", about: "A small studio in Otaniemi making cooperative mobile puzzle games played by a few hundred thousand people." },
@@ -18,7 +18,7 @@ const cards: ProblemCard[] = [
     weekOneReality: "You would sit with the shift operators at the dismantling line, collect a week of raw readings, and find out where they disagree with what people see on the bench. By Friday we would like a short list of the five most suspicious data problems and a first fix for one.",
     hardPart: "Nobody wrote down what the sensors were supposed to measure, and the people who set them up have left. Some oddities are real batteries behaving strangely, others are broken cables, and we cannot yet tell which is which.",
     niceToHave: ["Has worked with noisy hardware data", "Comfortable standing on a shop floor", "Can explain findings to non-technical operators"],
-    languages: ["English", "Finnish"], format: "onsite", status: "published", createdAt: "2026-11-14T09:30:00.000Z",
+    languages: ["English", "Finnish"], languagesNeeded: ["English"], format: "onsite", status: "published", createdAt: "2026-11-14T09:30:00.000Z",
   },
   {
     id: "card-game", companyId: "co-game",
@@ -27,7 +27,7 @@ const cards: ProblemCard[] = [
     weekOneReality: "Watch recordings of real sessions, play level 12 yourself on three different phones, and talk to a handful of players who quit. Come back with one or two theories we can test the following week.",
     hardPart: "The level is hard and slow at once, and the two effects are tangled together. A fix for one can easily hide the other.",
     niceToHave: ["Has watched people use something and learned from it", "Likes puzzle games"],
-    languages: ["English"], format: "hybrid", status: "published", createdAt: "2026-11-12T14:10:00.000Z",
+    languages: ["English"], languagesNeeded: ["English"], format: "hybrid", status: "published", createdAt: "2026-11-12T14:10:00.000Z",
   },
   {
     id: "card-game2", companyId: "co-game",
@@ -36,7 +36,7 @@ const cards: ProblemCard[] = [
     weekOneReality: "Collect the last three releases of translation bugs, sort them by cause, and propose a cheap check that catches the most common one before translators and testers see it.",
     hardPart: "Translators work in a spreadsheet without seeing the screen, and the developers cannot read most of the languages.",
     niceToHave: ["Speaks or writes a language other than English or Finnish", "Has done QA of any kind"],
-    languages: ["English", "Finnish"], format: "online", status: "published", createdAt: "2026-11-19T10:00:00.000Z",
+    languages: ["English", "Finnish"], languagesNeeded: ["English"], format: "online", status: "published", createdAt: "2026-11-19T10:00:00.000Z",
   },
   {
     id: "card-medtech", companyId: "co-medtech",
@@ -45,7 +45,7 @@ const cards: ProblemCard[] = [
     weekOneReality: "Shadow a ward for a morning if the hospital allows it, otherwise go through alarm logs and interview our clinical specialist. Write down which alarms people actually act on and which they ignore.",
     hardPart: "Fewer alarms is not automatically safer. We need to cut noise without ever hiding something critical, and the people who know the truth are very busy.",
     niceToHave: ["Has worked in a care, hospital or emergency setting", "Experience writing safety-sensitive instructions"],
-    languages: ["English", "Finnish", "Swedish"], format: "onsite", status: "published", createdAt: "2026-11-10T08:45:00.000Z",
+    languages: ["English", "Finnish", "Swedish"], languagesNeeded: ["English", "Finnish"], format: "onsite", status: "published", createdAt: "2026-11-10T08:45:00.000Z",
   },
   {
     id: "card-saas", companyId: "co-saas",
@@ -54,7 +54,7 @@ const cards: ProblemCard[] = [
     weekOneReality: "Read a few hundred support tickets and onboarding emails, group them by what people were trying to do, and sit in on two customer calls. Present the three most common stumbling points.",
     hardPart: "Customers describe symptoms, not causes. 'It does not work' can mean five different things, and the loudest complaints are rarely the most common.",
     niceToHave: ["Has taught or trained non-experts", "Comfortable with spreadsheets or basic SQL"],
-    languages: ["English", "Finnish"], format: "hybrid", status: "published", createdAt: "2026-11-13T11:20:00.000Z",
+    languages: ["English", "Finnish"], languagesNeeded: ["English"], format: "hybrid", status: "published", createdAt: "2026-11-13T11:20:00.000Z",
   },
   {
     id: "card-saas2", companyId: "co-saas",
@@ -63,7 +63,7 @@ const cards: ProblemCard[] = [
     weekOneReality: "Take fifty real, anonymised problem files, work out the ten patterns behind most failures, and suggest which two we should handle automatically first.",
     hardPart: "Every fix for one customer's file risks breaking another's, and customers do not tell us what their old system was.",
     niceToHave: ["Has cleaned up messy data before", "Patience with edge cases"],
-    languages: ["English"], format: "online", status: "published", createdAt: "2026-11-17T13:40:00.000Z",
+    languages: ["English"], languagesNeeded: ["English"], format: "online", status: "published", createdAt: "2026-11-17T13:40:00.000Z",
   },
   {
     id: "card-logistics", companyId: "co-logistics",
@@ -72,7 +72,7 @@ const cards: ProblemCard[] = [
     weekOneReality: "Spend two shifts on the depot floor following pallets from arrival to truck, noting every place where the system and reality drift apart. Propose one small change to try the following week.",
     hardPart: "The scanning process looks fine on paper. The gaps are in habits, shift handovers and a few awkward corners of the building, so they only show up if you watch.",
     niceToHave: ["Has worked on a warehouse, shop or factory floor", "Can talk to a night shift and a manager on the same day"],
-    languages: ["English", "Finnish"], format: "onsite", status: "published", createdAt: "2026-11-16T07:55:00.000Z",
+    languages: ["English", "Finnish"], languagesNeeded: ["English", "Finnish"], format: "onsite", status: "published", createdAt: "2026-11-16T07:55:00.000Z",
   },
   {
     id: "card-robotics", companyId: "co-robotics",
@@ -81,7 +81,7 @@ const cards: ProblemCard[] = [
     weekOneReality: "Build a small test table with twenty awkward parcels, run a few hundred picks, and record what fails and how. Try one cheap change to the cups or the approach angle and compare.",
     hardPart: "Failures depend on lighting, humidity and how the parcel lands, so results are noisy. We need a test that is fair enough to trust a result from.",
     niceToHave: ["Likes tinkering with hardware", "Has run careful experiments in a lab or workshop"],
-    languages: ["English"], format: "onsite", status: "published", createdAt: "2026-11-21T09:00:00.000Z",
+    languages: ["English"], languagesNeeded: ["English"], format: "onsite", status: "published", createdAt: "2026-11-21T09:00:00.000Z",
   },
 ];
 
@@ -247,22 +247,75 @@ const accounts: Account[] = [
   { id: "acc-organiser", email: "events@talentday.example", role: "organiser", displayName: "Event team", createdAt: SEED_AT },
 ];
 
+const shortlists: Shortlist[] = [
+  { id: "sl-1", cardId: "card-game", responseId: "r-g1", status: "invited", note: "Practical, plans to test on old phones." },
+  { id: "sl-2", cardId: "card-game", responseId: "r-g3", status: "invited" },
+  { id: "sl-3", cardId: "card-medtech", responseId: "r-m2", status: "accepted", note: "Clinical experience, careful about safety." },
+  { id: "sl-4", cardId: "card-medtech", responseId: "r-m1", status: "invited" },
+  { id: "sl-5", cardId: "card-logistics", responseId: "r-l1", status: "invited" },
+  { id: "sl-6", cardId: "card-game", responseId: "r-g2", status: "accepted", note: "Separates the two effects." },
+  { id: "sl-7", cardId: "card-saas", responseId: "r-s1", status: "accepted" },
+  { id: "sl-8", cardId: "card-saas", responseId: "r-s2", status: "accepted", note: "Reads confused customers well." },
+  { id: "sl-9", cardId: "card-logistics", responseId: "r-l3", status: "accepted" },
+  { id: "sl-10", cardId: "card-robotics", responseId: "r-b1", status: "accepted", note: "Starts from the cups." },
+  { id: "sl-11", cardId: "card-robotics", responseId: "r-b2", status: "accepted" },
+  { id: "sl-12", cardId: "card-saas2", responseId: "r-i2", status: "accepted" },
+  { id: "sl-13", cardId: "card-medtech", responseId: "r-m3", status: "accepted" },
+  { id: "sl-14", cardId: "card-game2", responseId: "r-h1", status: "declined" },
+];
+
+// Slot times and tables are filled in by applySchedule when the store is created.
+const meetings: Meeting[] = shortlists
+  .filter((sl) => sl.status === "accepted")
+  .map((sl, i): Meeting => ({ id: `mt-${i + 1}`, cardId: sl.cardId, responseId: sl.responseId, slotStart: "", table: 0 }));
+
+const closures: Closure[] = [
+  { id: "cl-1", cardId: "card-game", responseId: "r-g4", reason: "We had more strong answers than meetings", createdAt: "2026-11-17T09:00:00.000Z" },
+  { id: "cl-2", cardId: "card-saas", responseId: "r-s4", reason: "We went with a different approach to this problem", createdAt: "2026-11-18T09:00:00.000Z" },
+  { id: "cl-3", cardId: "card-logistics", responseId: "r-l4", reason: "The timing isn't right for us", createdAt: "2026-11-20T09:00:00.000Z" },
+];
+
+// Deterministic history so threads and feeds have something to show.
+function buildActivity(): Activity[] {
+  const out: Activity[] = [];
+  const HOUR = 3600_000;
+  const plus = (iso: string, h: number) => new Date(Date.parse(iso) + h * HOUR).toISOString();
+  const companyOf = (cardId: string) => cards.find((c) => c.id === cardId)!.companyId;
+  const add = (a: Omit<Activity, "id">) => out.push({ id: `act-${String(out.length + 1).padStart(4, "0")}`, ...a });
+  for (const c of cards) add({ at: c.createdAt, kind: "card_published", actor: "company", cardId: c.id, companyId: c.companyId });
+  for (const r of responses) {
+    add({ at: r.createdAt, kind: "answer_sent", actor: "talent", cardId: r.cardId, companyId: companyOf(r.cardId), responseId: r.id, talentId: r.talentId });
+  }
+  for (const sl of shortlists) {
+    const r = responses.find((x) => x.id === sl.responseId)!;
+    const ids = { cardId: sl.cardId, companyId: companyOf(sl.cardId), responseId: r.id, talentId: r.talentId };
+    const shortlistedAt = plus(r.createdAt, 26);
+    add({ at: shortlistedAt, kind: "shortlisted", actor: "company", ...ids });
+    if (sl.status === "accepted") {
+      const at = plus(shortlistedAt, 20);
+      add({ at, kind: "invite_accepted", actor: "talent", ...ids });
+      add({ at: plus(at, 0.01), kind: "meeting_scheduled", actor: "talent", ...ids });
+    } else if (sl.status === "declined") {
+      add({ at: plus(shortlistedAt, 20), kind: "invite_declined", actor: "talent", ...ids });
+    }
+  }
+  for (const cl of closures) {
+    const r = responses.find((x) => x.id === cl.responseId)!;
+    add({ at: cl.createdAt, kind: "answer_closed", actor: "company", cardId: cl.cardId, companyId: companyOf(cl.cardId), responseId: r.id, talentId: r.talentId });
+  }
+  return out;
+}
+
 export const seed: DB = {
   accounts,
   companies,
   cards,
   talents,
   responses,
-  shortlists: [
-    { id: "sl-1", cardId: "card-game", responseId: "r-g1", status: "invited", note: "Practical, plans to test on old phones." },
-    { id: "sl-2", cardId: "card-game", responseId: "r-g3", status: "invited" },
-    { id: "sl-3", cardId: "card-medtech", responseId: "r-m2", status: "accepted", note: "Clinical experience, careful about safety." },
-    { id: "sl-4", cardId: "card-medtech", responseId: "r-m1", status: "invited" },
-    { id: "sl-5", cardId: "card-logistics", responseId: "r-l1", status: "invited" },
-  ],
-  meetings: [
-    { id: "mt-1", cardId: "card-medtech", responseId: "r-m2", slotStart: "", table: 0 },
-  ],
+  shortlists,
+  meetings,
   event: { id: "ev-1", name: "Espoo Tech Talent Day", date: "2026-12-05", startTime: "10:00", endTime: "14:00", slotMinutes: 10, tables: 6 },
   feedback: [],
+  closures,
+  activity: buildActivity(),
 };

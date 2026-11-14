@@ -31,7 +31,7 @@ export function getDB(): DB {
       db = undefined;
     }
   }
-  if (db && !Array.isArray(db.accounts)) db = undefined; // pre-accounts db.json: re-seed
+  if (db && (!Array.isArray(db.accounts) || !Array.isArray(db.closures) || !Array.isArray(db.activity))) db = undefined; // older db.json: re-seed
   if (!db) {
     db = freshDB();
     persist(db);
@@ -66,6 +66,9 @@ export function applySchedule(db: DB): void {
 function freshDB(): DB {
   const db = structuredClone(seed) as DB;
   applySchedule(db);
+  // Start with a clean bell: only activity from now on counts as new.
+  const now = new Date().toISOString();
+  for (const a of db.accounts) a.notificationsSeenAt = now;
   return db;
 }
 
