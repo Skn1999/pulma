@@ -1,5 +1,5 @@
 import { defaultGoal } from "@/lib/deadlines";
-import { getDB } from "@/lib/store";
+import { loadDB } from "@/lib/store";
 import { getCompanyId } from "@/lib/persona";
 import { nowMs } from "@/lib/clock";
 import { eventLabel, sortedEvents } from "@/lib/events";
@@ -12,7 +12,7 @@ export default async function IntakePage({ searchParams }: { searchParams: Promi
   const sp = await searchParams;
   const asked = typeof sp.event === "string" ? sp.event : undefined;
   const companyId = await getCompanyId();
-  const db = getDB();
+  const db = await loadDB();
   const now = nowMs();
   const company = db.companies.find((c) => c.id === companyId);
   // Only events this company may publish to right now.

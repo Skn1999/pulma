@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { apiAccount } from "@/lib/session";
-import { getDB } from "@/lib/store";
+import { loadDB } from "@/lib/store";
 import { buildBlindResponses } from "@/lib/blind-responses";
 
 function mulberry32(a: number) {
@@ -18,7 +18,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const acc = await apiAccount("company");
   if (acc instanceof NextResponse) return acc;
   const { id } = await params;
-  const db = getDB();
+  const db = await loadDB();
   const card = db.cards.find((c) => c.id === id);
   if (!card) return NextResponse.json({ error: "Card not found" }, { status: 404 });
   if (card.companyId !== acc.companyId) return NextResponse.json({ error: "Not your card" }, { status: 403 });

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { apiAccount } from "@/lib/session";
-import { getDB, mutate, newId } from "@/lib/store";
+import { mutate, newId, loadDB } from "@/lib/store";
 import { logActivity } from "@/lib/activity";
 import { eventById } from "@/lib/events";
 import { eventStage, seatsLeft } from "@/lib/participation";
@@ -14,7 +14,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const acc = await apiAccount("organiser");
   if (acc instanceof NextResponse) return acc;
   const { id } = await params;
-  const db0 = getDB();
+  const db0 = await loadDB();
   const ev0 = eventById(db0, id);
   if (!ev0) return NextResponse.json({ error: "Event not found" }, { status: 404 });
   const stage = eventStage(ev0, nowMs());

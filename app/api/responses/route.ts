@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getDB, mutate, newId, nextPublicCode } from "@/lib/store";
+import { mutate, newId, nextPublicCode, loadDB } from "@/lib/store";
 import { logActivity } from "@/lib/activity";
 import { apiAccount } from "@/lib/session";
 import { isOpen } from "@/lib/deadlines";
@@ -13,7 +13,7 @@ export async function POST(req: Request) {
   const b = await req.json().catch(() => null);
   if (!b || typeof b !== "object") return NextResponse.json({ error: "Invalid body" }, { status: 400 });
   const talentId = acc.talentId ?? "";
-  const db = getDB();
+  const db = await loadDB();
   if (!db.talents.some((t) => t.id === talentId)) return NextResponse.json({ error: "Unknown talent" }, { status: 401 });
   const card = db.cards.find((c) => c.id === b.cardId && c.status === "published");
   if (!card) return NextResponse.json({ error: "Card not found" }, { status: 404 });

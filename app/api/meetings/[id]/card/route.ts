@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { apiAccount } from "@/lib/session";
-import { getDB, mutate } from "@/lib/store";
+import { mutate, loadDB } from "@/lib/store";
 import { nowMs } from "@/lib/clock";
 import { cardViewerSide, eventCardFor, parseCardSkills } from "@/lib/meet-card";
 
@@ -9,7 +9,7 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
   const acc = await apiAccount("talent");
   if (acc instanceof NextResponse) return acc;
   const { id } = await ctx.params;
-  const db = getDB();
+  const db = await loadDB();
   if (cardViewerSide(db, acc, id) !== "talent") return NextResponse.json({ error: "Not found" }, { status: 404 });
   const card = eventCardFor(db, id, nowMs());
   if (!card) return NextResponse.json({ error: "There is no event card for this meeting" }, { status: 409 });

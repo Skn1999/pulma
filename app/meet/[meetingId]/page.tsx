@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import QRCode from "qrcode";
 import { CalendarClock, MapPin } from "lucide-react";
 import { requireAccount } from "@/lib/session";
-import { getDB } from "@/lib/store";
+import { loadDB } from "@/lib/store";
 import { nowMs } from "@/lib/clock";
 import { cardViewerSide, eventCardFor, MAX_CARD_SKILLS } from "@/lib/meet-card";
 import { CardSkillsForm, PrintButton } from "@/components/meet/card-actions";
@@ -21,7 +21,7 @@ async function absoluteUrl(path: string): Promise<string> {
 export default async function EventCardPage({ params }: { params: Promise<{ meetingId: string }> }) {
   const { meetingId } = await params;
   const acc = await requireAccount();
-  const db = getDB();
+  const db = await loadDB();
   const side = cardViewerSide(db, acc, meetingId);
   if (!side) notFound();
   const card = eventCardFor(db, meetingId, nowMs());

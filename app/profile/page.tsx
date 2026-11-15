@@ -1,5 +1,5 @@
 import { requireAccount } from "@/lib/session";
-import { getDB } from "@/lib/store";
+import { loadDB } from "@/lib/store";
 import { ProfileForm } from "./profile-form";
 import { SkillsSection } from "@/components/talent/skills-section";
 
@@ -7,7 +7,7 @@ export const metadata = { title: "Profile · Pulma" };
 
 export default async function ProfilePage() {
   const acc = await requireAccount();
-  const db = getDB();
+  const db = await loadDB();
   const talent = acc.talentId ? db.talents.find((t) => t.id === acc.talentId) : undefined;
   const company = acc.companyId ? db.companies.find((c) => c.id === acc.companyId) : undefined;
   return (

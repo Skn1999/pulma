@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { apiAccount } from "@/lib/session";
-import { getDB, mutate, newId } from "@/lib/store";
+import { getDB, mutate, newId, loadDB } from "@/lib/store";
 import { logActivity } from "@/lib/activity";
 import { defaultGoal, isOpen } from "@/lib/deadlines";
 import { eventById, eventOf } from "@/lib/events";
@@ -11,7 +11,7 @@ import { parseCardSkills } from "@/lib/skills";
 import { INTERNATIONAL_SUPPORT, type CardDraft, type Format, type ProblemCard } from "@/lib/types";
 
 export async function GET() {
-  const db = getDB();
+  const db = await loadDB();
   const now = nowMs();
   const cards = db.cards
     .filter((c) => isOpen(c) && visibleToCandidates(eventOf(db, c), now))
@@ -33,7 +33,7 @@ export async function POST(req: Request) {
   const title = str(d.title);
   if (!title) return NextResponse.json({ error: "title required" }, { status: 400 });
   const format: Format = d.format === "onsite" || d.format === "online" || d.format === "hybrid" ? d.format : "hybrid";
-  const db0 = getDB();
+  const db0 = await loadDB();
   const eventId = body?.eventId === undefined || body.eventId === null ? "" : String(body.eventId);
   const ev = eventById(db0, eventId);
   if (!ev) return NextResponse.json({ error: "Pick an event first." }, { status: 400 });

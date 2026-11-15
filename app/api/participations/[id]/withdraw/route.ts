@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { apiAccount } from "@/lib/session";
-import { applySchedule, getDB, mutate } from "@/lib/store";
+import { applySchedule, mutate, loadDB } from "@/lib/store";
 import { logActivity } from "@/lib/activity";
 import { eventOf } from "@/lib/events";
 import { hasBookedMeetings } from "@/lib/participation";
@@ -16,7 +16,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
   if (acc instanceof NextResponse) return acc;
   if (acc.role === "talent") return NextResponse.json({ error: "Not available to candidates" }, { status: 403 });
   const { id } = await params;
-  const db0 = getDB();
+  const db0 = await loadDB();
   const p0 = db0.participations.find((p) => p.id === id);
   if (!p0 || (acc.role === "company" && p0.companyId !== acc.companyId)) return NextResponse.json({ error: "Not found" }, { status: 404 });
   if (p0.status !== "confirmed" && p0.status !== "invited") return NextResponse.json({ error: "This company is not taking part." }, { status: 409 });

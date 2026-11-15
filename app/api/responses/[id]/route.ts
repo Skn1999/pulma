@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getDB, mutate } from "@/lib/store";
+import { mutate, loadDB } from "@/lib/store";
 import { apiAccount } from "@/lib/session";
 import { logActivity } from "@/lib/activity";
 
@@ -9,7 +9,7 @@ const CLOSED = "The company has closed this answer, so it can't be changed.";
 async function guard(id: string, forEdit: boolean) {
   const acc = await apiAccount("talent");
   if (acc instanceof NextResponse) return { err: acc };
-  const db = getDB();
+  const db = await loadDB();
   const r = db.responses.find((x) => x.id === id);
   if (!r) return { err: NextResponse.json({ error: "Answer not found" }, { status: 404 }) };
   if (r.talentId !== acc.talentId) return { err: NextResponse.json({ error: "This isn't your answer" }, { status: 403 }) };

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { nowMs } from "@/lib/clock";
-import { getDB } from "@/lib/store";
+import { loadDB } from "@/lib/store";
 import { eventDay, eventLabel, eventOf, sortedEvents } from "@/lib/events";
 import { eventStage, participationOf } from "@/lib/participation";
 import { StageBadge } from "@/components/events/stage-badge";
@@ -19,7 +19,7 @@ const fmt = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", y
 export default async function CompanyHome() {
   const account = await requireAccount("company");
   const companyId = account.companyId ?? "";
-  const db = getDB();
+  const db = await loadDB();
   const now = nowMs();
   const steps = nextSteps(db, account, now);
   const cards = db.cards.filter((c) => c.companyId === companyId);

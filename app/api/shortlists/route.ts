@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { apiAccount } from "@/lib/session";
-import { getDB, mutate, newId } from "@/lib/store";
+import { mutate, newId, loadDB } from "@/lib/store";
 import { logActivity } from "@/lib/activity";
 import { addDays, goalOf, isOpen } from "@/lib/deadlines";
 import { ANSWERS_CLOSED, eventTakesAnswers } from "@/lib/participation";
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: `Message must be ${MESSAGE_MAX} characters or fewer` }, { status: 400 });
     message = t || undefined;
   }
-  const db = getDB();
+  const db = await loadDB();
   const card = db.cards.find((c) => c.id === b.cardId);
   if (!card) return NextResponse.json({ error: "Card not found" }, { status: 404 });
   if (card.companyId !== acc.companyId) return NextResponse.json({ error: "Not your card" }, { status: 403 });

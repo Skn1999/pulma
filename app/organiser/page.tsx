@@ -8,7 +8,7 @@ import { BarList } from "@/components/organiser/bar-list";
 import { ResetDemoButton } from "@/components/organiser/reset-demo-button";
 import { PromisesPanel } from "@/components/organiser/promises-panel";
 import { promisesKept } from "@/lib/promises";
-import { getDB } from "@/lib/store";
+import { loadDB } from "@/lib/store";
 import { AfterEventSummary } from "@/components/organiser/after-event-summary";
 import { eventOutcomes, followUpState } from "@/lib/outcomes";
 import { getStats } from "@/lib/stats";
@@ -21,7 +21,7 @@ export const dynamic = "force-dynamic";
 
 export default async function OrganiserPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const sp = await searchParams;
-  const db = getDB();
+  const db = await loadDB();
   const events = sortedEvents(db);
   const ev = pickEvent(db, events, typeof sp.event === "string" ? sp.event : undefined, nowMs()) ?? events[0];
   const stats = getStats(db, ev.id);

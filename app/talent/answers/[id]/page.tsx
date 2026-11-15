@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { getDB } from "@/lib/store";
+import { loadDB } from "@/lib/store";
 import { requireAccount } from "@/lib/session";
 import { nowMs } from "@/lib/clock";
 import { StepBack } from "@/components/talent/step-back";
@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 export default async function AnswerPage({ params }: { params: Promise<{ id: string }> }) {
   const account = await requireAccount("talent");
   const { id } = await params;
-  const db = getDB();
+  const db = await loadDB();
   const r = db.responses.find((x) => x.id === id && x.talentId === account.talentId);
   if (!r) notFound();
   const card = db.cards.find((c) => c.id === r.cardId);

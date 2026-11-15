@@ -1,4 +1,4 @@
-import { getDB } from "@/lib/store";
+import { loadDB } from "@/lib/store";
 import { nowMs } from "@/lib/clock";
 import { requireAccount } from "@/lib/session";
 import { nextSteps } from "@/lib/next-steps";
@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 
 export default async function TalentHome() {
   const account = await requireAccount("talent");
-  const db = getDB();
+  const db = await loadDB();
   const talent = db.talents.find((t) => t.id === account.talentId);
   const now = nowMs();
   const steps = nextSteps(db, account, now);

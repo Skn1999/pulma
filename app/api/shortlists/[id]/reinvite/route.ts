@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { apiAccount } from "@/lib/session";
-import { getDB, mutate } from "@/lib/store";
+import { mutate, loadDB } from "@/lib/store";
 import { logActivity } from "@/lib/activity";
 import { addDays, goalOf, inviteStatus } from "@/lib/deadlines";
 
@@ -8,7 +8,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
   const acc = await apiAccount("company");
   if (acc instanceof NextResponse) return acc;
   const { id } = await params;
-  const db0 = getDB();
+  const db0 = await loadDB();
   const sl = db0.shortlists.find((s) => s.id === id);
   const card = sl ? db0.cards.find((c) => c.id === sl.cardId) : undefined;
   if (!sl || !card || card.companyId !== acc.companyId) return NextResponse.json({ error: "Not found" }, { status: 404 });

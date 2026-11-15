@@ -9,7 +9,7 @@ import { CountTiles } from "@/components/organiser/count-tiles";
 import { NeedsTimeline } from "@/components/organiser/needs-timeline";
 import { fmtDay } from "@/components/event/format";
 import { buttonVariants } from "@/components/ui/button";
-import { getDB } from "@/lib/store";
+import { loadDB } from "@/lib/store";
 import { nowMs } from "@/lib/clock";
 import { OutcomesPanel } from "@/components/organiser/outcomes-panel";
 import { eventOutcomes, followUpState } from "@/lib/outcomes";
@@ -49,7 +49,7 @@ export default async function OrganiserEventPage({
   await requireAccount("organiser");
   const { id } = await params;
   const sp = await searchParams;
-  const db = getDB();
+  const db = await loadDB();
   const ev = eventById(db, id);
   if (!ev) notFound();
   const now = nowMs();

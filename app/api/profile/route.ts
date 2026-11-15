@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getDB, mutate } from "@/lib/store";
+import { mutate, getDB } from "@/lib/store";
 import { MEET_MODES, type MeetMode, type TalentGoal } from "@/lib/types";
 import { SESSION_COOKIE, apiAccount, sessionCookieOptions } from "@/lib/session";
 

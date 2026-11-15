@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { NextResponse } from "next/server";
-import { getDB } from "./store";
+import { getDB, syncDB } from "./store";
 import type { Account, Role } from "./types";
 
 export const SESSION_COOKIE = "pulma_session";
@@ -25,6 +25,7 @@ export function roleHome(role: Role): string {
 export async function getAccount(): Promise<Account | null> {
   const id = (await cookies()).get(SESSION_COOKIE)?.value;
   if (!id) return null;
+  await syncDB();
   return getDB().accounts.find((a) => a.id === id) ?? null;
 }
 

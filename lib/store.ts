@@ -6,13 +6,28 @@ import { buildSchedule } from "./schedule";
 import { sortedEvents } from "./events";
 import { sweepDeadlines } from "./sweep";
 import { sweepFollowUps } from "./outcomes";
+import { after } from "next/server";
+import { pullRemote, pushRemote, remoteEnabled } from "./remote-store";
 
 const FILE = path.join(process.cwd(), "data", "db.json");
 const memoryOnly = !!process.env.VERCEL;
 
-const g = globalThis as unknown as { __pulmaDB?: DB };
+const g = globalThis as unknown as { __pulmaDB?: DB; __pulmaVer?: string; __pulmaPush?: Promise<void>; __pulmaPull?: Promise<void> };
 
 function persist(db: DB) {
+  if (remoteEnabled()) {
+    // Hosted: share the copy with the app's other server instances (see lib/remote-store.ts).
+    const ver = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+    g.__pulmaVer = ver;
+    const prev = g.__pulmaPush ?? Promise.resolve();
+    const push = prev.then(() => pushRemote(db, ver));
+    g.__pulmaPush = push;
+    try {
+      after(() => push); // keep the function alive until the write lands, without delaying the response
+    } catch {
+      // outside a request (tests, scripts): nothing to keep alive
+    }
+  }
   if (memoryOnly) return;
   try {
     fs.mkdirSync(path.dirname(FILE), { recursive: true });
@@ -52,6 +67,44 @@ export function getDB(): DB {
   }
   g.__pulmaDB = db;
   return db;
+}
+
+/**
+ * Bring this instance's copy up to date with the shared one. Call it (await) at the start of every request that
+ * reads the store before anything else does; getAccount() does it, so pages and routes behind sign-in are covered.
+ * No-op without a configured Redis, and any failure keeps the local copy: the demo never breaks.
+ */
+export async function syncDB(): Promise<void> {
+  if (!remoteEnabled()) return;
+  if (g.__pulmaPush) await g.__pulmaPush; // our own last write lands first
+  if (!g.__pulmaPull) {
+    g.__pulmaPull = (async () => {
+      const got = await pullRemote(g.__pulmaVer);
+      if (got === "same") return;
+      if (got === "empty") {
+        persist(getDB()); // first instance ever: publish the fresh seed
+        return;
+      }
+      if (got && isCurrentShape(got.db)) {
+        g.__pulmaDB = got.db;
+        g.__pulmaVer = got.ver;
+      }
+    })().finally(() => {
+      g.__pulmaPull = undefined;
+    });
+  }
+  await g.__pulmaPull;
+}
+
+/** getDB() after syncDB(): for pages and routes that read the store without signing in first. */
+export async function loadDB(): Promise<DB> {
+  await syncDB();
+  return getDB();
+}
+
+/** Wait until this instance's writes reached the shared copy (route handlers call it before replying). */
+export async function flushDB(): Promise<void> {
+  if (g.__pulmaPush) await g.__pulmaPush;
 }
 
 export function mutate<T>(fn: (db: DB) => T): T {

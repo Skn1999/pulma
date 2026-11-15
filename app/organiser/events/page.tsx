@@ -2,7 +2,7 @@ import Link from "next/link";
 import { PageTitle } from "@/components/shell/page-title";
 import { NewEventForm } from "@/components/organiser/new-event-form";
 import { fmtDay } from "@/components/event/format";
-import { getDB } from "@/lib/store";
+import { loadDB } from "@/lib/store";
 import { eventDay, eventOf, sortedEvents } from "@/lib/events";
 import { meetingMode } from "@/lib/slots";
 import { eventStage } from "@/lib/participation";
@@ -11,8 +11,8 @@ import { nowMs } from "@/lib/clock";
 
 export const dynamic = "force-dynamic";
 
-export default function OrganiserEventsPage() {
-  const db = getDB();
+export default async function OrganiserEventsPage() {
+  const db = await loadDB();
   const now = nowMs();
   const rows = sortedEvents(db).map((ev) => {
     const cards = db.cards.filter((c) => c.status === "published" && eventOf(db, c).id === ev.id);

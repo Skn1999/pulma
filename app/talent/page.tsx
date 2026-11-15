@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { nowMs } from "@/lib/clock";
 import { Suspense } from "react";
-import { getDB } from "@/lib/store";
+import { loadDB } from "@/lib/store";
 import { goalOf, isOpen } from "@/lib/deadlines";
 import { eventDay, eventOf, sortedEvents } from "@/lib/events";
 import { candidateVisibleCards } from "@/lib/participation";
@@ -37,7 +37,7 @@ export default async function TalentPage({
   const intl = one("intl") === "1";
   const onlySkills = one("skills") === "1";
 
-  const db = getDB();
+  const db = await loadDB();
   const talentId = await getTalentId();
   // Only problems of open or locked events: draft and finished events stay out of sight.
   const published = candidateVisibleCards(db, nowMs())

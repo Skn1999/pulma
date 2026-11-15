@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { applySchedule, getDB, mutate, newId } from "@/lib/store";
+import { applySchedule, mutate, newId, loadDB } from "@/lib/store";
 import { apiAccount } from "@/lib/session";
 import { logActivity } from "@/lib/activity";
 import { goalOf, inviteStatus } from "@/lib/deadlines";
@@ -12,7 +12,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const b = await req.json().catch(() => null);
   if (!b || typeof b.accept !== "boolean") return NextResponse.json({ error: "accept (boolean) required" }, { status: 400 });
   const talentId = acc.talentId ?? "";
-  const db0 = getDB();
+  const db0 = await loadDB();
   const sl = db0.shortlists.find((s) => s.id === id);
   if (!sl) return NextResponse.json({ error: "Not found" }, { status: 404 });
   const resp = db0.responses.find((r) => r.id === sl.responseId);

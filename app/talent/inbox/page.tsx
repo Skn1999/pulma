@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { nowMs } from "@/lib/clock";
 import { Clock, Hourglass } from "lucide-react";
-import { getDB } from "@/lib/store";
+import { loadDB } from "@/lib/store";
 import { goalOf, inviteStatus } from "@/lib/deadlines";
 import { MEET_MODE_LABEL } from "@/lib/types";
 import { shortDate } from "@/lib/next-steps";
@@ -24,7 +24,7 @@ function when(iso: string) {
 }
 
 export default async function InboxPage() {
-  const db = getDB();
+  const db = await loadDB();
   const talentId = await getTalentId();
   const mine = new Map(db.responses.filter((r) => r.talentId === talentId).map((r) => [r.id, r]));
   const now = nowMs();

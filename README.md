@@ -1,36 +1,26 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Pulma
 
-## Getting Started
+Problem-first matchmaking for City of Espoo recruitment events (Junction 2026). See CLAUDE.md for the product,
+CHALLENGE.md for the brief and DEMO.md for the demo script. All data is synthetic.
 
-First, run the development server:
+## Run locally
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Data lives in `data/db.json` (re-seeded when missing). Without `ANTHROPIC_API_KEY` every AI feature uses its canned fallback.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Deploy (Vercel)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Vercel runs the app as several server instances that share no memory, so the store is mirrored in one Redis key
+(`lib/remote-store.ts`, Upstash REST API, no SDK). Each instance re-reads it only when its version changes.
 
-## Learn More
+1. Import the repo in Vercel (or `npx vercel` from this folder).
+2. Add an Upstash Redis database from the Vercel Marketplace and connect it to the project. That sets
+   `KV_REST_API_URL` and `KV_REST_API_TOKEN` (the `UPSTASH_REDIS_REST_*` names work too).
+3. Optional: `ANTHROPIC_API_KEY` for live AI; without it the fallbacks run.
+4. Deploy. The first request seeds the demo data; the organiser's "Reset demo data" re-seeds it for everyone.
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Without the Redis variables a deployment still works, but each instance keeps its own copy, so changes can seem to vanish.

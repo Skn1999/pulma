@@ -2,7 +2,7 @@ import Link from "next/link";
 import { nowMs } from "@/lib/clock";
 import { notFound } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
-import { getDB } from "@/lib/store";
+import { loadDB } from "@/lib/store";
 import { eventLabel, eventOf } from "@/lib/events";
 import { ANSWERS_CLOSED, eventTakesAnswers, visibleToCandidates } from "@/lib/participation";
 import { cardState, companyRecord, goalOf, isOpen } from "@/lib/deadlines";
@@ -19,7 +19,7 @@ export const dynamic = "force-dynamic";
 
 export default async function TalentCardPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const db = getDB();
+  const db = await loadDB();
   const card = db.cards.find((c) => c.id === id && c.status === "published");
   if (!card) notFound();
   const talentId = await getTalentId();

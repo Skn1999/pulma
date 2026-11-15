@@ -2,7 +2,7 @@ import Link from "next/link";
 import { nowMs } from "@/lib/clock";
 import { ChevronRight, Lock } from "lucide-react";
 import { Hourglass } from "lucide-react";
-import { getDB } from "@/lib/store";
+import { loadDB } from "@/lib/store";
 import { isOpen, replyStatus } from "@/lib/deadlines";
 import { shortDate } from "@/lib/next-steps";
 import { getTalentId } from "@/lib/persona";
@@ -14,7 +14,7 @@ import { StatusTrack, type TrackStage } from "@/components/talent/status-track";
 export const dynamic = "force-dynamic";
 
 export default async function AnswersPage() {
-  const db = getDB();
+  const db = await loadDB();
   const talentId = await getTalentId();
   const now = nowMs();
   const minDate = new Date(now + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);

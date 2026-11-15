@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { apiAccount } from "@/lib/session";
-import { applySchedule, getDB, mutate } from "@/lib/store";
+import { applySchedule, mutate, loadDB } from "@/lib/store";
 import { eventById } from "@/lib/events";
 import { eventStage } from "@/lib/participation";
 import { nowMs } from "@/lib/clock";
@@ -10,7 +10,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const acc = await apiAccount("organiser");
   if (acc instanceof NextResponse) return acc;
   const { id } = await params;
-  const db0 = getDB();
+  const db0 = await loadDB();
   const p0 = db0.participations.find((p) => p.id === id);
   if (!p0) return NextResponse.json({ error: "Not found" }, { status: 404 });
   const ev = eventById(db0, p0.eventId);

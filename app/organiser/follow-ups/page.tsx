@@ -1,10 +1,10 @@
 import { PageTitle } from "@/components/shell/page-title";
-import { getDB } from "@/lib/store";
+import { loadDB } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
 
-export default function FollowUpsPage() {
-  const db = getDB();
+export default async function FollowUpsPage() {
+  const db = await loadDB();
   const cardById = new Map(db.cards.map((c) => [c.id, c]));
   const companyById = new Map(db.companies.map((c) => [c.id, c]));
   const shortlisted = new Set(db.shortlists.map((s) => s.responseId));

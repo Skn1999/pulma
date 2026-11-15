@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { apiAccount } from "@/lib/session";
-import { getDB, mutate } from "@/lib/store";
+import { mutate, loadDB } from "@/lib/store";
 import { eventById, eventOf } from "@/lib/events";
 import { canPublishTo } from "@/lib/participation";
 import { nowMs } from "@/lib/clock";
@@ -11,7 +11,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const acc = await apiAccount("company");
   if (acc instanceof NextResponse) return acc;
   const { id } = await params;
-  const db0 = getDB();
+  const db0 = await loadDB();
   const card = db0.cards.find((c) => c.id === id);
   if (!card) return NextResponse.json({ error: "Card not found" }, { status: 404 });
   if (card.companyId !== acc.companyId) return NextResponse.json({ error: "Not your card" }, { status: 403 });

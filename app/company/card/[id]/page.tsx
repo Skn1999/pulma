@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { goalOf } from "@/lib/deadlines";
-import { getDB } from "@/lib/store";
+import { loadDB } from "@/lib/store";
 import { nowMs } from "@/lib/clock";
 import { eventLabel, eventOf, sortedEvents } from "@/lib/events";
 import { canPublishTo } from "@/lib/participation";
@@ -14,7 +14,7 @@ export default async function CompanyCardPage({ params, searchParams }: { params
   const { id } = await params;
   const { r } = await searchParams;
   const companyId = await getCompanyId();
-  const db = getDB();
+  const db = await loadDB();
   const card = db.cards.find((c) => c.id === id);
   if (!card) notFound();
   if (card.companyId !== companyId) redirect("/company");

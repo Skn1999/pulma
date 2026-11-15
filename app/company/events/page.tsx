@@ -6,7 +6,7 @@ import { InvitationReasons } from "@/components/company/invitation-reasons";
 import { exampleAnswer } from "@/lib/outcomes";
 import { fmtDay } from "@/components/event/format";
 import { buttonVariants } from "@/components/ui/button";
-import { getDB } from "@/lib/store";
+import { loadDB } from "@/lib/store";
 import { nowMs } from "@/lib/clock";
 import { requireAccount } from "@/lib/session";
 import { eventById, eventDay } from "@/lib/events";
@@ -28,7 +28,7 @@ function Facts({ ev }: { ev: Event }) {
 export default async function CompanyEventsPage() {
   const account = await requireAccount("company");
   const companyId = account.companyId ?? "";
-  const db = getDB();
+  const db = await loadDB();
   const now = nowMs();
   const mine = db.participations
     .filter((p) => p.companyId === companyId)

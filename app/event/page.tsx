@@ -3,7 +3,7 @@ import { Timetable } from "@/components/event/timetable";
 import { buildTimetable } from "@/components/event/build-timetable";
 import { CompanyDay, TalentDay, EmptyDay, ScheduleNotice } from "@/components/event/my-day";
 import { fmtDay, fmtTime } from "@/components/event/format";
-import { getDB } from "@/lib/store";
+import { loadDB } from "@/lib/store";
 import { buildSchedule, tableOf } from "@/lib/schedule";
 import { getAccount } from "@/lib/session";
 import { nowMs } from "@/lib/clock";
@@ -16,7 +16,7 @@ export default async function EventPage({ searchParams }: { searchParams: Promis
   const sp = await searchParams;
   const asked = typeof sp.event === "string" ? sp.event : undefined;
   const account = await getAccount();
-  const db = getDB();
+  const db = await loadDB();
   const now = nowMs();
   // Organisers see every event; companies and talent only the events they have problems or answers in.
   let choices = sortedEvents(db);

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { mutate, newId } from "@/lib/store";
+import { mutate, newId, syncDB } from "@/lib/store";
 import { SESSION_COOKIE, normEmail, roleHome, sessionCookieOptions } from "@/lib/session";
 import type { Account, Company, Role, Talent } from "@/lib/types";
 
@@ -28,6 +28,7 @@ export async function POST(req: Request) {
     if (!SECTORS.includes(sector)) return NextResponse.json({ error: "Choose a sector" }, { status: 400 });
   }
 
+  await syncDB();
   const result = mutate((db) => {
     const existing = db.accounts.find((a) => a.email === email);
     if (existing) return { conflict: existing.role };

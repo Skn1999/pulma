@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { CalendarClock } from "lucide-react";
-import { getDB } from "@/lib/store";
+import { loadDB } from "@/lib/store";
 import { requireAccount } from "@/lib/session";
 import { nowMs } from "@/lib/clock";
 import { PageTitle } from "@/components/shell/page-title";
@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 
 export default async function CompanyMeetingsPage() {
   const acc = await requireAccount("company");
-  const db = getDB();
+  const db = await loadDB();
   const nowLocal = localNow(nowMs());
   const windows = db.availability
     .filter((w) => w.companyId === acc.companyId && w.end > nowLocal)

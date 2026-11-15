@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getDB } from "@/lib/store";
+import { loadDB } from "@/lib/store";
 import { getTalentId } from "@/lib/persona";
 import { isOpen } from "@/lib/deadlines";
 import { eventOf } from "@/lib/events";
@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AnswerPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const db = getDB();
+  const db = await loadDB();
   const card = db.cards.find((c) => c.id === id && c.status === "published");
   if (!card) notFound();
   const talentId = await getTalentId();

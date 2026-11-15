@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { CalendarDays } from "lucide-react";
-import { getDB } from "@/lib/store";
+import { loadDB } from "@/lib/store";
 import { requireAccount } from "@/lib/session";
 import { PageTitle } from "@/components/shell/page-title";
 import { meetingEnd, meetingMode, meetingStatus } from "@/lib/slots";
@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 
 export default async function TalentMeetingsPage() {
   const acc = await requireAccount("talent");
-  const db = getDB();
+  const db = await loadDB();
   const mine = new Map(db.responses.filter((r) => r.talentId === acc.talentId).map((r) => [r.id, r]));
   const rows = db.meetings
     .filter((m) => mine.has(m.responseId))
