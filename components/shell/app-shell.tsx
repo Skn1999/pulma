@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { requireAccount } from "@/lib/session";
-import { getDB } from "@/lib/store";
+import { loadDB } from "@/lib/store";
 import { navFor, SIDEBAR_COOKIE } from "@/lib/nav";
 import { cookies } from "next/headers";
 import { NavLink } from "./nav-link";
@@ -12,7 +12,7 @@ import { NotificationsProvider } from "./notifications-provider";
 
 export async function AppShell({ children }: { children: React.ReactNode }) {
   const account = await requireAccount();
-  const db = getDB();
+  const db = await loadDB();
   const nav = navFor(account, db);
   // Text label for each side, shown next to the logo, so the role is never told by colour alone.
   const roleLabel = account.role === "company" ? "Employer" : account.role === "talent" ? "Candidate" : "Event team";
