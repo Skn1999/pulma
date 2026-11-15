@@ -5,6 +5,8 @@ import { Briefcase, Check, Plus, Sparkles, X } from "lucide-react";
 import { BUSINESS_ESPOO_RECRUITMENT_URL, INTERNATIONAL_SUPPORT, SUPPORT_LABEL, type CardDraft, type Format } from "@/lib/types";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { EscoSkillInput } from "@/components/esco-skill-input";
+import { ESCO_ATTRIBUTION } from "@/lib/esco-ref";
 
 const FORMATS: { value: Format; label: string }[] = [
   { value: "onsite", label: "On-site" },
@@ -18,7 +20,6 @@ const SOCIAL_CHECK_LANGUAGES = ["Finnish", "Swedish"];
 export interface EditorState {
   draft: CardDraft;
   niceRaw: string;
-  skillsRaw: string;
 }
 
 export function splitList(s: string): string[] {
@@ -117,6 +118,13 @@ export function CardEditor({
   const [dismissed, setDismissed] = useState<string[]>([]);
   const set = (patch: Partial<CardDraft>) => onChange({ ...state, draft: { ...draft, ...patch } });
 
+  const skills = draft.skills ?? [];
+  /** Replace the tags; `addRefs` is the full ref list to keep (omit to keep the refs that still match a tag). */
+  function setSkills(next: string[], addRefs?: NonNullable<CardDraft["skillRefs"]>) {
+    const refs = (addRefs ?? draft.skillRefs ?? []).filter((r) => next.includes(r.label));
+    set({ skills: next, skillRefs: refs.length ? refs : undefined });
+  }
+
   const needed = neededOf(draft);
   const isNeeded = (lang: string) => needed.includes(lang);
 
@@ -168,19 +176,50 @@ export function CardEditor({
         />
       </Field>
 
-      <Field id="f-skills" label="Work involved (3–6 short tags, comma-separated)">
-        <Input
+      <div className="space-y-1.5">
+        <label htmlFor="f-skills" className="text-sm font-medium text-foreground">
+          Work involved (3–6 short tags)
+        </label>
+        {skills.length > 0 && (
+          <ul className="flex flex-wrap gap-2" aria-label="Work involved so far">
+            {skills.map((tag) => {
+              const esco = draft.skillRefs?.find((r) => r.label === tag)?.esco;
+              return (
+                <li key={tag} className="flex items-center gap-1 rounded-full border border-border bg-background py-0.5 pl-3 pr-1 text-sm">
+                  {tag}
+                  {esco && (
+                    <span title={`ESCO: ${esco.label}`} className="rounded border border-border px-1.5 text-xs text-muted-foreground">
+                      ESCO<span className="sr-only">: {esco.label}</span>
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setSkills(skills.filter((x) => x !== tag))}
+                    aria-label={`Remove ${tag}`}
+                    className="inline-flex size-7 items-center justify-center rounded-full text-muted-foreground outline-none hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+                  >
+                    <X className="size-4" aria-hidden="true" />
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+        <EscoSkillInput
           id="f-skills"
-          value={state.skillsRaw}
-          aria-describedby="f-skills-help"
-          onChange={(e) =>
-            onChange({ ...state, skillsRaw: e.target.value, draft: { ...draft, skills: splitList(e.target.value).slice(0, 6) } })
-          }
+          disabled={skills.length >= 6}
+          describedBy="f-skills-help"
+          placeholder={skills.length >= 6 ? "You have 6 tags" : "Start typing, e.g. Python or messy sensor data"}
+          isTaken={(label, esco) => skills.some((t) => t.toLowerCase() === label.toLowerCase() || (!!esco && draft.skillRefs?.some((r) => r.label === t && r.esco?.uri === esco.uri)))}
+          onPick={(pick) => {
+            if (skills.length >= 6 || skills.some((t) => t.toLowerCase() === pick.label.toLowerCase())) return;
+            setSkills([...skills, pick.label], pick.esco ? [...(draft.skillRefs ?? []), { label: pick.label, esco: pick.esco }] : undefined);
+          }}
         />
         <p id="f-skills-help" className="text-xs text-muted-foreground">
-          Name the work, for example &quot;Messy sensor data&quot; or &quot;Python&quot;. Talent can see which problems use their own skills; nobody is ranked or hidden.
+          Name the work, for example &quot;Messy sensor data&quot; or &quot;Python&quot;. Pick a match from ESCO, the European skills list, or keep your own words. Talent can see which problems use their own skills; nobody is ranked or hidden. {ESCO_ATTRIBUTION}.
         </p>
-      </Field>
+      </div>
 
       <fieldset className="space-y-2">
         <legend className="text-sm font-medium text-foreground">Working languages</legend>

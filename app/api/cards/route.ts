@@ -7,6 +7,7 @@ import { eventById, eventOf } from "@/lib/events";
 import { canPublishTo, visibleToCandidates } from "@/lib/participation";
 import { nowMs } from "@/lib/clock";
 import { parseGoal } from "@/lib/goal-input";
+import { parseCardSkills } from "@/lib/skills";
 import { INTERNATIONAL_SUPPORT, type CardDraft, type Format, type ProblemCard } from "@/lib/types";
 
 export async function GET() {
@@ -55,7 +56,7 @@ export async function POST(req: Request) {
     niceToHave: strs(d.niceToHave),
     languages: strs(d.languages),
     ...(Array.isArray(needed) ? { languagesNeeded: strs(needed).filter((l) => strs(d.languages).includes(l)) } : {}),
-    skills: [...new Map(strs((d as { skills?: unknown }).skills).map((x) => x.slice(0, 60)).map((x) => [x.toLowerCase(), x])).values()].slice(0, 6),
+    ...parseCardSkills((d as { skills?: unknown }).skills, (d as { skillRefs?: unknown }).skillRefs),
     support: INTERNATIONAL_SUPPORT.filter((k) => strs((d as { support?: unknown }).support).includes(k)),
     format,
     eventId,

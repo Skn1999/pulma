@@ -5,13 +5,16 @@ import { useRouter } from "next/navigation";
 import { Plus, Sparkles, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { EscoSkillInput } from "@/components/esco-skill-input";
 import { Textarea } from "@/components/ui/textarea";
-import { MAX_CV_CHARS, MAX_SKILLS, MAX_SKILL_LENGTH, normaliseSkill } from "@/lib/skills";
+import { MAX_CV_CHARS, MAX_SKILLS } from "@/lib/skills";
+import { ESCO_ATTRIBUTION } from "@/lib/esco-ref";
+import type { EscoRef, SkillRef } from "@/lib/types";
 
 interface Skill {
   label: string;
   source: "cv" | "self";
+  esco?: EscoRef;
 }
 
 const btn = "min-h-11 px-4 text-sm";
@@ -23,7 +26,7 @@ export function SkillsSection({ initial }: { initial: Skill[] }) {
   const [cv, setCv] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [asked, setAsked] = useState(false);
-  const [own, setOwn] = useState("");
+  const [escoFor, setEscoFor] = useState<Record<string, EscoRef>>({});
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
@@ -50,9 +53,10 @@ export function SkillsSection({ initial }: { initial: Skill[] }) {
     setMsg("");
     try {
       const res = await fetch("/api/skills/extract", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: cv }) });
-      const data = (await res.json().catch(() => ({}))) as { suggestions?: string[]; error?: string };
+      const data = (await res.json().catch(() => ({}))) as { suggestions?: string[]; esco?: Record<string, EscoRef>; error?: string };
       if (!res.ok) throw new Error(data.error ?? "Could not suggest skills");
       setSuggestions(data.suggestions ?? []);
+      setEscoFor(data.esco ?? {});
       setAsked(true);
       setCv(""); // the CV is used once; drop it from the page too
     } catch (e) {
@@ -64,17 +68,15 @@ export function SkillsSection({ initial }: { initial: Skill[] }) {
   async function accept(labels: string[]) {
     const add = labels.filter((l, i) => !has(l) && labels.indexOf(l) === i).slice(0, MAX_SKILLS - skills.length);
     if (!add.length) return;
-    const ok = await save([...skills, ...add.map((label) => ({ label, source: "cv" as const }))]);
+    const ok = await save([...skills, ...add.map((label) => ({ label, source: "cv" as const, ...(escoFor[label] ? { esco: escoFor[label] } : {}) }))]);
     if (ok) setSuggestions((cur) => cur.filter((s) => !add.includes(s)));
   }
 
-  async function addOwn(e: React.FormEvent) {
-    e.preventDefault();
-    const label = normaliseSkill(own);
-    if (!label || has(label)) return setOwn("");
+  async function addPicked(pick: SkillRef) {
+    if (has(pick.label) || (pick.esco && skills.some((s) => s.esco?.uri === pick.esco?.uri))) return;
     if (full) return setMsg(`You can keep up to ${MAX_SKILLS} skills. Remove one first.`);
     setMsg("");
-    if (await save([...skills, { label, source: "self" }])) setOwn("");
+    await save([...skills, { label: pick.label, source: "self", ...(pick.esco ? { esco: pick.esco } : {}) }]);
   }
 
   function readFile(file: File | undefined) {
@@ -139,7 +141,10 @@ export function SkillsSection({ initial }: { initial: Skill[] }) {
             <ul className="mt-2 space-y-1.5">
               {suggestions.map((s) => (
                 <li key={s} className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-card px-3 py-1.5">
-                  <span className="min-w-0 flex-1 text-sm">{s}</span>
+                  <span className="min-w-0 flex-1 text-sm">
+                    {s}
+                    {escoFor[s] && <EscoTag esco={escoFor[s]} />}
+                  </span>
                   <Button type="button" variant="outline" className={btn} disabled={full} onClick={() => accept([s])} aria-label={`Add ${s}`}>
                     <Plus className="size-4" aria-hidden="true" /> Add
                   </Button>
@@ -157,13 +162,21 @@ export function SkillsSection({ initial }: { initial: Skill[] }) {
         )}
       </div>
 
-      <form onSubmit={addOwn} className="mt-4 flex gap-2">
-        <label htmlFor="own-skill" className="sr-only">Add a skill of your own</label>
-        <Input id="own-skill" className="h-11" value={own} maxLength={MAX_SKILL_LENGTH} onChange={(e) => setOwn(e.target.value)} placeholder="Add a skill, phrased as work (e.g. Cleaning messy data)" />
-        <Button type="submit" variant="outline" className={`${btn} shrink-0 gap-1.5`} disabled={!own.trim()}>
-          <Plus className="size-4" aria-hidden="true" /> Add
-        </Button>
-      </form>
+      <div className="mt-4 space-y-1.5">
+        <label htmlFor="own-skill" className="text-sm font-medium">Add a skill</label>
+        <EscoSkillInput
+          id="own-skill"
+          large
+          disabled={full}
+          describedBy="own-skill-help"
+          placeholder="Start typing, e.g. Python or cleaning data"
+          isTaken={(label, esco) => has(label) || (!!esco && skills.some((s) => s.esco?.uri === esco.uri))}
+          onPick={addPicked}
+        />
+        <p id="own-skill-help" className="text-xs text-muted-foreground">
+          Pick a match from ESCO, the European skills list, or keep your own words. {ESCO_ATTRIBUTION}.
+        </p>
+      </div>
 
       <h3 className="mt-5 text-sm font-semibold">Your skills ({skills.length} of {MAX_SKILLS})</h3>
       {skills.length === 0 ? (
@@ -173,6 +186,7 @@ export function SkillsSection({ initial }: { initial: Skill[] }) {
           {skills.map((s) => (
             <li key={s.label} className="flex items-center gap-1 rounded-full border border-border bg-background pl-3 pr-1 text-sm">
               {s.label}
+              {s.esco && <EscoTag esco={s.esco} />}
               <button
                 type="button"
                 onClick={() => save(skills.filter((x) => x.label !== s.label))}
@@ -186,5 +200,14 @@ export function SkillsSection({ initial }: { initial: Skill[] }) {
         </ul>
       )}
     </section>
+  );
+}
+
+/** Small tag on skills linked to ESCO; the title shows the ESCO label. */
+function EscoTag({ esco }: { esco: EscoRef }) {
+  return (
+    <span title={`ESCO: ${esco.label}`} className="ml-2 rounded border border-border px-1.5 py-0.5 align-middle text-xs text-muted-foreground">
+      ESCO<span className="sr-only">: {esco.label}</span>
+    </span>
   );
 }

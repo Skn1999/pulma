@@ -12,7 +12,7 @@ Ratings: **Strong** (built and demoable), **Partial** (some of it, or only as a 
 | Goal | More relevant, efficient, meaningful connections at Espoo events | Strong |
 | 1 | Companies hard to engage; doubt the city's candidates and a free service | Strong (since 14 Nov: reasons on the invitation) |
 | 2 | Companies describe needs unclearly and too late | Strong |
-| 3 | Organisers can't see applicants' real capabilities vs. company needs (esp. tech) | **Partial** |
+| 3 | Organisers can't see applicants' real capabilities vs. company needs (esp. tech) | Strong (15 Nov: ESCO supply vs demand) |
 | 4 | Companies overwhelmed by irrelevant approaches during events | Strong |
 | 5 | Professionals struggle to describe competencies and transferable skills | Strong |
 | 6 | AI-written CVs read by AI: synthetic representations | Strong |
@@ -20,8 +20,8 @@ Ratings: **Strong** (built and demoable), **Partial** (some of it, or only as a 
 | 8 | Platform crashes when everyone logs in at the start | **Partial** |
 | 9 | International recruitment: compliance, language, culture, relocation, onboarding | **Partial** (language + support badges) |
 | Bias | Don't disadvantage people by nationality, language, education, career path | Strong |
-| Scope | Registering, attending and following up | **Partial** (candidate registration, check-in) |
-| Data | Use relevant open data / APIs (ESCO, Work in Finland…) | **Gap** |
+| Scope | Registering, attending and following up | **Partial** (follow-up now strong; candidate registration and check-in still missing) |
+| Data | Use relevant open data / APIs (ESCO, Work in Finland…) | Strong (15 Nov: ESCO API + bundled fallback; Work in Finland, Business Espoo links) |
 
 Pulma's core argument answers the heart of the brief directly: *"We didn't build a smarter matching algorithm. We
 took the algorithm out and made the humans better at choosing."* Problem-first cards replace job ads, answers to a
@@ -151,3 +151,15 @@ real problem replace CVs, and a blind, random-order first round replaces AI scre
 7. Candidate registration via the organiser (journey: register). Planned for later; mention as roadmap.
 
 Also before the demo: reset the demo data, and keep the API-key-less fallbacks (they already work) as the safety net.
+
+## Update 15 Nov 2026
+- **Follow-up after the event (journey):** next-step promises (interview / trial / offer by a date, overdue flagged to
+  both sides), outcomes recorded by people (hired / still talking / not this time with a fixed reason), and an
+  organiser **Outcomes** report per event (problem-to-hire funnel, promises kept, problems with no next step, CSV),
+  inside a 60-day follow-up window after which an anonymous snapshot is kept and the event's personal data is deleted.
+- **Open data:** skills and problem "work involved" tags link to **ESCO** (live API with a bundled list of 233 ESCO
+  skills as fallback, attribution shown); matching uses the ESCO skill first.
+- **Insight 3:** organiser **supply vs demand** per event: how many problems need a skill vs how many answering
+  candidates list it; counts under 5 shown as "fewer than 5".
+- Remaining gaps: candidate registration via the organiser (planned), event-day check-in, load story for insight 8,
+  authority-compliance guidance for international hires.

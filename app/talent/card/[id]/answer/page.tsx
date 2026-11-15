@@ -64,7 +64,7 @@ export default async function AnswerPage({ params }: { params: Promise<{ id: str
       cardId={card.id}
       cardTitle={card.title}
       companyName={company?.name ?? ""}
-      relatedSkills={relatedSkillLabels(talent?.skills, card.skills)}
+      relatedSkills={relatedSkillLabels(talent?.skills, card.skills, card.skillRefs)}
       defaultLanguage={talent?.preferredLanguage ?? "English"}
       existing={mine ? { id: mine.id, text: mine.text, language: mine.originalLanguage, aiAssisted: mine.aiAssisted } : undefined}
     />

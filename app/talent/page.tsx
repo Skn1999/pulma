@@ -62,7 +62,7 @@ export default async function TalentPage({
   const mySkills = db.talents.find((t) => t.id === talentId)?.skills ?? [];
   const savedIds = new Set(db.talents.find((t) => t.id === talentId)?.saved ?? []);
   const now = nowMs();
-  const matchesOf = new Map(published.map((c) => [c.id, skillMatches(mySkills, c.skills)]));
+  const matchesOf = new Map(published.map((c) => [c.id, skillMatches(mySkills, c.skills, c.skillRefs)]));
   const statusOf = new Map(published.map((c) => [c.id, candidateStatus(db, talentId, c.id, now)]));
   const kindOf = (id: string) => statusOf.get(id)!.kind;
   const filtered = published.filter(

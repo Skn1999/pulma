@@ -101,6 +101,7 @@ export interface ProblemCard {
   format: Format;
   eventId?: string; // which event this problem is for; missing = defaultEvent(db)
   skills?: string[]; // 3–6 short tags of the work involved ("Work involved"); public, describes the work not the person
+  skillRefs?: SkillRef[]; // optional ESCO links for some of the `skills` tags (same labels); `skills` stays the visible list
   support?: InternationalSupport[]; // optional: what the company can help an international hire with
   status: "draft" | "published";
   createdAt: string; // ISO
@@ -120,9 +121,22 @@ export interface Talent {
   saved?: string[]; // card ids saved for later (max 50). PRIVATE: never sent to a company or organiser
 }
 
+/** A skill from ESCO (European Skills, Competences, Qualifications and Occupations). Skills data: ESCO, European Commission. */
+export interface EscoRef {
+  uri: string;
+  label: string;
+}
+
+/** A "Work involved" tag, optionally linked to an ESCO skill. */
+export interface SkillRef {
+  label: string;
+  esco?: EscoRef;
+}
+
 /** A skill the talent chose to keep, phrased as work. PRIVATE. The CV it came from is never stored. */
 export interface TalentSkill {
   label: string; // ≤60 chars
+  esco?: EscoRef; // optional link to the ESCO skill the person picked (or accepted from a CV suggestion)
   source: "cv" | "self";
   addedAt: string; // ISO
 }
@@ -399,7 +413,7 @@ export interface BlindResponse {
 /** Problem card fields the AI generates from the intake. */
 export type CardDraft = Pick<
   ProblemCard,
-  "title" | "context" | "weekOneReality" | "hardPart" | "niceToHave" | "languages" | "languagesNeeded" | "format" | "skills" | "support"
+  "title" | "context" | "weekOneReality" | "hardPart" | "niceToHave" | "languages" | "languagesNeeded" | "format" | "skills" | "skillRefs" | "support"
 >;
 
 export interface IntakeAnswers {

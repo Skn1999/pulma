@@ -13,6 +13,8 @@ import { AfterEventSummary } from "@/components/organiser/after-event-summary";
 import { eventOutcomes, followUpState } from "@/lib/outcomes";
 import { getStats } from "@/lib/stats";
 import { eventLabel, pickEvent, sortedEvents } from "@/lib/events";
+import { SupplyDemandPanel } from "@/components/organiser/supply-demand-panel";
+import { skillSupplyDemand } from "@/lib/supply-demand";
 import { EventPicker } from "@/components/event/event-picker";
 
 export const dynamic = "force-dynamic";
@@ -45,6 +47,7 @@ export default async function OrganiserPage({ searchParams }: { searchParams: Pr
         <ReplyRatePanel replies={stats.replies} />
         <PromisesPanel data={promisesKept(db, nowMs())} />
         <FollowUpPanel followUps={stats.followUps} />
+        <SupplyDemandPanel rows={skillSupplyDemand(db, ev.id)} />
         <div className="grid gap-4 md:grid-cols-2">
           <BarList id="sectors-heading" title="Sectors in demand" items={stats.sectors} unit="problem" />
           <BarList id="languages-heading" title="Languages in demand" items={stats.languages} unit="problem" />

@@ -27,7 +27,7 @@ export default async function ProfilePage() {
       />
       {acc.role === "talent" && (
         <div className="mt-8">
-          <SkillsSection initial={(talent?.skills ?? []).map((s) => ({ label: s.label, source: s.source }))} />
+          <SkillsSection initial={(talent?.skills ?? []).map((s) => ({ label: s.label, source: s.source, esco: s.esco }))} />
         </div>
       )}
     </div>

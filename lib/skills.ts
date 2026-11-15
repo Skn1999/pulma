@@ -1,6 +1,7 @@
 // Candidate skills: private to the talent. Pure helpers, no Next imports, no AI.
 // Matching is a deterministic, visible tag overlap. It never ranks or hides anything (CLAUDE.md hard rule 1).
-import type { TalentSkill } from "./types";
+import type { EscoRef, SkillRef, TalentSkill } from "./types";
+import { parseEscoRef } from "./esco-ref";
 
 export const MAX_SKILLS = 15;
 export const MAX_SKILL_LENGTH = 60;
@@ -24,11 +25,26 @@ function words(label: string): Set<string> {
   return out;
 }
 
-/** The card tags that match any of the talent's skills. Order follows the card's own tag order. */
-export function skillMatches(talentSkills: { label: string }[] | undefined, cardSkills: string[] | undefined): string[] {
+/** The ESCO link of a card tag, if the card has one for that label. */
+function refOf(tag: string, refs: SkillRef[] | undefined): EscoRef | undefined {
+  const key = tag.trim().toLowerCase();
+  return refs?.find((r) => r.label.trim().toLowerCase() === key)?.esco;
+}
+
+/**
+ * The card tags that match any of the talent's skills. Order follows the card's own tag order.
+ * Same ESCO uri matches first; otherwise the visible word rule (equal label, or a shared meaningful word).
+ */
+export function skillMatches(
+  talentSkills: { label: string; esco?: EscoRef }[] | undefined,
+  cardSkills: string[] | undefined,
+  cardRefs?: SkillRef[],
+): string[] {
   if (!talentSkills?.length || !cardSkills?.length) return [];
-  const mine = talentSkills.map((s) => ({ key: s.label.trim().toLowerCase(), words: words(s.label) }));
+  const mine = talentSkills.map((s) => ({ key: s.label.trim().toLowerCase(), words: words(s.label), uri: s.esco?.uri }));
   return cardSkills.filter((tag) => {
+    const uri = refOf(tag, cardRefs)?.uri;
+    if (uri && mine.some((m) => m.uri === uri)) return true;
     const key = tag.trim().toLowerCase();
     const tagWords = words(tag);
     return mine.some((m) => m.key === key || [...tagWords].some((w) => m.words.has(w)));
@@ -36,10 +52,14 @@ export function skillMatches(talentSkills: { label: string }[] | undefined, card
 }
 
 /** Skills the talent has that relate to a card (the talent's own labels, for the respond page). */
-export function relatedSkillLabels(talentSkills: { label: string }[] | undefined, cardSkills: string[] | undefined): string[] {
+export function relatedSkillLabels(
+  talentSkills: { label: string; esco?: EscoRef }[] | undefined,
+  cardSkills: string[] | undefined,
+  cardRefs?: SkillRef[],
+): string[] {
   if (!talentSkills?.length || !cardSkills?.length) return [];
   return talentSkills
-    .filter((s) => skillMatches([s], cardSkills).length > 0)
+    .filter((s) => skillMatches([s], cardSkills, cardRefs).length > 0)
     .map((s) => s.label);
 }
 
@@ -83,7 +103,7 @@ export function parseSkillsInput(body: unknown, existing: TalentSkill[] | undefi
   const out: TalentSkill[] = [];
   const seen = new Set<string>();
   for (const item of raw) {
-    const o = item as { label?: unknown; source?: unknown } | null;
+    const o = item as { label?: unknown; source?: unknown; esco?: unknown } | null;
     if (!o || typeof o.label !== "string") return { ok: false, error: "Each skill needs a label" };
     const label = normaliseSkill(o.label);
     if (!label) return { ok: false, error: "A skill can't be empty" };
@@ -93,7 +113,27 @@ export function parseSkillsInput(body: unknown, existing: TalentSkill[] | undefi
     if (seen.has(key)) continue;
     seen.add(key);
     const prev = existing?.find((s) => s.label.toLowerCase() === key);
-    out.push({ label, source: o.source, addedAt: prev?.addedAt ?? nowIso });
+    const esco = parseEscoRef(o.esco) ?? (o.esco === undefined ? prev?.esco : undefined);
+    out.push({ label, ...(esco ? { esco } : {}), source: o.source, addedAt: prev?.addedAt ?? nowIso });
   }
   return { ok: true, skills: out };
+}
+
+/** Card "Work involved": up to 6 unique visible labels, plus ESCO links for those labels that have a valid one. */
+export function parseCardSkills(skills: unknown, refs: unknown): { skills: string[]; skillRefs?: SkillRef[] } {
+  const labels = new Map<string, string>();
+  for (const x of Array.isArray(skills) ? skills : []) {
+    if (typeof x !== "string") continue;
+    const label = x.trim().slice(0, MAX_SKILL_LENGTH);
+    if (label && !labels.has(label.toLowerCase())) labels.set(label.toLowerCase(), label);
+  }
+  const list = [...labels.values()].slice(0, 6);
+  const skillRefs: SkillRef[] = [];
+  for (const r of Array.isArray(refs) ? refs : []) {
+    const label = typeof r?.label === "string" ? r.label.trim().toLowerCase() : "";
+    const esco = parseEscoRef(r?.esco);
+    const visible = labels.get(label);
+    if (esco && visible && list.includes(visible) && !skillRefs.some((x) => x.label === visible)) skillRefs.push({ label: visible, esco });
+  }
+  return { skills: list, ...(skillRefs.length ? { skillRefs } : {}) };
 }

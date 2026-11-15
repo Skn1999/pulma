@@ -1,0 +1,934 @@
+[
+ {
+  "uri": "http://data.europa.eu/esco/skill/97965983-0da4-4902-9daf-d5cd2693ef73",
+  "label": "3D modelling"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/ecc18804-a466-40d9-98b4-fba5cd67dd4b",
+  "label": "accounting"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/08371fe9-c658-4f6a-966f-71dbb0ab683d",
+  "label": "accounting department processes"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/99b163e8-7815-43e2-83f3-a47f3076354c",
+  "label": "accounting entries"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/880c54f9-866e-4f37-b5fa-25ef8a7d49b6",
+  "label": "accounting techniques"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/d63f49de-cb72-4ce3-9553-a374a4f32f52",
+  "label": "analyse data about clients"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/807d89b5-3557-4259-8e2c-1b374d497fe8",
+  "label": "analyse data for aeronautical publications"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/19aa10ee-35fb-4ba1-b8dc-51525c090ccc",
+  "label": "analyse data for policy decisions in trade"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/28878fd9-9a17-452a-b3b8-5db5c63d7905",
+  "label": "analyse energy market trends"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/8a43795b-bb38-4f29-91df-a6c92ad4643c",
+  "label": "analyse financial performance of a company"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/eb8babfb-ab91-4937-a032-6a79f82e9b7f",
+  "label": "analyse financial risk"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/66f83eaa-b9ae-471c-ad86-6b9229719e4a",
+  "label": "analyse foreign affairs policies"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/dbfb9dda-48d9-4a10-9821-3237f868071b",
+  "label": "analyse goal progress"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/f4cb64be-4215-4dbf-8649-70ae33228802",
+  "label": "analyse issues"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/8f113113-aa20-48f7-8da1-ac0051505d03",
+  "label": "analyse milk control test results"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/e149237d-9e3b-405f-a581-b1e540f376d3",
+  "label": "analyse supplier's information on vehicle parts"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/84cc8c9d-db57-42ec-8948-9b632bf06124",
+  "label": "battery chemistry"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/8cf03262-b6b0-4fe8-9d66-91063bb32db3",
+  "label": "battery components"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/142f7164-fe09-49ec-af18-7c9e86269d9e",
+  "label": "battery fluids"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/ad329eb4-463d-40ac-bf03-60e00538bb49",
+  "label": "battery testers"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/2ff405ec-f59c-4a7b-84b6-9776a49582c4",
+  "label": "bookkeeping regulations"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/b633eb55-8f1f-4ae6-ab4c-2022ffe2cb7f",
+  "label": "C++"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/c46f9312-e414-42f0-9c8b-1c1886af7b8d",
+  "label": "CAD for footwear"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/d8ee0b01-3d33-4a32-a07c-6a107400cac0",
+  "label": "CAD for garment manufacturing"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/a2b5dcf3-5b6a-453d-876c-cff540c0faf1",
+  "label": "CAD software"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/77e1563f-84fb-48dd-98f2-59a4e33908ca",
+  "label": "cadastral taxation"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/3a33cec3-4b44-471a-8864-5cc8567a8b1f",
+  "label": "CADD software"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/09dea77e-870c-49eb-9a97-1398bee57bd0",
+  "label": "cleaning industry health and safety measures"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/bfa5427c-83ec-404f-8465-dd49b42fde8e",
+  "label": "cleaning of reusable packaging"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/ce2dbe33-9e13-47bb-91bf-00cf799ac34c",
+  "label": "cleaning techniques"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/bd14968e-e409-45af-b362-3495ed7b10e0",
+  "label": "cloud technologies"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/fcd7dbd4-095d-448d-b605-89e8ac6a3d92",
+  "label": "coach clients"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/a5bcb999-ca8d-4b36-afa7-238a14af5888",
+  "label": "coach during a sports competition"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/0cc9c234-f817-4f4c-908a-4d28fe3b0f4a",
+  "label": "coach employees"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/d5c8ec12-202d-4b39-a71e-b6dcc24a358b",
+  "label": "coach individuals in specialised nursing care"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/2b5b31cc-21bf-479b-9e23-4230091e9eb0",
+  "label": "coach performers in your fight discipline"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/91a58da7-2111-4a03-9874-37311e105d06",
+  "label": "coach staff for running the performance"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/1c79db45-e4be-4b6e-af3b-a0ba61353aee",
+  "label": "coach team on visual merchandising"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/87439d9b-b537-4f90-a00a-3ec3bbfec5d1",
+  "label": "coach young people"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/0cfc7eb9-2891-4153-b335-6331f381ff05",
+  "label": "communicate health and safety measures"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/a5826fe3-8df6-4fa8-adad-b7116864588f",
+  "label": "communicate mathematical information"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/8df86db8-dfcd-414b-854f-ad1cdb18d733",
+  "label": "communicate on the environmental impact of mining"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/334cd662-0415-44ac-bc8a-e24b320b4284",
+  "label": "communicate on the youth's well-being"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/91be6910-bd67-4e1f-95b0-32513b399b24",
+  "label": "communicate problems to senior colleagues"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/0ab07923-f350-4a3c-bbea-3017d756c409",
+  "label": "communicate regulations"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/15d76317-c71a-4fa2-aadc-2ecc34e627b7",
+  "label": "communication"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/27de0574-cb9b-412b-a14b-be856efb0a95",
+  "label": "communication related to hearing impairment"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/9983816d-cc78-4d3f-9e3c-c7baa9ebc77a",
+  "label": "computer equipment"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/21d2f96d-35f7-4e3f-9745-c533d2dd6e97",
+  "label": "computer programming"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/7b5cce4d-c7fe-4119-b48f-70aa05391787",
+  "label": "computer science"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/e74f4f21-8d45-412c-b5c3-652e6167ee32",
+  "label": "content development processes"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/b0560439-14eb-41d1-aa53-1938efc24123",
+  "label": "content marketing strategy"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/8143d024-c593-49d2-834a-e9e9df1110b8",
+  "label": "content of airworthiness directives"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/9a0c96a2-8ffb-4384-b9e8-8928e7f86e23",
+  "label": "control aquatic production environment"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/45a41064-50af-42d6-875e-e0e43c04dbf1",
+  "label": "control cutterheads"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/39d92981-7b68-47de-bfc0-5374c067dba9",
+  "label": "control trade commercial documentation"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/05fc6f8d-639c-4329-a6de-dfdd800ed091",
+  "label": "customer insight"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/dc9a236c-c640-43c3-812f-269403591edb",
+  "label": "customer relationship management"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/136e0cab-0b19-48f7-9086-745d615f416b",
+  "label": "customer segmentation"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/15a33d76-4640-438d-ae64-fdc0c1d3eebc",
+  "label": "customer service"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/25f0ea33-b4a2-4f31-b7b4-7d20e827b180",
+  "label": "data mining"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/9effa3d7-c0c4-4583-ad94-b496ba5e5f2c",
+  "label": "data mining methods"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/a4346013-a967-4a58-a533-6b32ad1364c5",
+  "label": "data protection"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/cc7370dd-69fa-4c67-a96f-d4d135d38700",
+  "label": "data quality assessment"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/43ae58b9-5e56-4524-b45a-b422777a0576",
+  "label": "database"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/9ef0f3a0-9ce2-4ef1-a987-0366b5cb2dbe",
+  "label": "database development tools"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/ab1e97ed-2319-4293-a8b7-072d2648822f",
+  "label": "database management systems"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/b5c7e0dc-dda3-4790-a7d1-d6d8023b3089",
+  "label": "database quality standards"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/755a5df2-863e-44c1-b4a2-83eb33bac492",
+  "label": "design brand's online communication plan"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/698dabf4-ee23-4398-a4a8-9dff73830eca",
+  "label": "design campaign actions"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/3fb8b724-1d52-4d11-b8b8-1776f558d1f0",
+  "label": "design ICT hardware placement"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/769d124a-cdd7-4fb5-950f-c724a7b7971c",
+  "label": "design plans to address undesirable behaviour in animals"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/5aa79c4a-8b29-4d57-8723-b9a69ef0727e",
+  "label": "design strategies for nuclear emergencies"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/f519caf2-a69f-4357-a8b7-d992e4bfdae3",
+  "label": "design thermal requirements"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/3195829f-34e5-4509-a26c-eb8c7fbb1056",
+  "label": "design training programmes for individuals and animals"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/44864dac-e16e-4a28-85d3-c08552f2fba3",
+  "label": "design wayside signalling interlockings"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/75f650d0-9096-4b8f-bbd6-ad05ee3f6121",
+  "label": "document analysis results"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/7ddbfce9-902d-4d1c-b751-30274f4b49ce",
+  "label": "document evidence"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/e1f09038-b493-4771-ae29-a2d3e7ea013a",
+  "label": "document interviews"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/ea1bf5e5-e7f0-4d2c-a415-1c39c00512b1",
+  "label": "document management"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/4d38b095-6730-4157-9807-8049dd7b43b8",
+  "label": "document project progress"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/91571a67-f9e1-4c5b-80c5-43f3d14a3747",
+  "label": "document restoration"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/c82efd52-7d49-4692-bde7-3dc39311cc31",
+  "label": "document security incidents in the store"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/327d15c8-29ff-4ad4-a4fe-6536d777a45f",
+  "label": "documentation types"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/95c35c3a-035f-47c2-90cf-7e934d20fc08",
+  "label": "electronics"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/557d1221-0235-4a48-ada5-8fca73443627",
+  "label": "electronics principles"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/2180bd8c-86de-4889-8165-adac902eee9d",
+  "label": "embedded systems"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/f5fa2654-52cc-45d2-ac92-ac979dee5d12",
+  "label": "engine components"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/071de01d-c665-4984-9272-63e02b65b471",
+  "label": "engineer seismic equipment"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/72a74f69-5cf1-43c5-99b9-62a444578919",
+  "label": "engineering processes"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/cd56a093-3400-4635-80bd-b9611dcf1542",
+  "label": "Gamemaker Studio"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/8b2f716d-4ee3-41ca-97de-62ef56f80591",
+  "label": "games rules"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/7b5cb897-2ee8-450c-85a6-d73925cbd1dc",
+  "label": "GameSalad"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/ed1fbdc3-1071-423c-9bb4-e3288ca6d1fe",
+  "label": "hardware components suppliers"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/bac209e9-d337-4312-9041-17c2e75fa4df",
+  "label": "hardware industry"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/61d6ef20-6cc7-40f8-919e-3360db6cf2b3",
+  "label": "hardware materials"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/a07def4c-3b7f-4df0-8052-05968d9c936b",
+  "label": "interview animal owners on animals' conditions"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/34e0f023-0ca9-4f64-a932-3248bb4ed5df",
+  "label": "interview bank loanees"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/670c79e9-aa33-41ae-9858-573ade0adb89",
+  "label": "interview focus groups"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/f2eed0ad-6572-461a-b1a6-a4d2b5c2e6b5",
+  "label": "interview insurance claimants"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/8ad2b7ca-42c3-4bfe-939a-056a90bdd2d8",
+  "label": "interview parties in relation to animal welfare investigations"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/66d47084-9437-48b2-819b-c4c8214ed650",
+  "label": "interview people"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/324f0243-1a21-4f5c-9f71-52eebc2596ed",
+  "label": "interview techniques"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/5aaf2780-04d7-4bbf-8b06-af36eafe8eba",
+  "label": "inventory management rules"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/19a8293b-8e95-4de3-983f-77484079c389",
+  "label": "Java (computer programming)"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/7a86907d-1fd5-4e8f-b0f1-f366a14f6f6d",
+  "label": "Javanese"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/3cd569a2-4f88-4c1e-9995-8dce8c5e51a7",
+  "label": "JavaScript"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/9b9de2a4-d8af-4a7b-933a-a8334ae60067",
+  "label": "JavaScript Framework"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/e843973c-23dd-416a-8a9c-9e89512542fb",
+  "label": "logistics"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/834b8673-1498-4423-b748-7bb6dc312169",
+  "label": "manage aquatic resources stock production"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/fecc4fba-8f4b-4fde-846e-045d9889aa76",
+  "label": "manage cash transportation"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/a2eb9bb5-e539-4c71-98a7-595709f2d699",
+  "label": "manage inventory of camping supplies"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/3fedb2c6-488f-4c78-b20d-af23d481348a",
+  "label": "manage packaging material"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/da179276-69c8-47bc-a925-215bd7830179",
+  "label": "manage pain for veterinary patients"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/6d25ef0c-9f6c-4e46-acf3-b2ae022f85f6",
+  "label": "manage personnel"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/d9013e0e-e937-43d5-ab71-0e917ee882b8",
+  "label": "manage time"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/fe42bab4-e289-493b-a537-933f62c9eda4",
+  "label": "manage veterinary practice waiting area"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/84605f91-5ab4-4965-a1ad-cdc1901a820d",
+  "label": "marketing department processes"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/5bbaa0e6-0fd7-4df2-9db7-34f78b40dc34",
+  "label": "marketing management"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/d3e585e9-3a73-4511-b533-90f095e5aa09",
+  "label": "marketing mix"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/de03f4fd-c147-4477-a048-7109e5ba2d6f",
+  "label": "marketing principles"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/cf532795-a1fd-43bd-8407-6e43f877e6e3",
+  "label": "mobile device management"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/b8c01891-e3df-4a4b-948d-95b45e1788f5",
+  "label": "mobile device software frameworks"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/ef069fe6-305b-4452-8f7d-0c572e98effc",
+  "label": "mobile marketing"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/976455eb-5bbe-4493-ae64-ed16c3b009ea",
+  "label": "mobile operating systems"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/8b3aefd2-5021-418f-b069-828fb7abc598",
+  "label": "nursing principles"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/d429b19a-132f-44d3-971b-bb0ccd94f979",
+  "label": "nursing science"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/2234f499-aae9-4a7a-9d41-3aaa5cd98c07",
+  "label": "plan aquatic resources feeding regimes"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/28c4b670-ae54-4120-97b0-b20c4c470cc4",
+  "label": "plan art educational activities"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/758ddaf4-c2c0-4681-8724-d685de5ace17",
+  "label": "plan dog grooming work"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/746d4d58-7e6b-417c-a0b3-3f0c44564a2e",
+  "label": "plan facilities management policies"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/f21c2b32-83e0-46b2-99b1-c277e3d27f2f",
+  "label": "plan geotechnical investigations in the field"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/bb663409-5c88-4e3a-bc16-01aa1c8ce171",
+  "label": "plan health and safety procedures"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/8193f6c6-80d5-4542-a316-2b783e3d8ad9",
+  "label": "plan learning curriculum"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/7c05199f-7b03-4a4a-afee-7c9dfcf9066a",
+  "label": "plan resource allocation"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/410540a4-b88c-4073-9da2-8aa5d7eaf780",
+  "label": "player logic"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/14d133af-6662-490e-9716-a4cc1e26676a",
+  "label": "present a cause"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/39e7d2a3-8d01-497c-8c5f-d51ab53a4a22",
+  "label": "present arguments persuasively"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/dd89f74e-cce0-4e31-9b86-e088f0206d7a",
+  "label": "present decorative drink displays"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/9def3846-239c-4bcc-a84d-185d33d8f4db",
+  "label": "present drinks menu"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/326686e4-a55f-4eba-9d07-1c86408d5c5e",
+  "label": "present evidence"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/13fb1ca0-043d-4fcd-8185-c9ca78a23b4a",
+  "label": "present items during auction"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/b7553d1b-31b4-42e6-b6be-2a90189ef7d6",
+  "label": "present menus"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/85c1377a-b96f-4ad0-adb4-8d11f8a2eecd",
+  "label": "present the farm facilities"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/7111b95d-0ce3-441a-9d92-4c75d05c4388",
+  "label": "project management"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/237db40b-4600-47c0-837f-4a2c4f3014ab",
+  "label": "project management principles"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/ed1d8bd4-cd2a-4c64-b665-56d70651026c",
+  "label": "Prototyping development"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/0f16809e-a1a4-46a4-ae8e-058f5d0d358a",
+  "label": "prototyping in the wearing apparel industry"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/ccd0a1d9-afda-43d9-b901-96344886e14d",
+  "label": "Python (computer programming)"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/c7cc6dc5-d56b-4323-8e5c-47c4022f615f",
+  "label": "quality assurance methodologies"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/1177c6f5-09c5-4c35-873c-afd22d170ad3",
+  "label": "quality assurance procedures"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/186ba200-6c13-4ffd-947d-dbfe75a2b985",
+  "label": "quality criteria for livestock feed production"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/14026826-61f5-4476-a217-4e4d62e86b4f",
+  "label": "quality criteria for storage facilities"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/f2d9677b-ba41-4b02-9db9-b2e05a462830",
+  "label": "quality of fish products"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/8d4271ca-c9fd-40b3-875f-15f78332a49e",
+  "label": "quality standards"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/c5e3bd7d-670b-4579-beab-a2c66e72e9b5",
+  "label": "quality standards applicable to aquaculture products"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/616940bc-d888-4be8-912d-014b78550bf2",
+  "label": "quality standards of ophthalmic equipment"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/4fad9e2b-f855-4a08-8f85-1b6b3df06b11",
+  "label": "react acordingly to unexpected events outdoors"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/49e1eb78-e6b1-4116-8e9f-f23316ee503e",
+  "label": "react calmly in stressful situations"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/ca49f512-4434-49c1-8f49-9a078b60d2fe",
+  "label": "react to emergency situations in a live performance environment"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/be7c80ee-0b7a-455c-8928-055cfa65076c",
+  "label": "react to events in time-critical environments"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/3938da70-dd7a-4092-b039-10c2218867fd",
+  "label": "react to mining emergencies"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/876bb0fb-6b71-4617-9df6-ddabb9b7579f",
+  "label": "report airport security incidents"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/dfde5537-022a-4426-ba82-254651ba567a",
+  "label": "report call errors"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/be6ab363-3de1-427f-a8ef-85d5b0250822",
+  "label": "report facts"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/f3cc52e3-a96c-4549-b841-6e41a846fa99",
+  "label": "report on environmental issues"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/3310562c-ed9e-43c2-a4d0-bafeed7057a4",
+  "label": "report on fuel distribution incidents"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/ac93de83-16b6-442c-b83f-d880b8ddc792",
+  "label": "report on pest inspections"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/d05d0dc5-95f6-4287-8884-f54fcfea5178",
+  "label": "report the results of treatment"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/ace1a04d-b08b-4628-9311-d30a29e55d39",
+  "label": "report to captain"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/7a950986-27fe-4b6c-adf3-88f211e77019",
+  "label": "robotic components"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/e87ec79a-c9ff-46f5-84fa-7a0f394cdf40",
+  "label": "robotics"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/a5763fbd-e206-4660-8988-479d3679f41a",
+  "label": "rust proofing spray gun parts"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/cab07957-4f35-4bdd-9d6d-dc5a0cf42e13",
+  "label": "safety engineering"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/519b3949-b711-4a08-a395-a4bd068f9fa2",
+  "label": "safety regulations for warehouses"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/450de541-797a-4da0-9fe4-a81471c8047d",
+  "label": "sales activities"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/0c0488b3-fca5-4deb-865b-8dc605c3d909",
+  "label": "sales argumentation"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/c1388df1-47bd-4fd5-8b71-dce7886ef21b",
+  "label": "sales department processes"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/756ae350-9e1f-4cb9-9c27-6bd99806dadc",
+  "label": "sales promotion techniques"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/e7219848-a27a-4bf4-8775-d367707be7c9",
+  "label": "sales strategies"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/70a7b3b3-31ef-4b29-a30f-bb7299dff39b",
+  "label": "sensors"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/c1de3963-05eb-4e45-8496-58156a345fb1",
+  "label": "shift energy demands"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/438ff259-d086-4004-acda-1ec3e1631bc6",
+  "label": "software anomalies"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/484df271-bb52-49f1-8f50-f19624bf4df2",
+  "label": "software components libraries"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/e6b8f934-7f35-4dc6-9a64-f6c43acdc00b",
+  "label": "software components suppliers"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/598de5b0-5b58-4ea7-8058-a4bc4d18c742",
+  "label": "SQL"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/c062bab3-3ea0-4291-9220-a2d8fef4bead",
+  "label": "SQL Server"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/6f7512ab-d46d-402a-8c30-a8878d7c1f88",
+  "label": "SQL Server Integration Services"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/b77e7d1c-cbab-4fa8-95b9-6fc804786d2b",
+  "label": "staff game shifts"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/7ee4c2ea-b349-4bd2-81a3-ec31475d4833",
+  "label": "statistics"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/f8999197-a31f-410e-a0d4-ad654587844c",
+  "label": "teach air traffic control"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/107cfd0b-d429-4f74-b049-627efbf7b4dc",
+  "label": "teach communication sciences"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/c6f88b89-ce2c-4b8c-a133-7ee95bc48efa",
+  "label": "teach dance"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/be040651-f357-45d0-9e1a-d98245be6546",
+  "label": "teach geography"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/04e6f19b-6458-432f-9790-3979831a03bc",
+  "label": "teach nursing principles"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/2bc7884c-0d04-4ae9-a4e5-dccd77701ba3",
+  "label": "teach physics"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/1ec368ee-c8f0-495a-a8bb-b15b689e4e37",
+  "label": "teach psychology"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/37b1b569-92cb-4afe-9d83-bb977114c423",
+  "label": "teach veterinary science"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/89314406-22ff-4199-bd52-53c7729392b6",
+  "label": "test chemical auxiliaries"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/ebf40cf9-5c98-4d84-9f01-b7ca74e90682",
+  "label": "test concrete"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/3d3db1e7-b041-495e-8a93-deeacded8a2f",
+  "label": "test for emotional patterns"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/52b38e90-3d05-4042-a9e2-d19dec8dd7c1",
+  "label": "test hardware"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/e139c087-bd34-4660-8554-1d01092bc749",
+  "label": "test photographic equipment"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/0904fbfb-9afa-4439-a21b-c498ef2fa3f7",
+  "label": "test pyrotechnical effects"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/ffe8bbf9-0fec-44df-901d-1eb6b913e379",
+  "label": "test soil load bearing capacity"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/be64bb4c-84ac-4c83-8cc7-fc8593e15136",
+  "label": "test system accessibility for users with special needs"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/4f6e68b2-85c8-446e-a96d-b306ec7e0091",
+  "label": "training  subject expertise"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/48c34089-d74a-4e52-b783-aea877f2fea1",
+  "label": "training equipment for riding"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/2ca8f0db-2c2a-4d07-af6c-effb99fed08b",
+  "label": "translate foreign language"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/0ba0717c-3a7a-45a3-834c-59c554e56c72",
+  "label": "translate formulae into processes"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/06e347f2-2504-4ee8-b7f7-8d9542f56207",
+  "label": "translate keywords into full texts"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/0dcbf7c5-bedf-4485-b16b-23df54443864",
+  "label": "translate requirement concepts into content"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/2d6d4784-0992-48e7-b100-22d7229b3f0a",
+  "label": "translate requirement concepts into visual design"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/321f7ade-ba43-4923-a432-54df75ec80a5",
+  "label": "translate spoken language consecutively"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/4e0076f7-155d-4e2a-a058-39097de48420",
+  "label": "translate strategy into operation"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/5be704bc-e270-448c-93b4-fad465cf05b7",
+  "label": "translate tags"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/867137fb-ff1b-4ca3-99f3-cb6969aa2c68",
+  "label": "TypeScript"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/d1a86399-24d8-415f-98b9-e8cbb6b04a26",
+  "label": "Unity (digital game creation systems)"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/b04c4965-4fd7-4dfa-a8d4-0cec5c5f5d0c",
+  "label": "Unreal Engine"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/95ee5e38-5c1e-4cd2-a21d-6921390025a9",
+  "label": "usability engineering"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/089ddb19-1c7a-43ff-ba64-070f7ce4787a",
+  "label": "warehouse operations"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/1605025e-a179-421f-8f35-5b07d182a6b2",
+  "label": "web analytics"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/902fb91c-3113-4004-9b4f-79aa86b638b7",
+  "label": "web application security threats"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/69bbd53f-fbb0-4476-b4b2-ef7844464e28",
+  "label": "web programming"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/5c66ce3a-658d-43b1-9d8d-0f39be6c0f2e",
+  "label": "WebCMS"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/b3d9442d-1fb8-46cd-a947-154a42221f28",
+  "label": "write job descriptions"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/ec4855b5-84a5-4c59-812e-8e4319d7bf8d",
+  "label": "write Persian"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/1299a59c-8b90-4838-8bef-0065cdfc8bdf",
+  "label": "write Punjabi"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/271a36a0-bc7a-43a9-ad29-0a3f3cac4e57",
+  "label": "write risk assessment on performing arts production"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/b4a5d258-4fe7-4fa5-b58f-d2f8769eb15b",
+  "label": "write Sardinian"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/39a7d447-5a30-41b1-967d-bdcde3288c9e",
+  "label": "write Slovak"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/ea6c0bf5-fe69-4ffa-a1b4-398f46a67c95",
+  "label": "write to a deadline"
+ },
+ {
+  "uri": "http://data.europa.eu/esco/skill/918f5211-b99f-4b29-9a34-6e475583ef55",
+  "label": "write work-related reports"
+ }
+]

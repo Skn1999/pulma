@@ -2,6 +2,7 @@
 import type { DB, Account, Activity, Availability, Closure, Company, HiringGoal, Participation, ProblemCard, Shortlist, Meeting, Talent, Response } from "@/lib/types";
 import { localNow, placeFor } from "@/lib/slots";
 import { addDaysToDate } from "@/lib/follow-up";
+import { escoExact } from "@/lib/esco";
 
 const companies: Company[] = [
   { id: "co-game", name: "Nordlight Games", sector: "Games", size: "35 people", about: "A small studio in Otaniemi making cooperative mobile puzzle games played by a few hundred thousand people.", office: "Nordlight Games, Studio 2, Otakaari 99 B, Espoo (demo address)" },
@@ -107,7 +108,15 @@ const CARD_SKILLS: Record<string, string[]> = {
   "card-logistics": ["Warehouse operations", "Process improvement", "Talking to night shifts", "Spreadsheets"],
   "card-robotics": ["Careful experiments", "Robotics", "Computer vision", "Hardware tinkering"],
 };
-for (const c of cards) c.skills = CARD_SKILLS[c.id];
+for (const c of cards) {
+  c.skills = CARD_SKILLS[c.id];
+  // Link the tags that have an exact ESCO skill in the bundled list (Skills data: ESCO, European Commission).
+  const refs = c.skills.flatMap((label) => {
+    const esco = escoExact(label);
+    return esco ? [{ label, esco }] : [];
+  });
+  if (refs.length) c.skillRefs = refs;
+}
 
 const talents: Talent[] = [
   { id: "t-olena", displayName: "Olena Kovalenko", email: "olena.k@example.com", preferredLanguage: "Ukrainian", saved: ["card-robotics"], skills: [
@@ -142,6 +151,20 @@ const talents: Talent[] = [
   { id: "t-nina", displayName: "Nina Kallio", email: "nina.k@example.com" },
   { id: "t-petra", displayName: "Petra Wiklund", email: "petra.w@example.com", preferredLanguage: "Swedish" },
 ];
+
+// A few more candidates keep skills so the organiser's supply-and-demand counts are not all "fewer than 5".
+const MORE_SKILLS: Record<string, string[]> = {
+  "t-mika": ["Python", "Data analysis"], "t-priya": ["Python", "Data analysis"], "t-ville": ["Python", "Data analysis"],
+  "t-noor": ["Python", "Data analysis"], "t-kasper": ["Python", "Data analysis"], "t-omar": ["Data analysis"],
+};
+for (const t of talents) {
+  const extra = (MORE_SKILLS[t.id] ?? []).map((label) => ({ label, source: "self" as const, addedAt: "2026-11-12T10:00:00.000Z" }));
+  if (extra.length) t.skills = [...(t.skills ?? []), ...extra];
+  for (const sk of t.skills ?? []) {
+    const esco = escoExact(sk.label);
+    if (esco) sk.esco = esco;
+  }
+}
 
 interface R {
   id: string; code: string; card: string; talent: string; text: string; date: string;
@@ -506,6 +529,13 @@ export function addPastEventSeed(db: DB, now: number): void {
       skills: ["Battery data analysis", "Spreadsheets", "Reading old records", "Python"],
     }),
   ];
+  for (const c of cards2) {
+    const refs = (c.skills ?? []).flatMap((label) => {
+      const esco = escoExact(label);
+      return esco ? [{ label, esco }] : [];
+    });
+    if (refs.length) c.skillRefs = refs;
+  }
   db.cards.push(...cards2);
 
   const tableOf: Record<string, number> = { "co-saas": 1, "co-logistics": 2, "co-medtech": 3, "co-cleantech": 4 };
