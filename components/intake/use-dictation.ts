@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { Button } from "@/components/ui/button";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 function getCtor(): any {
@@ -29,22 +28,30 @@ const ERROR_TEXT: Record<string, string> = {
 };
 
 /**
- * Speech-to-text into the answer box (browser Web Speech API; nothing is sent to Pulma's servers).
+ * useDictation: speech-to-text into an answer box (browser Web Speech API; nothing is sent to Pulma's servers).
  * - Keeps listening until Stop: the browser ends a session after a pause, so it is restarted quietly.
  * - Spoken phrases are joined with spaces and added after what is already in the box.
  * - Typing in the box, or sending the answer, stops dictation, so it never overwrites an edit or spills into the
  *   next question.
  * - Problems (microphone blocked, offline) are said in words; dictation is optional, typing always works.
  */
-export function DictateButton({
-  value,
-  onChange,
-  disabled,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  disabled?: boolean;
-}) {
+export const DICTATION_LANGS = [
+  { value: "en-US", label: "English" },
+  { value: "fi-FI", label: "Suomi" },
+] as const;
+
+export interface Dictation {
+  supported: boolean | null; // null until known (server render)
+  listening: boolean;
+  error: string | null;
+  lang: string;
+  setLang: (l: string) => void;
+  start: () => void;
+  stop: () => void;
+  cancel: () => void; // stop and drop anything still being heard (sending, going back)
+}
+
+export function useDictation({ value, onChange }: { value: string; onChange: (v: string) => void }): Dictation {
   const supported = useSyncExternalStore(subscribe, () => !!getCtor(), () => null);
   const [listening, setListening] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -77,11 +84,6 @@ export function DictateButton({
     },
     [],
   );
-
-  if (supported === null) return null;
-  if (!supported) {
-    return <p className="text-xs text-muted-foreground">Dictation works in Chrome, Edge and Safari. You can type instead.</p>;
-  }
 
   function session() {
     const Ctor = getCtor();
@@ -150,46 +152,12 @@ export function DictateButton({
     setListening(false);
   }
 
-  return (
-    <div className="flex flex-wrap items-center gap-2">
-      <label className="sr-only" htmlFor="dictate-lang">
-        Dictation language
-      </label>
-      <select
-        id="dictate-lang"
-        value={lang}
-        onChange={(e) => setLang(e.target.value)}
-        disabled={listening}
-        className="h-8 rounded-lg border border-border bg-background px-2 text-sm focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-      >
-        <option value="en-US">English</option>
-        <option value="fi-FI">Suomi</option>
-      </select>
-      {listening ? (
-        <Button type="button" variant="default" onClick={stop}>
-          <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true">
-            <rect x="3" y="3" width="10" height="10" rx="1.5" />
-          </svg>
-          Stop
-        </Button>
-      ) : (
-        <Button type="button" variant="outline" onClick={start} disabled={disabled}>
-          <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
-            <rect x="6" y="1.5" width="4" height="8" rx="2" />
-            <path d="M3.5 8a4.5 4.5 0 009 0M8 12.5V15" strokeLinecap="round" />
-          </svg>
-          Dictate
-        </Button>
-      )}
-      <span aria-live="polite" className="inline-flex items-center gap-1.5 text-sm">
-        {listening && (
-          <>
-            <span aria-hidden="true" className="size-2 rounded-full bg-destructive motion-safe:animate-pulse" />
-            <span className="font-medium text-primary">Listening… typing stops it</span>
-          </>
-        )}
-        {!listening && error && <span className="text-destructive">{error}</span>}
-      </span>
-    </div>
-  );
+  function cancel() {
+    wantRef.current = false;
+    if (recRef.current) recRef.current.cutOff = true;
+    recRef.current?.abort();
+    setListening(false);
+  }
+
+  return { supported, listening, error, lang, setLang, start, stop, cancel };
 }

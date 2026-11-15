@@ -10,9 +10,9 @@ import { PageTitle } from "@/components/shell/page-title";
 import { Textarea } from "@/components/ui/textarea";
 import { ProblemCardView } from "@/components/problem-card";
 import { QUESTIONS } from "./questions";
-import { DictateButton } from "./dictate-button";
+import { DICTATION_LANGS, useDictation } from "./use-dictation";
 import { GoalFields } from "@/components/company/goal-fields";
-import { CalendarDays } from "lucide-react";
+import { ArrowUp, CalendarDays, ChevronLeft, Mic, Square } from "lucide-react";
 import { CardEditor, splitList, type EditorState } from "./card-editor";
 
 type Stage = "event" | "chat" | "generating" | "edit";
@@ -73,6 +73,7 @@ export function IntakeFlow({
   const [goal, setGoal] = useState<HiringGoal>(defaultGoal);
   const [eventId, setEventId] = useState(fixedEventId ?? "");
   const chosen = events.find((e) => e.id === eventId);
+  const dictation = useDictation({ value, onChange: setValue });
   // True during the short "typing" beat before a new question shows, so a new question never just appears unnoticed.
   const [typing, setTyping] = useState(stage === "chat");
   const thinkTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -148,6 +149,7 @@ export function IntakeFlow({
   function send() {
     const v = value.trim();
     if (!v || typing) return;
+    dictation.cancel();
     const next = [...answers];
     next[step] = v;
     setAnswers(next);
@@ -162,6 +164,7 @@ export function IntakeFlow({
 
   function back() {
     if (step === 0) return;
+    dictation.cancel();
     clearTimeout(thinkTimer.current);
     setTyping(false); // going back is instant: the question was already read
     const next = [...answers];
@@ -338,38 +341,84 @@ export function IntakeFlow({
   return (
     <Frame step={step} composer={
       <div className="border-t bg-background px-4 py-3 sm:px-6">
-        <div className="mx-auto max-w-2xl space-y-2">
-          <label htmlFor="answer" className="sr-only">{q.text}</label>
-          <Textarea
-            id="answer"
-            ref={taRef}
-            rows={3}
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
-                e.preventDefault();
-                send();
-              }
-            }}
-            aria-describedby="answer-hint"
-            className="max-h-40 resize-none"
-          />
-          <p id="answer-hint" className="text-xs text-muted-foreground">
-            {q.hint} Enter to send, Shift+Enter for a new line.
-          </p>
-          {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-          <div className="flex flex-wrap items-center gap-2">
-            <DictateButton value={value} onChange={setValue} />
-            <div className="ml-auto flex gap-2">
-              {step > 0 && (
-                <Button type="button" variant="outline" onClick={back}>Back</Button>
+        <div className="mx-auto max-w-2xl space-y-1.5">
+          {/* One box: the text, and under it the language, dictation and send controls. The box carries the focus ring. */}
+          <div className="rounded-xl border border-input bg-card shadow-xs transition-[border-color,box-shadow] duration-150 focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50">
+            <label htmlFor="answer" className="sr-only">{q.text}</label>
+            <Textarea
+              id="answer"
+              ref={taRef}
+              rows={3}
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+                  e.preventDefault();
+                  send();
+                }
+              }}
+              aria-describedby="answer-hint"
+              className="max-h-40 resize-none border-0 bg-transparent shadow-none focus-visible:ring-0 dark:bg-transparent"
+            />
+            <div className="flex items-center gap-1 px-2 pb-2">
+              {dictation.supported && (
+                <>
+                  <label htmlFor="dictate-lang" className="sr-only">Dictation language</label>
+                  <select
+                    id="dictate-lang"
+                    value={dictation.lang}
+                    onChange={(e) => dictation.setLang(e.target.value)}
+                    disabled={dictation.listening}
+                    className="h-9 rounded-full bg-transparent px-2 text-sm text-muted-foreground outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60"
+                  >
+                    {DICTATION_LANGS.map((l) => (
+                      <option key={l.value} value={l.value}>{l.label}</option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={dictation.listening ? dictation.stop : dictation.start}
+                    aria-pressed={dictation.listening}
+                    aria-label={dictation.listening ? "Stop dictation" : "Dictate"}
+                    title={dictation.listening ? "Stop dictation" : "Dictate"}
+                    className={`inline-flex size-9 items-center justify-center rounded-full outline-none transition-[background-color,color,scale] duration-150 ease-(--ease-out) focus-visible:ring-3 focus-visible:ring-ring/50 motion-safe:active:scale-[0.94] ${
+                      dictation.listening ? "bg-destructive text-white" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    }`}
+                  >
+                    {dictation.listening ? <Square className="size-3.5 fill-current" aria-hidden="true" /> : <Mic className="size-4.5" aria-hidden="true" />}
+                  </button>
+                </>
               )}
-              <Button type="button" onClick={send} disabled={!value.trim() || typing}>
-                {last ? "Create my card" : "Send"}
-              </Button>
+              <span aria-live="polite" className="min-w-0 flex-1 truncate px-1 text-xs font-medium text-destructive">
+                {dictation.listening ? "Listening… typing stops it" : ""}
+              </span>
+              <button
+                type="button"
+                onClick={send}
+                disabled={!value.trim() || typing}
+                aria-label={last ? "Create my card" : "Send"}
+                title={last ? "Create my card" : "Send (Enter)"}
+                className={`inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-full bg-primary text-sm font-medium text-primary-foreground outline-none transition-[background-color,opacity,scale] duration-150 ease-(--ease-out) hover:bg-primary/90 focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-40 motion-safe:active:scale-[0.94] ${
+                  last ? "px-4" : "w-9"
+                }`}
+              >
+                {last && <span aria-hidden="true">Create my card</span>}
+                <ArrowUp className="size-4.5" aria-hidden="true" />
+              </button>
             </div>
           </div>
+          <div className="flex items-start gap-3">
+            <p id="answer-hint" className="min-w-0 flex-1 text-xs text-muted-foreground">
+              {q.hint} Enter to send, Shift+Enter for a new line.
+            </p>
+            {step > 0 && (
+              <button type="button" onClick={back} className="inline-flex shrink-0 items-center gap-0.5 rounded text-xs font-medium text-primary underline-offset-4 outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50">
+                <ChevronLeft className="size-3.5" aria-hidden="true" /> Previous question
+              </button>
+            )}
+          </div>
+          {dictation.error && !dictation.listening && <p role="status" className="text-xs text-destructive">{dictation.error}</p>}
+          {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
         </div>
       </div>
     }>
