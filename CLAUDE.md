@@ -254,12 +254,15 @@ three obviously generic AI-written ones; 22 fictional candidates. More demo acco
   `getAccount()`; pages without sign-in use `await loadDB()`); write with `mutate()` and `logActivity` inside it.
 - **Auth:** `requireAccount(role)` in pages, `apiAccount(role)` in route handlers. Use `nowMs()` in pages. Local
   times are Helsinki wall-clock strings.
-- **LLM:** Anthropic SDK, model `claude-sonnet-5-5`, key `ANTHROPIC_API_KEY`. Prompts in `lib/prompts.ts`, logic in
-  `lib/ai.ts`; every function returns a fallback and never throws.
+- **LLM:** Anthropic SDK, model `claude-sonnet-5-5`, key `ANTHROPIC_API_KEY`. If that key is missing, Google Gemini
+  is used instead (`GEMINI_API_KEY`, REST, default model `gemini-flash-latest` with low thinking, override with
+  `GEMINI_MODEL`). With neither, canned fallbacks. Prompts in `lib/prompts.ts`, logic in `lib/ai.ts`; every function
+  returns a fallback and never throws.
 - **ESCO:** `lib/esco.ts` (public API `ec.europa.eu/esco/api/suggest2`), bundled `data/esco-skills.json`
   (rebuild with `node scripts/fetch-esco.mjs`).
 - **Dictation:** browser Web Speech API (`components/intake/dictate-button.tsx`); typing always works.
-- **Deploy:** Vercel via GitHub import, Upstash Redis from the Vercel Marketplace, optional `ANTHROPIC_API_KEY`.
+- **Deploy:** Vercel via GitHub import, Upstash Redis from the Vercel Marketplace, optional `ANTHROPIC_API_KEY` or
+  `GEMINI_API_KEY`.
 
 ### Data model (lib/types.ts, abridged)
 ```ts

@@ -6,8 +6,11 @@ import { CARD_SYSTEM, CLARITY_SYSTEM, SKILLS_SYSTEM, cardUserMessage } from "./p
 import { MAX_SKILL_LENGTH, fallbackExtract, normaliseSkill } from "./skills";
 
 const MODEL = "claude-sonnet-5-5";
+// Second provider: used only when there is no Anthropic key. Override the model with GEMINI_MODEL.
+const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-flash-latest";
 const MAX_TOKENS = 1200;
 const TIMEOUT_MS = 8000;
+const GEMINI_TIMEOUT_MS = 15000;
 const CLARITY_MAX_CHARS = 600;
 const FORMATS: Format[] = ["onsite", "online", "hybrid"];
 const KNOWN_LANGUAGES = [
@@ -26,8 +29,53 @@ function client(): Anthropic | null {
   return new Anthropic({ timeout: TIMEOUT_MS, maxRetries: 0 });
 }
 
-/** One Claude call. Returns trimmed text, or null on any failure or missing key. */
+/** One Gemini call (REST, no SDK). Returns trimmed text, or null on any failure or missing key. */
+async function completeGemini(system: string, user: string): Promise<string | null> {
+  const key = process.env.GEMINI_API_KEY;
+  if (!key) return null;
+  const call = (thinkingLow: boolean) =>
+    fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: system }] },
+        contents: [{ role: "user", parts: [{ text: user }] }],
+        generationConfig: {
+          maxOutputTokens: 4096, // room for the model's own thinking as well as the answer
+          temperature: 0.4,
+          // Low thinking: writing aids need speed (about 2s instead of 6–15s), not deep reasoning.
+          ...(thinkingLow ? { thinkingConfig: { thinkingLevel: "low" } } : {}),
+        },
+      }),
+      cache: "no-store",
+      signal: AbortSignal.timeout(GEMINI_TIMEOUT_MS),
+    });
+  try {
+    let res = await call(true);
+    if (res.status === 400) res = await call(false); // older models don't take thinkingLevel
+    if (!res.ok) return null;
+    const data = (await res.json()) as {
+      candidates?: { content?: { parts?: { text?: string; thought?: boolean }[] } }[];
+    };
+    const text = (data.candidates?.[0]?.content?.parts ?? [])
+      .filter((p) => !p.thought)
+      .map((p) => p.text ?? "")
+      .join("")
+      .trim();
+    return text || null;
+  } catch {
+    return null;
+  }
+}
+
+/** Which model, if any, writes for us: Claude when its key is set, else Gemini, else none (canned fallbacks). */
+export function aiProvider(): "anthropic" | "gemini" | null {
+  return process.env.ANTHROPIC_API_KEY ? "anthropic" : process.env.GEMINI_API_KEY ? "gemini" : null;
+}
+
+/** One model call. Returns trimmed text, or null on any failure or missing key. */
 async function complete(system: string, user: string): Promise<string | null> {
+  if (aiProvider() === "gemini") return completeGemini(system, user);
   try {
     const api = client();
     if (!api) return null;
