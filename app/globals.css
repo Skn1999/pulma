@@ -49,6 +49,7 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-warning: var(--warning);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -94,6 +95,7 @@
   --pair: #FCA5C7;
   --note: #FFDC47;
   --destructive: #C8102E;
+  --warning: #8A4B00; /* dark amber text, 7:1 on white: due soon */
   --border: #D5DCE5;
   --input: #A7ACB0;
   --ring: #0050BB;
@@ -156,6 +158,7 @@
   --accent: oklch(0.269 0 0);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
+  --warning: oklch(0.82 0.15 75);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.556 0 0);

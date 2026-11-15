@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AlertCircle, Clock } from "lucide-react";
 import { nowMs } from "@/lib/clock";
 import { loadDB } from "@/lib/store";
 import { eventDay, eventLabel, eventOf, sortedEvents } from "@/lib/events";
@@ -113,7 +114,7 @@ function ProblemsTable({ rows, caption }: { rows: Row[]; caption: string }) {
           <table className="w-full min-w-[900px] text-sm">
             <caption className="sr-only">{caption}</caption>
             <thead>
-              <tr className="border-b text-left text-xs uppercase tracking-wide text-muted-foreground">
+              <tr className="whitespace-nowrap border-b text-left text-xs uppercase tracking-wide text-muted-foreground">
                 <th scope="col" className="px-4 py-2 font-medium sm:px-6">Problem</th>
                 <th scope="col" className="px-3 py-2 font-medium">Status</th>
                 <th scope="col" className="px-3 py-2 font-medium">Published</th>
@@ -129,7 +130,7 @@ function ProblemsTable({ rows, caption }: { rows: Row[]; caption: string }) {
             <tbody>
               {rows.map(({ card, goal, progress, answers, fresh, open, shortlisted, accepted }) => (
                 <tr key={card.id} className="group relative border-b last:border-0 hover:bg-muted/50 focus-within:bg-muted/50">
-                  <th scope="row" className="px-4 py-3 text-left font-medium sm:px-6">
+                  <th scope="row" className="min-w-56 px-4 py-3 text-left font-medium sm:px-6">
                     <Link
                       href={`/company/card/${card.id}`}
                       className="font-display text-base outline-none after:absolute after:inset-0 focus-visible:after:ring-2 focus-visible:after:ring-ring focus-visible:after:ring-inset"
@@ -142,10 +143,9 @@ function ProblemsTable({ rows, caption }: { rows: Row[]; caption: string }) {
                       {card.status !== "published" ? "Draft" : progress.state === "paused" ? "Paused" : progress.state === "filled" ? "Filled" : "Published"}
                     </span>
                   </td>
-                  <td className="px-3 py-3 text-muted-foreground">{fmt.format(new Date(card.createdAt))}</td>
+                  <td className="whitespace-nowrap px-3 py-3 text-muted-foreground">{fmt.format(new Date(card.createdAt))}</td>
                   <td className="px-3 py-3">
-                    {shortDate(goal.decideBy)}
-                    {progress.state === "open" && progress.decideByDays < 0 && <span className="block text-xs font-medium">Date passed</span>}
+                    <DecideBy date={goal.decideBy} days={progress.decideByDays} active={card.status === "published" && progress.state === "open"} />
                   </td>
                   <td className="px-3 py-3 tabular-nums">
                     {progress.answers === 0 ? (
@@ -160,9 +160,7 @@ function ProblemsTable({ rows, caption }: { rows: Row[]; caption: string }) {
                   <td className="px-3 py-3 text-right tabular-nums">{answers}</td>
                   <td className="px-3 py-3 text-right tabular-nums">
                     {fresh > 0 ? (
-                      <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">
-                        {fresh} new
-                      </span>
+                      <span className="font-semibold text-primary">{fresh}</span>
                     ) : (
                       <span className="text-muted-foreground">0</span>
                     )}
@@ -175,5 +173,41 @@ function ProblemsTable({ rows, caption }: { rows: Row[]; caption: string }) {
             </tbody>
           </table>
         </div>
+  );
+}
+
+/**
+ * Decide-by date with how close it is. Shape and words carry the urgency as well as colour: passed = red with an
+ * alert icon, within a week = amber with a clock, later = plain with a quiet "in N days". Paused, filled and draft
+ * problems show the date only: nothing is waiting on it.
+ */
+function DecideBy({ date, days, active }: { date: string; days: number; active: boolean }) {
+  const when = days < 0 ? (days === -1 ? "1 day ago" : `${-days} days ago`) : days === 0 ? "Today" : days === 1 ? "Tomorrow" : `In ${days} days`;
+  if (!active) return <span className="whitespace-nowrap text-muted-foreground">{shortDate(date)}</span>;
+  if (days < 0)
+    return (
+      <span className="block whitespace-nowrap text-destructive">
+        <span className="inline-flex items-center gap-1 font-semibold">
+          <AlertCircle className="size-3.5" aria-hidden="true" />
+          {shortDate(date)}
+        </span>
+        <span className="block text-xs font-medium">Date passed · {when}</span>
+      </span>
+    );
+  if (days <= 7)
+    return (
+      <span className="block whitespace-nowrap text-warning">
+        <span className="inline-flex items-center gap-1 font-semibold">
+          <Clock className="size-3.5" aria-hidden="true" />
+          {shortDate(date)}
+        </span>
+        <span className="block text-xs font-medium">{when}</span>
+      </span>
+    );
+  return (
+    <span className="block whitespace-nowrap">
+      {shortDate(date)}
+      <span className="block text-xs text-muted-foreground">{when}</span>
+    </span>
   );
 }
