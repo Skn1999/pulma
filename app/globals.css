@@ -215,3 +215,8 @@
     }
   }
 }
+/* Chat "typing" dots in the problem intake (components/intake/intake-flow.tsx). Opacity only. */
+@keyframes typing-dot {
+  0%, 80%, 100% { opacity: 0.3; }
+  40% { opacity: 1; }
+}

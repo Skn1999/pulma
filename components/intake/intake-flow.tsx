@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -27,14 +27,23 @@ export interface IntakeEvent {
   used: number; // problems already published in this event
 }
 
+// How long the "typing" beat lasts before the next question appears: long enough to notice, short enough not to wait.
+const THINK_MS = 650;
+const THINK_MS_REDUCED = 300;
+
+/**
+ * Chat bubble. It enters once, when it mounts: a fade with a short rise (questions) or a small scale from the
+ * sender's corner (your answers), 300ms on the shared ease-out curve. CSS @starting-style, no JS. Under reduced
+ * motion only the fade remains.
+ */
 function Bubble({ who, children }: { who: "ai" | "me"; children: React.ReactNode }) {
   return (
     <div className={`flex ${who === "me" ? "justify-end" : "justify-start"}`}>
       <div
-        className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-[0.95rem] leading-6 ${
+        className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-[0.95rem] leading-6 transition-[opacity,translate,scale] duration-300 ease-(--ease-out) starting:opacity-0 ${
           who === "me"
-            ? "rounded-br-sm bg-primary text-primary-foreground"
-            : "rounded-bl-sm border border-border bg-card text-foreground"
+            ? "origin-bottom-right rounded-br-sm bg-primary text-primary-foreground motion-safe:starting:scale-95"
+            : "rounded-bl-sm border border-border bg-card text-foreground motion-safe:starting:translate-y-2"
         }`}
       >
         {children}
@@ -64,11 +73,33 @@ export function IntakeFlow({
   const [goal, setGoal] = useState<HiringGoal>(defaultGoal);
   const [eventId, setEventId] = useState(fixedEventId ?? "");
   const chosen = events.find((e) => e.id === eventId);
+  // True during the short "typing" beat before a new question shows, so a new question never just appears unnoticed.
+  const [typing, setTyping] = useState(stage === "chat");
+  const thinkTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  function think() {
+    clearTimeout(thinkTimer.current);
+    setTyping(true);
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    thinkTimer.current = setTimeout(() => setTyping(false), reduced ? THINK_MS_REDUCED : THINK_MS);
+  }
+
+  useEffect(() => {
+    // First question on arrival (event already chosen): same beat as every later question.
+    // typing starts true then; only the end of the beat needs scheduling.
+    if (stage === "chat") {
+      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      thinkTimer.current = setTimeout(() => setTyping(false), reduced ? THINK_MS_REDUCED : THINK_MS);
+    }
+    return () => clearTimeout(thinkTimer.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function chooseEvent(e: IntakeEvent) {
     setEventId(e.id);
     setGoal({ ...goal, decideBy: e.date });
     setStage("chat");
+    think();
   }
 
   const taRef = useRef<HTMLTextAreaElement>(null);
@@ -81,7 +112,7 @@ export function IntakeFlow({
       endRef.current?.scrollIntoView({ block: "end", behavior: "smooth" });
     }
     if (stage === "edit") previewHeadingRef.current?.focus();
-  }, [stage, step]);
+  }, [stage, step, typing]);
 
   async function generate(all: string[]) {
     setStage("generating");
@@ -116,7 +147,7 @@ export function IntakeFlow({
 
   function send() {
     const v = value.trim();
-    if (!v) return;
+    if (!v || typing) return;
     const next = [...answers];
     next[step] = v;
     setAnswers(next);
@@ -125,11 +156,14 @@ export function IntakeFlow({
     } else {
       setStep(step + 1);
       setValue(next[step + 1] ?? "");
+      think();
     }
   }
 
   function back() {
     if (step === 0) return;
+    clearTimeout(thinkTimer.current);
+    setTyping(false); // going back is instant: the question was already read
     const next = [...answers];
     if (value.trim()) next[step] = value.trim();
     setAnswers(next);
@@ -331,7 +365,7 @@ export function IntakeFlow({
               {step > 0 && (
                 <Button type="button" variant="outline" onClick={back}>Back</Button>
               )}
-              <Button type="button" onClick={send} disabled={!value.trim()}>
+              <Button type="button" onClick={send} disabled={!value.trim() || typing}>
                 {last ? "Create my card" : "Send"}
               </Button>
             </div>
@@ -344,16 +378,30 @@ export function IntakeFlow({
         <Bubble who="ai">
           Hi! Five short questions, and I&apos;ll turn your answers into a problem card that talent can respond to.
         </Bubble>
-        {QUESTIONS.slice(0, step).map((qq, i) => (
-          <div key={qq.key} className="space-y-3">
-            <Bubble who="ai">{qq.text}</Bubble>
-            <Bubble who="me">{answers[i]}</Bubble>
-          </div>
+        {/* One stable element per question, so only bubbles that are actually new play their entrance. */}
+        {QUESTIONS.slice(0, step + 1).map((qq, i) => (
+          <Fragment key={qq.key}>
+            {i === step && typing ? <TypingBubble /> : <Bubble who="ai">{qq.text}</Bubble>}
+            {i < step && <Bubble who="me">{answers[i]}</Bubble>}
+          </Fragment>
         ))}
-        <Bubble who="ai">{q.text}</Bubble>
         <div ref={endRef} />
       </div>
     </Frame>
+  );
+}
+
+/** Three dots that pulse in turn (opacity only; still dots under reduced motion). Hidden from screen readers:
+ * the question itself is announced by the log when it arrives. */
+function TypingBubble() {
+  return (
+    <div className="flex justify-start" aria-hidden="true">
+      <div className="flex items-center gap-1 rounded-2xl rounded-bl-sm border border-border bg-card px-4 py-3.5 transition-opacity duration-200 ease-(--ease-out) starting:opacity-0">
+        {[0, 160, 320].map((d) => (
+          <span key={d} className="size-1.5 rounded-full bg-muted-foreground animate-[typing-dot_1s_ease-in-out_infinite]" style={{ animationDelay: `${d}ms` }} />
+        ))}
+      </div>
+    </div>
   );
 }
 
