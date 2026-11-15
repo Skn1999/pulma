@@ -1,6 +1,7 @@
 // Synthetic seed data. Every person and company here is fictional.
 import type { DB, Account, Activity, Availability, Closure, Company, HiringGoal, Participation, ProblemCard, Shortlist, Meeting, Talent, Response } from "@/lib/types";
 import { localNow, placeFor } from "@/lib/slots";
+import { addDaysToDate } from "@/lib/follow-up";
 
 const companies: Company[] = [
   { id: "co-game", name: "Nordlight Games", sector: "Games", size: "35 people", about: "A small studio in Otaniemi making cooperative mobile puzzle games played by a few hundred thousand people.", office: "Nordlight Games, Studio 2, Otakaari 99 B, Espoo (demo address)" },
@@ -373,6 +374,10 @@ export const seed: DB = {
   shortlists,
   meetings,
   events: [
+    // Finished events (v9): ev-0 is still settling (follow-up window open); ev-old is long over.
+    // F2: report snapshot — ev-old gets its final `report` + `closedAt` here once Event has the OutcomeReport type.
+    { id: "ev-old", name: "Espoo Spring Talent Day", date: "2026-04-18", startTime: "10:00", endTime: "14:00", slotMinutes: 10, tables: 6, venue: "Tapiola Hall (demo venue)", stage: "done", problemDeadline: "2026-04-03", focus: "Software, health tech and clean-tech" },
+    { id: "ev-0", name: "Espoo Autumn Talent Day", date: "2026-10-17", startTime: "10:00", endTime: "14:00", slotMinutes: 10, tables: 6, venue: "Leppävaara Hall (demo venue)", stage: "done", problemDeadline: "2026-10-02", focus: "Logistics, medtech, SaaS and clean-tech" },
     { id: "ev-1", name: "Espoo Tech Talent Day", date: "2026-12-05", startTime: "10:00", endTime: "14:00", slotMinutes: 10, tables: 6, venue: "Otaniemi Hall A (demo venue)", stage: "open", problemDeadline: "2026-11-21", focus: "Software, games, data and robotics" },
     { id: "ev-2", name: "Espoo Green Transition Jobs Morning", date: "2026-12-10", startTime: "09:00", endTime: "12:00", slotMinutes: 10, tables: 4, venue: "Keilaniemi Pavilion (demo venue)", stage: "open", problemDeadline: "2026-11-26", focus: "Clean-tech, logistics and health tech" },
     { id: "ev-3", name: "Espoo International Talent Evening", date: "2027-01-21", startTime: "16:00", endTime: "19:00", slotMinutes: 10, tables: 4, venue: "Espoo Centre Library Hall (demo venue)", stage: "open", problemDeadline: "2027-01-07", focus: "Any field; English-friendly teams" },
@@ -433,4 +438,181 @@ export function addRelativeSeed(db: DB, now: number): void {
   }
   const yuki = db.talents.find((t) => t.id === "t-yuki");
   if (yuki) yuki.goal = { status: "open", meetModes: ["video"], updatedAt: inDays(-2) };
+
+  addPastEventSeed(db, now);
+}
+
+
+/**
+ * The finished Autumn Talent Day (ev-0): 4 problems, 16 answers, 8 held meetings, mutual next steps and
+ * recorded outcomes. Absolute dates (the event is in the past), except the two next-step dates that must
+ * sit around the real clock: one promise that is overdue now, one "still talking" date ahead.
+ * Everyone here is fictional and reuses existing talents; nothing is ranked.
+ */
+export function addPastEventSeed(db: DB, now: number): void {
+  const today = localNow(now).slice(0, 10);
+  const HOUR = 3600_000;
+  const plus = (iso: string, h: number) => new Date(Date.parse(iso) + h * HOUR).toISOString();
+  const goal: HiringGoal = { decideBy: "2026-10-30", replyWithinDays: 5, inviteDays: 3, meetModes: ["event"] };
+  const mkCard = (c: Omit<ProblemCard, "status" | "format" | "goal" | "eventId" | "state" | "stateAt" | "stateReason" | "languagesNeeded">): ProblemCard => ({
+    ...c, eventId: "ev-0", format: "onsite", status: "published", goal, languagesNeeded: ["English"],
+  });
+  const cards2: ProblemCard[] = [
+    mkCard({
+      id: "card-p-logistics", companyId: "co-logistics", createdAt: "2026-09-24T08:30:00.000Z",
+      title: "Pallets vanish between our cross-dock gates",
+      context: "About one pallet in forty gets scanned at gate 3 and never at gate 5. It usually turns up a day later in the wrong lane. Drivers blame the scanners, the scanner team blames the drivers.",
+      weekOneReality: "You would spend two night shifts walking the cross-dock with the shift leads, follow ten pallets by hand, and compare what you saw with the scan log.",
+      hardPart: "The scan log looks perfect while the floor looks chaotic. Nobody agrees what counts as a lost pallet.",
+      niceToHave: ["Has worked a night shift", "Comfortable with spreadsheets"], languages: ["English", "Finnish"],
+      skills: ["Warehouse operations", "Process improvement", "Talking to night shifts", "Spreadsheets"],
+    }),
+    mkCard({
+      id: "card-p-saas", companyId: "co-saas", createdAt: "2026-09-25T09:00:00.000Z",
+      title: "Small shops send us invoice photos we cannot read",
+      context: "Many of our smallest customers photograph paper invoices on a kitchen table. Our import reads about two in three correctly, and the rest land in a queue that one support person clears by hand.",
+      weekOneReality: "You would read through a week of failed imports, sort them by what went wrong, and sit in on three support calls.",
+      hardPart: "The failures look random until you see the photos. Customers do not know why theirs failed, so they just send another one.",
+      niceToHave: ["Patience with messy documents", "Has explained a technical problem to a non-technical person"], languages: ["English", "Finnish"],
+      skills: ["Cleaning messy data", "Customer support", "Document formats", "Edge case testing"],
+    }),
+    mkCard({
+      id: "card-p-medtech", companyId: "co-medtech", createdAt: "2026-09-26T10:00:00.000Z",
+      title: "Night nurses mute our bedside alarm and we do not know why",
+      context: "Our bedside monitor beeps for borderline readings. Interviews and logs both show nurses silencing it on night shifts, often within seconds. Some of those alarms are real.",
+      weekOneReality: "You would shadow two night shifts on a test ward, note every alarm and what the nurse did, and write up the ten most common situations in plain words.",
+      hardPart: "Nurses are careful people with good reasons, and they worry that talking to us means being blamed. Trust comes before data.",
+      niceToHave: ["Has worked in a hospital or care setting", "Writes plainly"], languages: ["English", "Finnish", "Swedish"],
+      skills: ["Watching real work", "Interviewing", "Healthcare settings", "Plain-language writing"],
+    }),
+    mkCard({
+      id: "card-p-cleantech", companyId: "co-cleantech", createdAt: "2026-09-28T09:00:00.000Z",
+      title: "We cannot tell which battery packs are worth taking apart",
+      context: "Packs arrive from three suppliers with different labels. Dismantling takes about two hours per pack and some turn out to hold almost no recoverable metal. We only find out at the end.",
+      weekOneReality: "You would go through the last 200 dismantled packs with the line lead, find what the labels and the outcome have in common, and suggest one quick check at the dock.",
+      hardPart: "Half the labels are handwritten and the old records were typed in by whoever was on shift.",
+      niceToHave: ["Likes reading old records", "Has worked with supplier data"], languages: ["English", "Finnish"],
+      skills: ["Battery data analysis", "Spreadsheets", "Reading old records", "Python"],
+    }),
+  ];
+  db.cards.push(...cards2);
+
+  const tableOf: Record<string, number> = { "co-saas": 1, "co-logistics": 2, "co-medtech": 3, "co-cleantech": 4 };
+  for (const co of Object.keys(tableOf)) {
+    db.participations.push({ id: `pa-ev-0-${co}`, eventId: "ev-0", companyId: co, status: "confirmed", table: tableOf[co], invitedAt: "2026-09-10T09:00:00.000Z", respondedAt: "2026-09-11T09:00:00.000Z" });
+  }
+
+  type A = { id: string; code: string; card: string; talent: string; day: string; text: string; lang?: string;
+    fate: "accepted" | "declined" | "closed"; closeReason?: Closure["reason"] };
+  const ans: A[] = [
+    // Karavaani: pallets
+    { id: "r-p1", code: "D4", card: "card-p-logistics", talent: "t-olena", day: "2026-10-01", fate: "accepted", lang: "Ukrainian",
+      text: "Я б не починала зі сканерів. Я б обрала десять піддонів і ходила б за кожним, записуючи на папері, де він стоїть о кожній годині, а потім порівняла б з журналом. Якщо піддон \"губиться\" там, де журнал мовчить, то проблема в процесі, а не в техніці." },
+    { id: "r-p2", code: "H2", card: "card-p-logistics", talent: "t-ville", day: "2026-10-01", fate: "accepted", lang: "Finnish",
+      text: "Olen tehnyt yövuoroja varastolla. Kysyisin ensin vuoroesimiehiltä, mikä on heidän mielestään kadonnut kuormalava, koska se päättää koko laskennan. Sitten seuraisin kymmentä lavaa käsin ja merkitsisin ylös, kuka siirsi ne ja milloin." },
+    { id: "r-p3", code: "K7", card: "card-p-logistics", talent: "t-petra", day: "2026-10-02", fate: "closed", closeReason: "We had more strong answers than meetings",
+      text: "I would look at the scan data first and find the gates with the most gaps. After that I would talk to the drivers who use them." },
+    { id: "r-p4", code: "M3", card: "card-p-logistics", talent: "t-omar", day: "2026-10-03", fate: "closed", closeReason: "The timing isn't right for us",
+      text: "Optimising the end-to-end flow of goods requires a holistic, data-driven approach. I would leverage best practices to unlock efficiencies across the supply chain." },
+    // Ledgerleaf: invoice photos
+    { id: "r-p5", code: "B6", card: "card-p-saas", talent: "t-aino", day: "2026-10-01", fate: "accepted", lang: "Finnish",
+      text: "Lajittelisin viikon epäonnistuneet tuonnit kolmeen kasaan: hämärä kuva, rypistynyt paperi ja outo asettelu. Sitten katsoisin, mikä kasa on suurin, ja pyytäisin asiakasta ottamaan kuvan toisin vain siinä tapauksessa. Yksi selkeä ohje voi poistaa puolet jonosta." },
+    { id: "r-p6", code: "F8", card: "card-p-saas", talent: "t-joonas", day: "2026-10-02", fate: "accepted",
+      text: "I once cleared a backlog of scanned receipts for a small bookkeeping firm. Most of the mess was three things: shadows, folded corners and receipts photographed upside down. I would start by counting which of these shows up most in your failed imports and write the customer a one-line tip for each." },
+    { id: "r-p7", code: "N5", card: "card-p-saas", talent: "t-yuki", day: "2026-10-03", fate: "declined",
+      text: "I would sit with the support person for a day and watch what they fix by hand, because that is the list of things the import should learn." },
+    { id: "r-p8", code: "T2", card: "card-p-saas", talent: "t-nina", day: "2026-10-04", fate: "closed", closeReason: "We went with a different approach to this problem",
+      text: "I am a passionate self-starter who thrives in fast-paced environments and delivers scalable solutions. I would leverage my strong communication skills to drive impactful outcomes." },
+    // Pulssi: alarms
+    { id: "r-p9", code: "C9", card: "card-p-medtech", talent: "t-liisa", day: "2026-10-02", fate: "accepted", lang: "Finnish",
+      text: "Olen työskennellyt sairaanhoitajana yövuoroissa. Hälytyksen hiljentäminen on usein turvallisuusteko: kun potilas nukkuu, ääni voi herättää kolme muuta. Menisin osastolle kahdeksi yöksi, enkä kysyisi mitään ensimmäisenä, vaan kirjaisin vain mitä tapahtuu." },
+    { id: "r-p10", code: "G3", card: "card-p-medtech", talent: "t-kasper", day: "2026-10-02", fate: "accepted",
+      text: "I would not start with the alarm. I would ask nurses to tell me about the last time the monitor was right and the last time it was wrong. If we only ask about muting, people hear blame. Then I would sort their stories into the ten most common situations." },
+    { id: "r-p11", code: "L6", card: "card-p-medtech", talent: "t-leena", day: "2026-10-03", fate: "closed", closeReason: "We had more strong answers than meetings",
+      text: "I would shadow a night shift and write down every alarm and what the nurse did. Then I would look for patterns by time of night." },
+    { id: "r-p12", code: "P1", card: "card-p-medtech", talent: "t-carmen", day: "2026-10-04", fate: "closed", closeReason: "We had more strong answers than meetings", lang: "Spanish",
+      text: "Empezaría por ganarme la confianza de las enfermeras: les explicaría que no busco culpables, y pasaría una noche entera a su lado antes de apuntar nada." },
+    // Kiertovolt: which packs
+    { id: "r-p13", code: "E5", card: "card-p-cleantech", talent: "t-noor", day: "2026-10-03", fate: "accepted",
+      text: "I would take the last 200 dismantled packs and split them into the ones that paid off and the ones that did not. Then I would check which label, supplier or handwriting style the poor ones share. If one supplier explains most of it, a ten-second check at the dock may be enough." },
+    { id: "r-p14", code: "J8", card: "card-p-cleantech", talent: "t-hanna", day: "2026-10-04", fate: "accepted", lang: "Finnish",
+      text: "Lukisin vanhat kirjaukset rauhassa läpi ja kysyisin linjan vetäjältä, mitkä paketit hän jo epäilee heti ovesta. Hänen vaistonsa on varmaan aineistoa, jota ei ole kirjattu." },
+    { id: "r-p15", code: "R4", card: "card-p-cleantech", talent: "t-ivan", day: "2026-10-05", fate: "closed", closeReason: "The problem has changed on our side", lang: "Ukrainian",
+      text: "Я б порівняв позначки на упаковках з тим, скільки металу вдалося отримати, і подивився б, чи є зв'язок з постачальником." },
+    { id: "r-p16", code: "S7", card: "card-p-cleantech", talent: "t-dmytro", day: "2026-10-06", fate: "closed", closeReason: "We went with a different approach to this problem",
+      text: "Data is the key to unlocking value. By harnessing advanced analytics and fostering a data-driven culture, I will deliver transformative insights for your sustainable future." },
+  ];
+
+  const cardCo = (id: string) => db.cards.find((c) => c.id === id)!.companyId;
+  for (const a of ans) {
+    const created = `${a.day}T12:00:00.000Z`;
+    db.responses.push({ id: a.id, publicCode: a.code, cardId: a.card, talentId: a.talent, text: a.text, originalLanguage: a.lang ?? "English", aiAssisted: false, createdAt: created });
+    const ids = { cardId: a.card, companyId: cardCo(a.card), responseId: a.id, talentId: a.talent };
+    db.activity.push({ id: `act-p-${a.id}-sent`, at: created, kind: "answer_sent", actor: "talent", ...ids });
+    if (a.fate === "closed") {
+      const at = plus(created, 30);
+      db.closures.push({ id: `cl-${a.id}`, cardId: a.card, responseId: a.id, reason: a.closeReason, createdAt: at });
+      db.activity.push({ id: `act-p-${a.id}-closed`, at, kind: "answer_closed", actor: "company", ...ids });
+      continue;
+    }
+    const shortAt = plus(created, 26);
+    db.shortlists.push({ id: `sl-${a.id}`, cardId: a.card, responseId: a.id, status: a.fate, createdAt: shortAt, respondBy: plus(shortAt, 72) });
+    db.activity.push({ id: `act-p-${a.id}-sl`, at: shortAt, kind: "shortlisted", actor: "company", ...ids });
+    if (a.fate === "declined") {
+      db.activity.push({ id: `act-p-${a.id}-decl`, at: plus(shortAt, 20), kind: "invite_declined", actor: "talent", ...ids });
+    } else {
+      const acc = plus(shortAt, 20);
+      db.activity.push({ id: `act-p-${a.id}-acc`, at: acc, kind: "invite_accepted", actor: "talent", ...ids });
+      db.activity.push({ id: `act-p-${a.id}-mt`, at: plus(acc, 0.01), kind: "meeting_scheduled", actor: "talent", ...ids });
+    }
+  }
+  for (const c of cards2) db.activity.push({ id: `act-p-${c.id}-pub`, at: c.createdAt, kind: "card_published", actor: "company", cardId: c.id, companyId: c.companyId });
+
+  // Eight held meetings on 17 Oct (slots and tables are fixed history: buildSchedule never re-plans a done event).
+  const held: { n: number; resp: string; slot: string; fb: ["next-step" | "not-now", "next-step" | "not-now"] }[] = [
+    { n: 1, resp: "r-p1", slot: "10:00", fb: ["next-step", "next-step"] },
+    { n: 2, resp: "r-p2", slot: "10:10", fb: ["next-step", "next-step"] },
+    { n: 3, resp: "r-p5", slot: "10:20", fb: ["next-step", "next-step"] },
+    { n: 4, resp: "r-p6", slot: "10:30", fb: ["next-step", "next-step"] },
+    { n: 5, resp: "r-p9", slot: "10:40", fb: ["next-step", "next-step"] },
+    { n: 6, resp: "r-p10", slot: "10:50", fb: ["next-step", "next-step"] },
+    { n: 7, resp: "r-p13", slot: "11:00", fb: ["next-step", "not-now"] },
+    { n: 8, resp: "r-p14", slot: "11:10", fb: ["not-now", "next-step"] },
+  ];
+  const MUTUAL_AT = "2026-10-17T12:00:00.000Z";
+  for (const h of held) {
+    const r = db.responses.find((x) => x.id === h.resp)!;
+    db.meetings.push({ id: `mt-p${h.n}`, cardId: r.cardId, responseId: r.id, slotStart: `2026-10-17T${h.slot}:00`, table: tableOf[cardCo(r.cardId)], mode: "event", status: "booked", durationMin: 10 });
+    db.feedback.push({ id: `fb-p${h.n}c`, meetingId: `mt-p${h.n}`, side: "company", outcome: h.fb[0] }, { id: `fb-p${h.n}t`, meetingId: `mt-p${h.n}`, side: "talent", outcome: h.fb[1] });
+    if (h.fb[0] === "next-step" && h.fb[1] === "next-step") {
+      db.activity.push({ id: `act-p-mt${h.n}-mutual`, at: plus(MUTUAL_AT, h.n / 10), kind: "mutual_next_step", actor: "talent", cardId: r.cardId, companyId: cardCo(r.cardId), responseId: r.id, talentId: r.talentId });
+    }
+  }
+
+  // Next-step promises and outcomes. mt-p2 is mutual with no plan yet (the company can plan it live).
+  const meet = (n: number) => db.meetings.find((m) => m.id === `mt-p${n}`)!;
+  const log = (n: number, kind: "next_step_planned" | "outcome_recorded", actor: "company" | "talent", at: string) => {
+    const m = meet(n);
+    const r = db.responses.find((x) => x.id === m.responseId)!;
+    db.activity.push({ id: `act-p-mt${n}-${kind}-${at.slice(5, 10)}`, at, kind, actor, cardId: m.cardId, companyId: cardCo(m.cardId), responseId: r.id, talentId: r.talentId });
+  };
+  const plan = (n: number, kind: "interview" | "trial" | "offer", by: string, plannedAt: string, note?: string) => {
+    meet(n).nextStep = { kind, by, plannedAt, ...(note ? { note } : {}) };
+    log(n, "next_step_planned", "company", plannedAt);
+  };
+  plan(1, "interview", addDaysToDate(today, -3), "2026-10-19T09:00:00.000Z", "A short call with the shift lead and the depot manager.");
+  plan(3, "trial", "2026-11-05", "2026-10-20T09:00:00.000Z", "Two paid days next to our support person.");
+  meet(3).outcome = { kind: "hired", at: "2026-11-02T10:00:00.000Z" };
+  log(3, "outcome_recorded", "company", "2026-11-02T10:00:00.000Z");
+  plan(4, "interview", "2026-11-03", "2026-10-20T10:00:00.000Z");
+  meet(4).nextStep!.by = addDaysToDate(today, 10);
+  meet(4).nextStep!.updatedAt = "2026-11-02T11:00:00.000Z";
+  meet(4).outcome = { kind: "still_talking", at: "2026-11-02T11:00:00.000Z" };
+  log(4, "outcome_recorded", "company", "2026-11-02T11:00:00.000Z");
+  plan(5, "offer", "2026-11-08", "2026-10-21T09:00:00.000Z");
+  meet(5).outcome = { kind: "hired", at: "2026-11-06T10:00:00.000Z" };
+  log(5, "outcome_recorded", "company", "2026-11-06T10:00:00.000Z");
+  plan(6, "interview", "2026-10-31", "2026-10-21T10:00:00.000Z");
+  meet(6).outcome = { kind: "not_this_time", at: "2026-10-30T10:00:00.000Z", reason: "Our needs changed" };
+  log(6, "outcome_recorded", "company", "2026-10-30T10:00:00.000Z");
 }

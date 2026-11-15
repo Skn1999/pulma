@@ -7,6 +7,7 @@ import { shortDate } from "@/lib/next-steps";
 import { Stepper } from "@/components/ui/stepper";
 import { goalLine, recordText } from "@/lib/promise-text";
 import { MeetingPanel } from "@/components/meetings/meeting-panel";
+import { NextStepSection } from "./next-step-section";
 
 function fmt(iso: string) {
   return new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Helsinki" }).format(new Date(iso));
@@ -146,6 +147,8 @@ export function MatchThread({ responseId, viewer = "talent" }: { responseId: str
       {mt && (
         <MeetingPanel meeting={mt} viewer={viewer} companyName={company} counterpartName={t.counterpartName} onChanged={() => loadRef.current()} />
       )}
+
+      {t.followUp && <NextStepSection followUp={t.followUp} viewer={viewer} company={company} onChanged={() => loadRef.current()} />}
 
       <section aria-labelledby="thread-privacy">
         <h3 id="thread-privacy" className="text-sm font-semibold">What stays private</h3>

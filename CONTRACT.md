@@ -595,3 +595,112 @@ Visual treatment (tokens only; each also has an icon + word):
 ## Tests
 - candidateStatus: each kind and its priority (invited beats answered; closed beats answered; saved only
   when unanswered). Saved list never appears in company-facing payloads (blind responses / company thread).
+
+---
+# v9 — After the event: next-step promises, outcomes, the report, and ESCO skills
+Principle stays: intent drives your own workflow, never decisions about other people. Outcomes are recorded by
+people, never inferred. Organisers see anonymous counts only. All seed data fictional.
+
+## Step F1: Next-step promises and outcomes (company ↔ candidate, after the meeting)
+Types:
+- `NextStepKind = "interview" | "trial" | "offer" | "other"`; labels "Interview", "Trial day", "Offer", "Next step".
+- `Meeting.nextStep?: { kind: NextStepKind; by: string /* YYYY-MM-DD */; note?: string /* ≤200 */; plannedAt: string; updatedAt?: string }`
+- `OUTCOME_REASONS = ["We filled it another way", "Our needs changed", "Not the right fit for this role"] as const`
+- `Meeting.outcome?: { kind: "hired" | "still_talking" | "not_this_time" | "talent_withdrew"; at: string; reason?: OutcomeReason }`
+- ActivityKinds: `next_step_planned`, `next_step_overdue` (system, once per plan), `outcome_recorded`.
+Rules (lib/follow-up.ts, pure):
+- A meeting is eligible once BOTH sides chose "next-step" in Feedback (the existing "mutual" condition).
+- `nextStepStatus(meeting, now)` → none | planned (daysLeft) | overdue (daysOver) | done (outcome recorded,
+  except still_talking which needs a new `by`). Overdue = Helsinki today > `by` and no final outcome.
+API:
+- POST `/api/meetings/[id]/next-step` (company, own card, mutual only) `{kind, by, note?}`: by = 1–30 days from
+  today; re-planning allowed (updates `updatedAt`). Log next_step_planned (candidate told).
+- POST `/api/meetings/[id]/outcome` (company) `{kind: "hired"|"still_talking"|"not_this_time", reason?, by?}`:
+  not_this_time requires a reason from OUTCOME_REASONS; still_talking requires a new `by` (1–30 days) and keeps
+  the plan open. Talent (own meeting) may post `{kind: "talent_withdrew"}` ("I've taken another job").
+  Log outcome_recorded (other side told). No free text is sent with an outcome.
+- Sweep: log next_step_overdue once per plan when overdue (actor "system"), told to both sides.
+UI:
+- Match thread (both viewers) after mutual next step: a "Next step" section.
+  - Company, no plan: "Plan the next step" (dialog: kind radio, date input with min/max, optional note).
+  - Planned: "Interview by Fri 20 Dec" (+ note); company sees "Record how it went" (Hired / Still talking → new
+    date / Not this time → reason) and "Change plan"; candidate sees "<Company> will contact you about an
+    interview by Fri 20 Dec" and "I've taken another job".
+  - Overdue: wording like reply promises ("<Company> is 2 days past its next-step date").
+  - Outcome: one line ("Hired" / "Not this time: Our needs changed" / "You took another job").
+  - After "Hired" (company only): "You may be eligible for a pay subsidy or the Espoo supplement" linking to
+    https://www.espoo.fi/en/business-espoo-helping-companies-thrive/financial-support-and-employment
+- Next steps lists (lib/next-steps.ts): company "Plan the next step with <name>" (mutual, no plan),
+  "Tell <name> how it went by <date>" (planned; overdue first); talent waitingOnThem "<Company>: interview by
+  <date>" (overdue flagged). Names only where already revealed (they are, after acceptance).
+- Company "Promises kept" record (lib/deadlines companyRecord) also counts next-step promises: kept = outcome or
+  re-plan before `by`; late = recorded after `by`; overdue now counts as not kept. Keep MIN_RECORD rule.
+
+## Step F2: Follow-up window and the organiser outcome report
+Types:
+- `Event.followUpDays?: number` (default 60). `Event.report?: OutcomeReport` (final snapshot) and
+  `Event.closedAt?: string`.
+- `OutcomeReport` = the anonymous figures below + `asOf` (ISO).
+Rules (lib/outcomes.ts — this file already holds `exampleAnswer`; add to it):
+- `eventOutcomes(db, eventId, now): OutcomeReport` — counts only, for that event's problems:
+  funnel { problems, answers, shortlisted, accepted, meetingsHeld (booked event/office/video meetings whose start
+  has passed), nextStepAgreed (mutual), nextStepPlanned by kind, hired, stillTalking, notThisTime,
+  talentWithdrew }, promises { medianReplyDays (null under 5 replies), replyKeptPct, nextStepKeptPct (null
+  under 5), overdueNow }, problemsWithoutNextStep: [{ cardId, title, companyName }] (problems, never people).
+- Follow-up window: open from the event date for `followUpDays`. `followUpState(ev, now)` → "before" |
+  "settling" (last updated now) | "final" (report snapshot exists).
+- Closing (`closeFollowUp(db, eventId, now)`): store `report = eventOutcomes(...)`, `closedAt`, then DELETE that
+  event's personal data: its responses, shortlists, meetings, feedback, closures, activity rows for those
+  responses; problem cards stay (they describe companies), with no answers. Accounts/talents are NOT deleted
+  (they may take part in other events). Runs when the window ends (in freshDB / notifications sweep like the
+  deadline sweep) or when the organiser presses "Close follow-up now" (confirm dialog that says exactly what is
+  deleted and that it can't be undone).
+API: POST `/api/events/[id]/close-follow-up` (organiser). GET `/api/events/[id]/outcomes.csv` (organiser):
+  the same anonymous figures as CSV (metric,value).
+UI:
+- Organiser event page: new tab **Outcomes** (`?tab=outcomes`): status line ("Still settling · last updated
+  14 Nov · window closes 16 Dec" | "Final · closed 9 Feb"), the funnel as a horizontal bar list with count and
+  % of the previous step (words, not colour, carry meaning), "At the event" (meetings held) vs "Since"
+  (next steps, hires), the promises block, "Problems with no next step" (cue to talk with the company),
+  "Download CSV", and while settling "Close follow-up now".
+- Organiser Overview: a compact "After the event" summary for the most recent past event (hires, next steps,
+  % promises kept) linking to its Outcomes tab.
+- Candidate/company pages for a closed event's data simply no longer show it (it is deleted).
+Seed:
+- ev-0 "Espoo Autumn Talent Day", 2026-10-17 10:00–14:00, 6 tables, "Leppävaara Hall (demo venue)", stage done,
+  followUpDays 60 (settling during the demo). 4 problems from existing companies (confirmed participations),
+  ~16 answers, shortlists, ~8 held meetings, feedback with 5 mutual next steps, next-step plans (interview,
+  trial, offer), outcomes: 2 hired, 1 still talking, 1 not this time, 1 planned & overdue. Keep it consistent
+  with existing talents (reuse t-* ids; no new real-looking people).
+- ev-old "Espoo Spring Talent Day", 2026-04-18, stage done, already closed: only `report` + `closedAt` (a final
+  snapshot with plausible counts), no personal data.
+
+## Step E1: ESCO skills (phase 1) and supply vs. demand (phase 2)
+ESCO = European Skills, Competences, Qualifications and Occupations (public API, no key, CC-BY style reuse with
+attribution "Skills data: ESCO, European Commission").
+- lib/esco.ts (server): `suggestSkills(text, lang = "en")` → `[{ uri, label }]` via
+  `https://ec.europa.eu/esco/api/suggest2?text=…&type=skill&language=…&limit=8`, 2.5s timeout, in-memory LRU
+  cache; on error/timeout fall back to a bundled list `data/esco-skills.json` (≈150–250 real ESCO skills
+  relevant to our sectors, each `{uri, label}` — generate it with a script `scripts/fetch-esco.mjs` that queries
+  the API for our FALLBACK_VOCAB terms; commit the JSON; matching on the fallback = case-insensitive prefix/word
+  match). Never throws (hard rule 7).
+- GET `/api/esco/skills?q=&lang=` (signed in; q ≥ 2 chars) → suggestions.
+- Types: `TalentSkill.esco?: { uri: string; label: string }`; `ProblemCard.skillRefs?: { label: string;
+  esco?: { uri; label } }[]` alongside the existing `skills: string[]` (keep `skills` as the visible labels so
+  nothing else breaks).
+- UI: an accessible combobox (`components/esco-skill-input.tsx`: input + listbox, aria-activedescendant,
+  arrow keys, Enter, Escape) used (a) in the candidate's profile skills ("Add a skill") and (b) in the card editor
+  "Work involved". Picking an ESCO suggestion stores its uri + label; free text is still allowed (no esco).
+  CV skill suggestions get their best ESCO match (first suggest2 hit) attached, still accepted per skill by the
+  person. Show a small "ESCO" tag on linked skills with a title tooltip of the ESCO label; attribution line
+  under the profile skills and in the card editor.
+- Matching (lib/skills.ts `skillMatches`): match by ESCO uri first, then the existing word rule. Explore's "Uses
+  your skills" unchanged otherwise.
+- Phase 2 — organiser supply vs demand (Overview, per event picker): for each ESCO skill (or plain label when no
+  uri), "Problems that need it" (count of this event's problems) vs "Candidates who list it" (count of talents
+  with that skill — talents who answered any problem in this event, opt-in implicit by having skills; counts
+  under 5 shown as "fewer than 5"). Top 10 by demand. Words + numbers, no colour-only meaning. Note: "Counts
+  only. Skills are private to each candidate; no one is identified."
+- Seed: give ESCO uris to existing seeded skills/tags where a real match exists (from the bundled JSON).
+- Tests: suggestSkills fallback when fetch fails; uri-first matching; supply/demand suppression under 5; no
+  talent skills leak to company payloads (existing tests stay green).

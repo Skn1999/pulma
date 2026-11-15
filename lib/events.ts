@@ -14,9 +14,10 @@ export function sortedEvents(db: DB): Event[] {
   return [...db.events].sort(byDate);
 }
 
-/** The earliest event by date, ties by id. Always exists once the DB is seeded. */
+/** The earliest event by date, ties by id, skipping finished (done) events when any other exists. Always exists once the DB is seeded. */
 export function defaultEvent(db: DB): Event {
-  return sortedEvents(db)[0];
+  const all = sortedEvents(db);
+  return all.find((e) => e.stage !== "done") ?? all[0];
 }
 
 /** The event a problem belongs to; a missing or unknown eventId means the default event. */

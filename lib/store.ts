@@ -25,7 +25,11 @@ function persist(db: DB) {
 
 /** Older data shapes are re-seeded rather than migrated (demo data only). */
 function isCurrentShape(db: DB): boolean {
-  return [db.accounts, db.closures, db.activity, db.availability, db.events, db.participations].every(Array.isArray) && db.events.length > 0;
+  return (
+    [db.accounts, db.closures, db.activity, db.availability, db.events, db.participations].every(Array.isArray) &&
+    db.events.length > 0 &&
+    db.events.some((e) => e.id === "ev-0") // v9 seed: the finished Autumn Talent Day with next steps and outcomes
+  );
 }
 
 export function getDB(): DB {
@@ -58,7 +62,8 @@ export function mutate<T>(fn: (db: DB) => T): T {
 /** Write slot times and tables from buildSchedule onto db.meetings. Never throws. */
 export function applySchedule(db: DB): void {
   try {
-    const slots = sortedEvents(db).flatMap((ev) => buildSchedule(db, ev.id).slots);
+    // Finished events keep the times they had: their meetings are history, not something to re-plan.
+    const slots = sortedEvents(db).filter((ev) => ev.stage !== "done").flatMap((ev) => buildSchedule(db, ev.id).slots);
     for (const m of db.meetings) {
       const slot = slots.find((x) => x.meetingId === m.id);
       if (slot) {

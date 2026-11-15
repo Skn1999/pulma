@@ -74,3 +74,13 @@ The event team now decides which companies take part. Companies do not pick an e
 - Switch to a candidate (Olena): the new problem shows under Explore. Switch back to the Event team: the **Problems** tab lists it, and **Employers** shows Kiertovolt as Confirmed with its table (you can move it to another free table).
 - After **Lock the event**, a candidate sees "Answers for this event have closed." on that event's problems.
 - Existing demo companies are already confirmed for the events their problems belong to. Use **Reset demo data** (Overview) to get the pending Kiertovolt invitation back.
+
+## After the event (next steps and outcomes)
+The seed includes a finished event, **Espoo Autumn Talent Day** (17 Oct): 4 problems, 16 answers, 8 held meetings. Use **Reset demo data** first.
+- **Plan a next step**: sign in as **Karavaani Freight** (hiring@karavaanifreight.example) → Home → "Plan the next step with Ville Mäkelä" → the thread's **Next step** section → **Plan the next step**
+  (pick Interview / Trial day / Offer / Next step, a date up to 30 days ahead, an optional note). Ville (ville.m@example.com) then sees "Karavaani Freight will contact you about an interview by …".
+- **Record an outcome**: the same company has "Tell Olena Kovalenko how it went", already past its date (flagged "Overdue", and the sweep has told both sides).
+  Open it → **Record how it went** → Hired / Still talking (new date) / Not this time (pick a reason). "Hired" shows the pay-subsidy link.
+  **Ledgerleaf** (hiring@ledgerleaf.example) has "Joonas Heikkinen" in the *Still talking* state; **Pulssi Medical** has one hire and one "not this time".
+- **Candidate side**: sign in as **Olena** (olena.k@example.com) → Home → Waiting on them: "Karavaani Freight: interview by … (past its date)". Open the answer → **I've taken another job** closes it for both sides.
+- Companies' "Promises kept" record now also counts these next-step promises (kept, late, overdue).

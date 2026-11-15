@@ -6,7 +6,8 @@ import { newId } from "./store";
 import { eventOfMeeting } from "./events";
 import { meetingMode } from "./slots";
 import { shortDate } from "./next-steps";
-import { MEET_MODE_LABEL, type Account, type Activity, type ActivityView, type DB } from "./types";
+import { outcomeText } from "./follow-up";
+import { MEET_MODE_LABEL, type Account, type Activity, type ActivityView, type DB, type NextStepKind } from "./types";
 
 const slotFmt = new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "UTC" });
 /** Local "YYYY-MM-DDTHH:MM:00" → "Tue 18 Nov, 14:00" (formatted as UTC so wall-clock time is kept). */
@@ -24,6 +25,13 @@ function slotLabel(db: DB, responseId: string | undefined): string | null {
   const mode = meetingMode(m);
   if (mode === "event") return m.table ? `Table ${m.table} at ${eventOfMeeting(db, m).name} · ${m.slotStart.slice(11, 16)}` : null;
   return `${MEET_MODE_LABEL[mode]} · ${formatLocalSlot(m.slotStart)}`;
+}
+
+const NEXT_STEP_PHRASE: Record<NextStepKind, string> = { interview: "an interview", trial: "a trial day", offer: "an offer", other: "a next step" };
+
+function planOf(db: DB, responseId: string | undefined) {
+  const m = responseId ? db.meetings.find((x) => x.responseId === responseId) : undefined;
+  return m?.nextStep;
 }
 
 function changeReason(db: DB, responseId: string | undefined, by: "company" | "talent"): string {
@@ -159,6 +167,21 @@ export function viewActivity(db: DB, account: Account, a: Activity): ActivityVie
       case "meeting_cancelled":
         text = a.actor === "company" ? `You cancelled the meeting with ${who}` : `${who} cancelled the meeting${changeReason(db, response.id, "talent")}`;
         break;
+      case "next_step_planned": {
+        const p = planOf(db, response.id);
+        text = p ? `You planned ${NEXT_STEP_PHRASE[p.kind]} with ${who} by ${shortDate(p.by)}` : `You planned a next step with ${who}`;
+        break;
+      }
+      case "next_step_overdue": {
+        const p = planOf(db, response.id);
+        text = `Your next-step date${p ? ` of ${shortDate(p.by)}` : ""} with ${who} has passed`;
+        break;
+      }
+      case "outcome_recorded": {
+        const o = db.meetings.find((x) => x.responseId === response.id)?.outcome;
+        text = a.actor === "talent" ? `${who} took another job` : o ? `You recorded: ${outcomeText(o, "company")} (${who})` : `You recorded how it went with ${who}`;
+        break;
+      }
       default:
         return null;
     }
@@ -238,6 +261,30 @@ export function viewActivity(db: DB, account: Account, a: Activity): ActivityVie
     case "meeting_cancelled":
       text = a.actor === "talent" ? `You cancelled your meeting with ${company}` : `${company} cancelled the meeting${changeReason(db, response.id, "company")}`;
       break;
+    case "next_step_planned": {
+      const p = planOf(db, response.id);
+      text = p ? `${company} will contact you about ${NEXT_STEP_PHRASE[p.kind]} by ${shortDate(p.by)}` : `${company} planned a next step with you`;
+      break;
+    }
+    case "next_step_overdue": {
+      const p = planOf(db, response.id);
+      text = `${company} is past its next-step date${p ? ` of ${shortDate(p.by)}` : ""}`;
+      break;
+    }
+    case "outcome_recorded": {
+      const o = db.meetings.find((x) => x.responseId === response.id)?.outcome;
+      text =
+        a.actor === "talent"
+          ? `You told ${company} you took another job`
+          : o?.kind === "hired"
+            ? `${company} recorded that you were hired`
+            : o?.kind === "still_talking"
+              ? `${company} says you are still talking`
+              : o?.kind === "not_this_time"
+                ? `${company}: not this time${o.reason ? ` — ${o.reason}` : ""}`
+                : `${company} recorded how it went`;
+      break;
+    }
     default:
       return null; // card_published, answer_withdrawn, shortlist_removed (silent) are not for talent
   }

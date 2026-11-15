@@ -1,6 +1,7 @@
 // Goals and deadlines. Pure: no I/O, `now` is always passed in (ms since epoch) so tests are stable.
 // Deadlines are promises people made; nothing here decides anything about a person.
 import { defaultEvent, eventOf } from "./events";
+import { nextStepStatus } from "./follow-up";
 import type { DB, Event, HiringGoal, ProblemCard, Response, Shortlist } from "./types";
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -135,6 +136,23 @@ export function companyRecord(db: DB, companyId: string, now: number): CompanyRe
     } else if (s.state === "overdue") {
       counted++;
       overdueNow++;
+    }
+  }
+  // Next-step promises count too. Kept = an outcome was recorded (or the plan was changed) before the date.
+  // Late = recorded or re-planned after the date. Overdue now = the date passed with nothing recorded.
+  for (const m of db.meetings) {
+    const plan = m.nextStep;
+    if (!plan || !cardIds.has(m.cardId)) continue;
+    const st = nextStepStatus(m, now);
+    if (st.state === "overdue") {
+      counted++;
+      overdueNow++;
+    } else if (plan.missed) {
+      counted++;
+      late++;
+    } else if ((m.outcome && m.outcome.kind !== "talent_withdrew") || plan.updatedAt) {
+      counted++;
+      onTime++;
     }
   }
   return { counted, onTime, late, overdueNow, rate: counted >= MIN_RECORD ? onTime / counted : null };

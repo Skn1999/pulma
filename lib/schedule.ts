@@ -63,6 +63,29 @@ export function tableOf(db: DB, eventId: string, companyId: string): number | un
   return idx >= 0 ? (idx % ev.tables) + 1 : undefined;
 }
 
+/** A finished event keeps the slots its meetings already have: nothing is re-planned. */
+function storedSchedule(db: DB, eventId: string, date: string, slotMinutes: number): Schedule {
+  const slots: Slot[] = [];
+  const unscheduled: string[] = [];
+  const arrivals: Record<string, string> = {};
+  const earliest = new Map<string, number>();
+  for (const m of db.meetings) {
+    const card = db.cards.find((c) => c.id === m.cardId);
+    if (!card || eventOf(db, card).id !== eventId || (m.mode ?? "event") !== "event" || (m.status !== undefined && m.status !== "booked")) continue;
+    const r = db.responses.find((x) => x.id === m.responseId);
+    if (!r || !m.slotStart || !m.table) { unscheduled.push(m.id); continue; }
+    const startMin = toMinutes(m.slotStart.slice(11, 16));
+    slots.push({
+      eventId, meetingId: m.id, cardId: card.id, companyId: card.companyId, responseId: r.id, talentId: r.talentId,
+      table: m.table, start: m.slotStart, end: isoAt(date, startMin + slotMinutes),
+    });
+    earliest.set(r.talentId, Math.min(earliest.get(r.talentId) ?? Infinity, startMin));
+  }
+  for (const [talentId, startMin] of earliest) arrivals[talentId] = isoAt(date, startMin - ARRIVAL_LEAD_MINUTES);
+  slots.sort((a, b) => byString(a.start, b.start) || a.table - b.table);
+  return { slots, arrivals, unscheduled };
+}
+
 /**
  * Greedy scheduler. Meetings are processed in id order (deterministic). Each meeting
  * takes the earliest slot where neither its table nor its talent is already busy.
@@ -79,6 +102,8 @@ export function buildSchedule(db: DB, eventId: string): Schedule {
 
   const cardById = new Map(db.cards.map((c) => [c.id, c]));
   const responseById = new Map(db.responses.map((r) => [r.id, r]));
+
+  if (ev.stage === "done") return storedSchedule(db, ev.id, ev.date, ev.slotMinutes);
 
   // Only event-day meetings that are booked. Office/video meetings have their own picked times, and
   // pending / rescheduling / cancelled meetings hold no table slot.

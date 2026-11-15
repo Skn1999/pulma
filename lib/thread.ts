@@ -2,8 +2,9 @@
 import { feedFor } from "./activity";
 import { cardState, companyRecord, goalOf, inviteStatus, replyStatus, type ReplyStatus } from "./deadlines";
 import { eventOfMeeting, tablePlace } from "./events";
+import { nextStepStatus, nextStepWindow, type NextStepState } from "./follow-up";
 import { meetingEnd, meetingMode, meetingStatus } from "./slots";
-import type { Account, ActivityView, DB, HiringGoal, Meeting, MeetMode } from "./types";
+import type { Account, ActivityView, DB, HiringGoal, Meeting, MeetingOutcome, MeetMode, NextStepKind } from "./types";
 
 export type ThreadStage = "sent" | "shortlisted" | "accepted" | "declined" | "closed" | "booked" | "withdrawn";
 export type StepState = "done" | "current" | "todo" | "skipped";
@@ -37,6 +38,16 @@ export interface ThreadView {
   invite?: { respondBy: string; expired: boolean; daysLeft: number };
   cardState?: { state: "paused" | "filled"; reason?: string; at?: string };
   steppedBack?: { until?: string };
+  /** After a mutual "next step": the company's promise and how it ended. Absent until both chose Next step. */
+  followUp?: {
+    meetingId: string;
+    state: NextStepState;
+    plan?: { kind: NextStepKind; by: string; note?: string };
+    daysLeft: number;
+    daysOver: number;
+    outcome?: Pick<MeetingOutcome, "kind" | "reason" | "at">;
+    window: { min: string; max: string }; // dates a company may promise (company viewer only uses it)
+  };
   companyRecord?: { rate: number | null; counted: number }; // talent view only: the company's on-time reply record
 }
 
@@ -144,6 +155,23 @@ export function buildThread(db: DB, account: Account, responseId: string, now: n
       ? { cardState: { state: cardState(card) as "paused" | "filled", reason: card.stateReason, at: card.stateAt } }
       : {}),
     ...(response.steppedBack ? { steppedBack: { until: response.steppedBack.until } } : {}),
+    ...(anyMeeting && accepted && mutual
+      ? (() => {
+          const st = nextStepStatus(anyMeeting, now);
+          const p = anyMeeting.nextStep;
+          return {
+            followUp: {
+              meetingId: anyMeeting.id,
+              state: st.state,
+              ...(p ? { plan: { kind: p.kind, by: p.by, ...(p.note ? { note: p.note } : {}) } } : {}),
+              daysLeft: st.daysLeft,
+              daysOver: st.daysOver,
+              ...(anyMeeting.outcome ? { outcome: { kind: anyMeeting.outcome.kind, reason: anyMeeting.outcome.reason, at: anyMeeting.outcome.at } } : {}),
+              window: nextStepWindow(now),
+            },
+          };
+        })()
+      : {}),
     ...(isTalent
       ? (() => {
           const rec = companyRecord(db, card.companyId, now);

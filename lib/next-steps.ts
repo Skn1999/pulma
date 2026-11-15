@@ -3,8 +3,10 @@
 // Nothing here orders or filters people; lists are sorted by deadline only.
 import { cardState, goalOf, inviteStatus, decideByDays, replyStatus } from "./deadlines";
 import { eventOf } from "./events";
+import { isMutual, nextStepStatus } from "./follow-up";
+import { eventStage } from "./participation";
 import { localNow, meetingMode, meetingStatus } from "./slots";
-import type { Account, DB, Meeting } from "./types";
+import { NEXT_STEP_LABEL, type Account, type DB, type Meeting } from "./types";
 
 export interface NextStep {
   id: string;
@@ -68,7 +70,8 @@ export function nextSteps(db: DB, account: Account, now: number): NextSteps {
           });
         }
         const days = decideByDays(goal, now);
-        if (days <= 3) {
+        // A finished event has no decision left to make: its follow-up lives in the next-step items below.
+        if (days <= 3 && eventStage(eventOf(db, card), now) !== "done") {
           you.push({
             id: `decide-${card.id}`,
             text: days < 0
@@ -103,6 +106,14 @@ export function nextSteps(db: DB, account: Account, now: number): NextSteps {
         } else if (meetingIsPast(db, m, now) && !db.feedback.some((f) => f.meetingId === m.id && f.side === "company")) {
           you.push({ id: `followup-${m.id}`, text: `How did your ${meetingMode(m) === "video" ? "call" : "meeting"} with ${who(m.responseId)} go?`, ...step });
         }
+        // After a mutual "next step": promise what happens next, then say how it went. Names only once revealed.
+        if (accepted(m.responseId) && isMutual(db, m.id)) {
+          const ns = nextStepStatus(m, now);
+          if (ns.state === "none") you.push({ id: `plan-${m.id}`, text: `Plan the next step with ${who(m.responseId)}`, ...step });
+          else if (ns.by && ns.state !== "done") {
+            you.push({ id: `outcome-${m.id}`, text: `Tell ${who(m.responseId)} how it went by ${shortDate(ns.by)}`, ...step, due: ns.by, overdue: ns.state === "overdue" });
+          }
+        }
       }
     }
   }
@@ -126,6 +137,13 @@ export function nextSteps(db: DB, account: Account, now: number): NextSteps {
         else if (st === "reschedule") you.push({ id: `pick-${m.id}`, text: `${company} asked to move your meeting. Pick a new time.`, href });
         else if (meetingIsPast(db, m, now) && !db.feedback.some((f) => f.meetingId === m.id && f.side === "talent")) {
           you.push({ id: `followup-${m.id}`, text: `How did your meeting with ${company} go?`, href });
+        }
+      }
+      if (m && sl?.status === "accepted" && isMutual(db, m.id)) {
+        const ns = nextStepStatus(m, now);
+        if (m.nextStep && ns.by && ns.state !== "done" && ns.state !== "none") {
+          const kind = NEXT_STEP_LABEL[m.nextStep.kind].toLowerCase();
+          them.push({ id: `nextstep-${m.id}`, text: `${company}: ${kind} by ${shortDate(ns.by)}${ns.state === "overdue" ? " (past its date)" : ""}`, href, due: ns.by, overdue: ns.state === "overdue" });
         }
       }
       if (r.steppedBack || cardState(card) !== "open") continue;

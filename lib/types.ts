@@ -166,6 +166,41 @@ export interface Meeting {
   /** Up to 3 of the candidate's own skill labels they chose to show on the event-day card. Private until chosen. */
   cardSkills?: string[];
   lastChange?: { by: "company" | "talent"; kind: "reschedule" | "cancel"; reason: MeetingChangeReason; at: string };
+  /** After a mutual "next step": the company's promise of what happens next, and by when. */
+  nextStep?: NextStepPlan;
+  /** How it ended, recorded by a person (never inferred). Missing = still open. */
+  outcome?: MeetingOutcome;
+}
+
+export type NextStepKind = "interview" | "trial" | "offer" | "other";
+export const NEXT_STEP_KINDS: NextStepKind[] = ["interview", "trial", "offer", "other"];
+export const NEXT_STEP_LABEL: Record<NextStepKind, string> = {
+  interview: "Interview",
+  trial: "Trial day",
+  offer: "Offer",
+  other: "Next step",
+};
+export const NEXT_STEP_NOTE_MAX = 200;
+export const NEXT_STEP_MAX_DAYS = 30;
+
+export interface NextStepPlan {
+  kind: NextStepKind;
+  by: string; // "YYYY-MM-DD": the date the company promised to be in touch by
+  note?: string; // ≤200 chars
+  plannedAt: string; // ISO
+  updatedAt?: string; // ISO, set when re-planned
+  /** True once the company recorded something or re-planned AFTER a promised date had passed. Feeds the company's record only. */
+  missed?: boolean;
+}
+
+/** Fixed list: the company picks a reason for "not this time"; no free text is stored or sent. */
+export const OUTCOME_REASONS = ["We filled it another way", "Our needs changed", "Not the right fit for this role"] as const;
+export type OutcomeReason = (typeof OUTCOME_REASONS)[number];
+
+export interface MeetingOutcome {
+  kind: "hired" | "still_talking" | "not_this_time" | "talent_withdrew";
+  at: string; // ISO
+  reason?: OutcomeReason; // not_this_time only
 }
 
 /** draft = organiser only; open = companies publish, candidates answer; locked = no changes; done = over. */
@@ -270,7 +305,11 @@ export type ActivityKind =
   // v7
   | "event_invited" // organiser invited a company to an event
   | "event_joined" // company accepted
-  | "event_declined"; // company declined
+  | "event_declined" // company declined
+  // v9
+  | "next_step_planned" // company planned (or changed) the next step after a mutual follow-up
+  | "next_step_overdue" // system: the promised next-step date passed without an outcome
+  | "outcome_recorded"; // company recorded how it went, or the talent took another job
 
 /**
  * Append-only log of what happened. Raw rows are NEVER sent to a client: use the
