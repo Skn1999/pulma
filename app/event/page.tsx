@@ -7,7 +7,9 @@ import { loadDB } from "@/lib/store";
 import { buildSchedule, tableOf } from "@/lib/schedule";
 import { getAccount } from "@/lib/session";
 import { nowMs } from "@/lib/clock";
-import { eventLabel, eventsOfCompany, eventsOfTalent, pickEvent, sortedEvents, tablePlace, upcomingEvents } from "@/lib/events";
+import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
+import { eventLabel, eventsOfCompany, eventsOfTalent, helsinkiToday, pickEvent, sortedEvents, tablePlace, upcomingEvents } from "@/lib/events";
 import { EventPicker } from "@/components/event/event-picker";
 
 export const dynamic = "force-dynamic";
@@ -124,20 +126,51 @@ export default async function EventPage({ searchParams }: { searchParams: Promis
     { k: "Venue", v: ev.venue },
   ];
 
+  const factsBlock = (
+    <dl className="flex flex-wrap gap-x-8 gap-y-2 rounded-xl bg-card px-4 py-3 text-sm ring-1 ring-foreground/10">
+      {facts.map((f) => (
+        <div key={f.k}>
+          <dt className="text-xs uppercase tracking-wide text-muted-foreground">{f.k}</dt>
+          <dd className="font-medium">{f.v}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+
+  // Candidates arrive here from one event on their Meetings page, so they get a way back rather than an event list.
+  if (account?.role === "talent") {
+    return (
+      <>
+        <PageTitle title={title} subtitle={ev.name} />
+        <div className="space-y-6 px-4 py-6 sm:px-6">
+          <Link href="/talent/meetings" className="-mt-2 inline-flex min-h-11 items-center gap-1 text-sm font-medium text-primary">
+            <ChevronLeft className="size-4" aria-hidden="true" /> Back to Meetings
+          </Link>
+          {factsBlock}
+          {body}
+        </div>
+      </>
+    );
+  }
+
+  // Employers and the event team: the list of events beside the day (above it on narrow screens).
+  const hasList = choices.length > 1;
   return (
     <>
       <PageTitle title={title} subtitle={ev.name} />
-      <div className="space-y-6 px-4 py-6 sm:px-6">
-        <EventPicker events={choices} selectedId={ev.id} basePath="/event" />
-        <dl className="flex flex-wrap gap-x-8 gap-y-2 rounded-xl bg-card px-4 py-3 text-sm ring-1 ring-foreground/10">
-          {facts.map((f) => (
-            <div key={f.k}>
-              <dt className="text-xs uppercase tracking-wide text-muted-foreground">{f.k}</dt>
-              <dd className="font-medium">{f.v}</dd>
-            </div>
-          ))}
-        </dl>
-        {body}
+      <div className={hasList ? "gap-6 px-4 py-6 sm:px-6 lg:grid lg:grid-cols-[17rem_minmax(0,1fr)] lg:items-start" : "px-4 py-6 sm:px-6"}>
+        <EventPicker
+          events={choices}
+          selectedId={ev.id}
+          basePath="/event"
+          title={account?.role === "company" ? "Your events" : "All events"}
+          today={helsinkiToday(now)}
+          className="mb-6 lg:sticky lg:top-4 lg:mb-0"
+        />
+        <div className="min-w-0 space-y-6">
+          {factsBlock}
+          {body}
+        </div>
       </div>
     </>
   );

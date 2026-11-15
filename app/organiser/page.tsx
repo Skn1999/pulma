@@ -12,7 +12,7 @@ import { loadDB } from "@/lib/store";
 import { AfterEventSummary } from "@/components/organiser/after-event-summary";
 import { eventOutcomes, followUpState } from "@/lib/outcomes";
 import { getStats } from "@/lib/stats";
-import { eventLabel, pickEvent, sortedEvents } from "@/lib/events";
+import { eventLabel, pickEvent, sortedEvents, helsinkiToday } from "@/lib/events";
 import { SupplyDemandPanel } from "@/components/organiser/supply-demand-panel";
 import { skillSupplyDemand } from "@/lib/supply-demand";
 import { EventPicker } from "@/components/event/event-picker";
@@ -41,7 +41,7 @@ export default async function OrganiserPage({ searchParams }: { searchParams: Pr
         {past && pastState && (
           <AfterEventSummary ev={past} state={pastState} report={pastState === "final" && past.report ? past.report : eventOutcomes(db, past.id, now)} />
         )}
-        <EventPicker events={events} selectedId={ev.id} basePath="/organiser" />
+        <EventPicker events={events} selectedId={ev.id} basePath="/organiser" title="Show figures for" today={helsinkiToday(now)} />
         <CountTiles counts={stats.counts} />
         <NeedsTimeline timeline={stats.timeline} eventDate={ev.date} />
         <ReplyRatePanel replies={stats.replies} />
