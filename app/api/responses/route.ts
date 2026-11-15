@@ -33,6 +33,9 @@ export async function POST(req: Request) {
       text,
       originalLanguage: typeof b.originalLanguage === "string" && b.originalLanguage ? b.originalLanguage : "English",
       aiAssisted: b.aiAssisted === true,
+      ...(b.aiAssisted === true && typeof b.textBeforeAi === "string" && b.textBeforeAi.trim()
+        ? { textBeforeAi: b.textBeforeAi.trim().slice(0, 4000) }
+        : {}),
       createdAt: new Date().toISOString(),
     };
     d.responses.push(r);

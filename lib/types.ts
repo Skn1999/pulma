@@ -149,6 +149,9 @@ export interface Response {
   text: string;
   originalLanguage: string; // e.g. "Ukrainian"
   aiAssisted: boolean;
+  /** The candidate's own wording from before they accepted an AI edit, so they can go back to it (and drop the
+   * AI-assisted label). PRIVATE to the candidate: never sent to a company or organiser. Only set while aiAssisted. */
+  textBeforeAi?: string;
   createdAt: string;
   updatedAt?: string; // set when the talent edits the answer before any shortlist
   /** The talent stepped back ("my situation changed"). The reason is NOT stored; only an optional return date, which the company may see. */

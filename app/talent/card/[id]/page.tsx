@@ -68,7 +68,7 @@ export default async function TalentCardPage({ params }: { params: Promise<{ id:
               languages={card.languages}
               recap={{ title: card.title, hardPart: card.hardPart }}
               relatedSkills={relatedSkillLabels(talent?.skills, card.skills, card.skillRefs)}
-              existing={mine ? { id: mine.id, publicCode: mine.publicCode, text: mine.text, language: mine.originalLanguage, aiAssisted: mine.aiAssisted } : undefined}
+              existing={mine ? { id: mine.id, publicCode: mine.publicCode, text: mine.text, language: mine.originalLanguage, aiAssisted: mine.aiAssisted, textBeforeAi: mine.textBeforeAi } : undefined}
             />
           ) : mine ? (
             <section aria-labelledby="answer-h" className="rounded-xl border border-border bg-card p-4 sm:p-5">

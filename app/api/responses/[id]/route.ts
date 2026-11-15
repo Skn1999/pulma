@@ -32,6 +32,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     r.text = text;
     if (typeof b.originalLanguage === "string" && b.originalLanguage) r.originalLanguage = b.originalLanguage;
     r.aiAssisted = b.aiAssisted === true;
+    // Own words from before an AI edit: kept only while the AI wording is in use, then forgotten.
+    if (r.aiAssisted && typeof b.textBeforeAi === "string" && b.textBeforeAi.trim()) r.textBeforeAi = b.textBeforeAi.trim().slice(0, 4000);
+    else delete r.textBeforeAi;
     r.updatedAt = new Date().toISOString();
     const card = d.cards.find((c) => c.id === r.cardId);
     if (card) logActivity(d, { kind: "answer_edited", actor: "talent", cardId: card.id, companyId: card.companyId, responseId: r.id, talentId: r.talentId, at: r.updatedAt });

@@ -25,7 +25,7 @@ export function ResponseForm({
 }: {
   cardId: string; companyName: string; relatedSkills?: string[]; languages?: string[];
   recap?: { title: string; hardPart: string }; // phones: the problem in two lines above the text box
-  existing?: { id: string; publicCode: string; text: string; language: string; aiAssisted: boolean };
+  existing?: { id: string; publicCode: string; text: string; language: string; aiAssisted: boolean; textBeforeAi?: string };
 }) {
   const router = useRouter();
   const [text, setText] = useState(existing?.text ?? "");
@@ -33,6 +33,8 @@ export function ResponseForm({
   const [suggestion, setSuggestion] = useState<string | null>(null);
   const [clarityMsg, setClarityMsg] = useState("");
   const [clarityAccepted, setClarityAccepted] = useState(existing?.aiAssisted ?? false);
+  // The candidate's own words from before the first accepted AI edit: lets them go back and drop the label.
+  const [beforeAi, setBeforeAi] = useState<string | null>(existing?.aiAssisted ? (existing.textBeforeAi ?? null) : null);
   const [busy, setBusy] = useState<"" | "clarity" | "submit">("");
   const [error, setError] = useState("");
   const [sent, setSent] = useState(false);
@@ -43,6 +45,11 @@ export function ResponseForm({
 
   function onChange(v: string) {
     setText(v);
+    // Typed their way back to exactly their own words: no AI wording is left, so no label.
+    if (clarityAccepted && beforeAi !== null && v.trim() === beforeAi.trim()) {
+      setClarityAccepted(false);
+      setBeforeAi(null);
+    }
     setSuggestion(null);
     setClarityMsg("");
   }
@@ -73,7 +80,7 @@ export function ResponseForm({
     setBusy("submit");
     setError("");
     try {
-      const payload = { text, originalLanguage: language, aiAssisted };
+      const payload = { text, originalLanguage: language, aiAssisted, textBeforeAi: aiAssisted ? (beforeAi ?? undefined) : undefined };
       const r = existing
         ? await post(`/api/responses/${existing.id}`, payload, "PATCH")
         : await post("/api/responses", { cardId, ...payload });
@@ -95,6 +102,15 @@ export function ResponseForm({
 
   const parts = suggestion ? diffWords(text, suggestion) : [];
   const changed = !existing || trimmed !== existing.text.trim() || aiAssisted !== existing.aiAssisted;
+
+  function useOriginal() {
+    if (beforeAi === null) return;
+    setText(beforeAi);
+    setClarityAccepted(false);
+    setBeforeAi(null);
+    setSuggestion(null);
+    setClarityMsg("Back to your own words. The AI-assisted label is removed.");
+  }
 
   return (
     <form onSubmit={submit} aria-labelledby="answer-h" className="rounded-xl border border-border bg-card p-4 shadow-card sm:p-5">
@@ -175,6 +191,7 @@ export function ResponseForm({
                 type="button"
                 className={btn}
                 onClick={() => {
+                  if (!clarityAccepted) setBeforeAi(text); // keep the words from before the FIRST AI edit
                   setText(suggestion);
                   setSuggestion(null);
                   setClarityAccepted(true);
@@ -190,9 +207,40 @@ export function ResponseForm({
         )}
 
         {aiAssisted && (
-          <p className="flex flex-wrap items-center gap-2 text-sm">
-            <AiLabel /> Shown to the company because AI helped with the wording.
-          </p>
+          <div className="rounded-lg border border-border bg-background p-3 text-sm">
+            <p className="flex flex-wrap items-center gap-2">
+              <AiLabel /> Shown to the company because AI helped with the wording.
+            </p>
+            {beforeAi !== null ? (
+              <>
+                <p className="mt-2 text-muted-foreground">
+                  Prefer your own words? Going back removes the label.
+                  {trimmed !== "" && " Changes made since the AI edit are dropped."}
+                </p>
+                <Button type="button" variant="outline" size="sm" className="mt-2" onClick={useOriginal}>
+                  Use my original words
+                </Button>
+              </>
+            ) : (
+              <>
+                <p className="mt-2 text-muted-foreground">
+                  The label stays while AI wording is in your answer. If you have rewritten it in your own words, you can remove it.
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="mt-2"
+                  onClick={() => {
+                    setClarityAccepted(false);
+                    setClarityMsg("Label removed: this answer is in your own words.");
+                  }}
+                >
+                  It&apos;s in my own words now
+                </Button>
+              </>
+            )}
+          </div>
         )}
       </div>
 
