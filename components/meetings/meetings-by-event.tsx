@@ -89,11 +89,11 @@ function EventSection({ g, role }: { g: EventMeetings; role: Role }) {
                 <Row key={r.meeting.id} r={r} role={role} when={`${hhmm(r.start)}–${hhmm(r.end)}`} where={r.table ? `Table ${r.table}` : undefined} />
               ))}
             </ol>
-            {!g.past && (
-              <Link href={`/event?event=${g.event.id}`} className="mt-2 inline-flex min-h-10 items-center text-sm font-medium text-primary underline-offset-4 hover:underline">
-                See the whole event day
-              </Link>
-            )}
+            {/* After the event this is the only way to the "After your conversation" choice (Next step / Not now),
+                which unlocks the company's next-step plan once both sides say yes. Keep it for past events. */}
+            <Link href={`/event?event=${g.event.id}`} className="mt-2 inline-flex min-h-10 items-center text-sm font-medium text-primary underline-offset-4 hover:underline">
+              {g.past ? "How did it go? Say if you'd like a next step" : "See the whole event day"}
+            </Link>
           </Block>
         )}
 
