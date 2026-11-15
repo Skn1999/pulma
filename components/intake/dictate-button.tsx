@@ -22,7 +22,9 @@ const ERROR_TEXT: Record<string, string> = {
   "not-allowed": "Microphone access is blocked. Allow it from the icon in the address bar, then try again.",
   "service-not-allowed": "Microphone access is blocked. Allow it from the icon in the address bar, then try again.",
   "audio-capture": "No microphone was found.",
-  network: "Dictation needs an internet connection in this browser. You can type instead.",
+  // Brave, Arc, Opera, Vivaldi and other Chromium browsers expose the API without a speech service behind it:
+  // they fail at once with "network". So do Chrome and Edge when offline.
+  network: "This browser has no speech service (common in Brave, Arc, Opera), or you are offline. Try Chrome, Edge or Safari, or type instead.",
   "language-not-supported": "This browser can't dictate in that language.",
 };
 
@@ -100,12 +102,11 @@ export function DictateButton({
       onChangeRef.current(next);
     };
     rec.onerror = (e: any) => {
-      const msg = ERROR_TEXT[e?.error as string];
-      if (msg) {
-        wantRef.current = false;
-        setError(msg);
-      }
-      // "no-speech" and "aborted" are normal: the end handler decides whether to carry on.
+      const code = String(e?.error ?? "unknown");
+      if (code === "no-speech" || code === "aborted") return; // normal: the end handler decides whether to carry on
+      console.warn("Dictation error:", code);
+      wantRef.current = false;
+      setError(ERROR_TEXT[code] ?? `Dictation stopped (${code}). Try again, or type instead.`);
     };
     rec.onend = () => {
       if (recRef.current !== rec) return;
@@ -115,6 +116,8 @@ export function DictateButton({
         session(); // the browser paused it; keep going until Stop
         return;
       }
+      // Ended on its own straight away, again and again, with no error: say so instead of stopping silently.
+      if (wantRef.current) setError("Dictation stopped straight away in this browser. Try Chrome, Edge or Safari, or type instead.");
       wantRef.current = false;
       recRef.current = null;
       setListening(false);
@@ -122,7 +125,9 @@ export function DictateButton({
     recRef.current = rec;
     try {
       rec.start();
-    } catch {
+    } catch (err) {
+      console.warn("Dictation could not start:", err);
+      setError("Dictation could not start in this browser. You can type instead.");
       wantRef.current = false;
       recRef.current = null;
       setListening(false);
