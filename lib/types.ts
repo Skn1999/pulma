@@ -222,6 +222,36 @@ export interface Event {
   stage: EventStage;
   problemDeadline: string; // "YYYY-MM-DD": last day companies can publish a problem
   description?: string; // ≤400 chars
+  /** Days after the event date that people can still record outcomes. Missing = 60. */
+  followUpDays?: number;
+  /** Final anonymous snapshot, written when the follow-up window closes (personal data is deleted then). */
+  report?: OutcomeReport;
+  closedAt?: string; // ISO
+}
+
+/** Anonymous figures for one event: counts and problem titles only. Never a name, email, code or answer text. */
+export interface OutcomeReport {
+  asOf: string; // ISO
+  funnel: {
+    problems: number;
+    answers: number;
+    shortlisted: number;
+    accepted: number;
+    meetingsHeld: number;
+    nextStepAgreed: number;
+    nextStepPlanned: Record<NextStepKind, number>;
+    hired: number;
+    stillTalking: number;
+    notThisTime: number;
+    talentWithdrew: number;
+  };
+  promises: {
+    medianReplyDays: number | null; // null under 5 replies
+    replyKeptPct: number | null; // null under 5 counted
+    nextStepKeptPct: number | null; // null under 5 counted
+    overdueNow: number;
+  };
+  problemsWithoutNextStep: { cardId: string; title: string; companyName: string }[];
 }
 
 /** A company's place at an event. The organiser invites; the company accepts or declines. */

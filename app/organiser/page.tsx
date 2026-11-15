@@ -9,6 +9,8 @@ import { ResetDemoButton } from "@/components/organiser/reset-demo-button";
 import { PromisesPanel } from "@/components/organiser/promises-panel";
 import { promisesKept } from "@/lib/promises";
 import { getDB } from "@/lib/store";
+import { AfterEventSummary } from "@/components/organiser/after-event-summary";
+import { eventOutcomes, followUpState } from "@/lib/outcomes";
 import { getStats } from "@/lib/stats";
 import { eventLabel, pickEvent, sortedEvents } from "@/lib/events";
 import { EventPicker } from "@/components/event/event-picker";
@@ -21,6 +23,10 @@ export default async function OrganiserPage({ searchParams }: { searchParams: Pr
   const events = sortedEvents(db);
   const ev = pickEvent(db, events, typeof sp.event === "string" ? sp.event : undefined, nowMs()) ?? events[0];
   const stats = getStats(db, ev.id);
+  const now = nowMs();
+  // The most recent event that has already happened (its follow-up is settling or final).
+  const past = [...events].reverse().find((e) => followUpState(e, now) !== "before");
+  const pastState = past ? (followUpState(past, now) as "settling" | "final") : null;
 
   return (
     <>
@@ -30,6 +36,9 @@ export default async function OrganiserPage({ searchParams }: { searchParams: Pr
         actions={<ResetDemoButton />}
       />
       <div className="space-y-4 px-4 py-6 sm:px-6">
+        {past && pastState && (
+          <AfterEventSummary ev={past} state={pastState} report={pastState === "final" && past.report ? past.report : eventOutcomes(db, past.id, now)} />
+        )}
         <EventPicker events={events} selectedId={ev.id} basePath="/organiser" />
         <CountTiles counts={stats.counts} />
         <NeedsTimeline timeline={stats.timeline} eventDate={ev.date} />

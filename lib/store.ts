@@ -5,6 +5,7 @@ import type { DB } from "./types";
 import { buildSchedule } from "./schedule";
 import { sortedEvents } from "./events";
 import { sweepDeadlines } from "./sweep";
+import { sweepFollowUps } from "./outcomes";
 
 const FILE = path.join(process.cwd(), "data", "db.json");
 const memoryOnly = !!process.env.VERCEL;
@@ -28,7 +29,8 @@ function isCurrentShape(db: DB): boolean {
   return (
     [db.accounts, db.closures, db.activity, db.availability, db.events, db.participations].every(Array.isArray) &&
     db.events.length > 0 &&
-    db.events.some((e) => e.id === "ev-0") // v9 seed: the finished Autumn Talent Day with next steps and outcomes
+    db.events.some((e) => e.id === "ev-0") &&
+    !!db.events.find((e) => e.id === "ev-old")?.report // v9 seed: the settling Autumn Talent Day and the closed Spring one (snapshot only)
   );
 }
 
@@ -114,6 +116,7 @@ function freshDB(): DB {
   shiftSeedIntoPast(db);
   addRelativeSeed(db, now);
   applySchedule(db);
+  sweepFollowUps(db, now); // a follow-up window that already ended is closed: only the anonymous snapshot stays
   sweepDeadlines(db, now, "due"); // deadlines already passed in seed history, dated when they passed
   // Start with a clean bell: only activity from now on counts as new.
   const seenAt = new Date(now).toISOString();

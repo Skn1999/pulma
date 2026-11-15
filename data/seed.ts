@@ -375,8 +375,19 @@ export const seed: DB = {
   meetings,
   events: [
     // Finished events (v9): ev-0 is still settling (follow-up window open); ev-old is long over.
-    // F2: report snapshot — ev-old gets its final `report` + `closedAt` here once Event has the OutcomeReport type.
-    { id: "ev-old", name: "Espoo Spring Talent Day", date: "2026-04-18", startTime: "10:00", endTime: "14:00", slotMinutes: 10, tables: 6, venue: "Tapiola Hall (demo venue)", stage: "done", problemDeadline: "2026-04-03", focus: "Software, health tech and clean-tech" },
+    // ev-old is closed: only the anonymous final snapshot remains (counts and problem titles, no people).
+    { id: "ev-old", name: "Espoo Spring Talent Day", date: "2026-04-18", startTime: "10:00", endTime: "14:00", slotMinutes: 10, tables: 6, venue: "Tapiola Hall (demo venue)", stage: "done", problemDeadline: "2026-04-03", focus: "Software, health tech and clean-tech",
+      followUpDays: 60, closedAt: "2026-06-18T06:00:00.000Z",
+      report: {
+        asOf: "2026-06-18T06:00:00.000Z",
+        funnel: {
+          problems: 5, answers: 23, shortlisted: 11, accepted: 9, meetingsHeld: 9, nextStepAgreed: 5,
+          nextStepPlanned: { interview: 3, trial: 1, offer: 1, other: 0 },
+          hired: 2, stillTalking: 0, notThisTime: 2, talentWithdrew: 1,
+        },
+        promises: { medianReplyDays: 3.5, replyKeptPct: 82, nextStepKeptPct: 80, overdueNow: 0 },
+        problemsWithoutNextStep: [{ cardId: "card-old-1", title: "Our weekly production report is copied by hand", companyName: "Ledgerleaf" }],
+      } },
     { id: "ev-0", name: "Espoo Autumn Talent Day", date: "2026-10-17", startTime: "10:00", endTime: "14:00", slotMinutes: 10, tables: 6, venue: "Leppävaara Hall (demo venue)", stage: "done", problemDeadline: "2026-10-02", focus: "Logistics, medtech, SaaS and clean-tech" },
     { id: "ev-1", name: "Espoo Tech Talent Day", date: "2026-12-05", startTime: "10:00", endTime: "14:00", slotMinutes: 10, tables: 6, venue: "Otaniemi Hall A (demo venue)", stage: "open", problemDeadline: "2026-11-21", focus: "Software, games, data and robotics" },
     { id: "ev-2", name: "Espoo Green Transition Jobs Morning", date: "2026-12-10", startTime: "09:00", endTime: "12:00", slotMinutes: 10, tables: 4, venue: "Keilaniemi Pavilion (demo venue)", stage: "open", problemDeadline: "2026-11-26", focus: "Clean-tech, logistics and health tech" },

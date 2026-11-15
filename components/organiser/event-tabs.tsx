@@ -5,6 +5,7 @@ export const EVENT_TABS = [
   { key: "employers", label: "Employers" },
   { key: "problems", label: "Problems" },
   { key: "schedule", label: "Schedule" },
+  { key: "outcomes", label: "Outcomes" },
 ] as const;
 export type EventTab = (typeof EVENT_TABS)[number]["key"];
 

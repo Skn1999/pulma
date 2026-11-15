@@ -11,6 +11,8 @@ import { fmtDay } from "@/components/event/format";
 import { buttonVariants } from "@/components/ui/button";
 import { getDB } from "@/lib/store";
 import { nowMs } from "@/lib/clock";
+import { OutcomesPanel } from "@/components/organiser/outcomes-panel";
+import { eventOutcomes, followUpState } from "@/lib/outcomes";
 import { getStats } from "@/lib/stats";
 import { eventById, eventDay, eventOf } from "@/lib/events";
 import { canMoveStage, eventStage, hasBookedMeetings, seatsLeft } from "@/lib/participation";
@@ -162,6 +164,17 @@ export default async function OrganiserEventPage({
             </tbody>
           </table>
         </div>
+      );
+  } else if (tab === "outcomes") {
+    const fu = followUpState(ev, now);
+    body =
+      fu === "before" ? (
+        <div className="rounded-xl border border-dashed p-8 text-center">
+          <p className="font-display text-lg font-semibold">Outcomes appear after the event</p>
+          <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">From {eventDay(ev.date)}, this tab shows what happened next: meetings held, next steps and hires, as counts only.</p>
+        </div>
+      ) : (
+        <OutcomesPanel ev={ev} state={fu} report={fu === "final" && ev.report ? ev.report : eventOutcomes(db, ev.id, now)} />
       );
   } else {
     body = (
