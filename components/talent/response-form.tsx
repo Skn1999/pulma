@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
-import { ChevronDown, Sparkles, X } from "lucide-react";
+import { ChevronDown, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { diffWords } from "diff";
 import { Button } from "@/components/ui/button";
@@ -11,26 +12,30 @@ import { AiLabel } from "@/components/ai-label";
 import { RelatedSkills } from "@/components/talent/related-skills";
 import { PreviewButton } from "@/components/thread/answer-preview";
 
-const LANGS = ["English", "Finnish", "Swedish", "Ukrainian", "Spanish", "Russian", "Arabic", "Other"];
 const SOFT_LIMIT = 600;
 const btn = "min-h-11 px-4 text-sm";
 
+/**
+ * The answer form, inline on the problem page (beside the card on wide screens, under it on phones), so the
+ * problem stays in view while writing. No language picker: answers are written in one of the problem's working
+ * languages; an edit keeps the language already stored.
+ */
 export function ResponseForm({
-  cardId, cardTitle, companyName, defaultLanguage, existing, relatedSkills = [],
+  cardId, companyName, existing, relatedSkills = [], languages = [], recap,
 }: {
-  cardId: string; cardTitle: string; companyName: string; defaultLanguage: string; relatedSkills?: string[];
-  existing?: { id: string; text: string; language: string; aiAssisted: boolean };
+  cardId: string; companyName: string; relatedSkills?: string[]; languages?: string[];
+  recap?: { title: string; hardPart: string }; // phones: the problem in two lines above the text box
+  existing?: { id: string; publicCode: string; text: string; language: string; aiAssisted: boolean };
 }) {
   const router = useRouter();
   const [text, setText] = useState(existing?.text ?? "");
-  const [language, setLanguage] = useState(LANGS.includes(existing?.language ?? defaultLanguage) ? (existing?.language ?? defaultLanguage) : "Other");
+  const language = existing?.language ?? languages[0] ?? "English";
   const [suggestion, setSuggestion] = useState<string | null>(null);
   const [clarityMsg, setClarityMsg] = useState("");
   const [clarityAccepted, setClarityAccepted] = useState(existing?.aiAssisted ?? false);
   const [busy, setBusy] = useState<"" | "clarity" | "submit">("");
   const [error, setError] = useState("");
   const [sent, setSent] = useState(false);
-  const [showCard, setShowCard] = useState(false);
 
   const over = text.length > SOFT_LIMIT;
   const aiAssisted = clarityAccepted;
@@ -74,8 +79,14 @@ export function ResponseForm({
         : await post("/api/responses", { cardId, ...payload });
       setSent(true);
       toast.success(existing ? "Answer updated" : `Sent as Response #${r.publicCode}`);
-      router.push("/talent/answers");
-      router.refresh();
+      if (existing) {
+        setSent(false);
+        setBusy("");
+        router.refresh();
+      } else {
+        router.push("/talent/answers");
+        router.refresh();
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not submit");
       setBusy("");
@@ -83,148 +94,134 @@ export function ResponseForm({
   }
 
   const parts = suggestion ? diffWords(text, suggestion) : [];
+  const changed = !existing || trimmed !== existing.text.trim() || aiAssisted !== existing.aiAssisted;
 
   return (
-    <form onSubmit={submit} className="fixed inset-0 z-50 flex flex-col bg-background">
-      <div className="flex h-14 shrink-0 items-center justify-between border-b px-2">
-        <Button type="button" variant="ghost" className="min-h-11 gap-1 px-3" onClick={() => router.push(`/talent/card/${cardId}`)}>
-          <X className="size-4" aria-hidden="true" /> Close
-        </Button>
-        {existing && <h1 className="text-sm font-semibold">Edit your answer</h1>}
-        <Button type="submit" className="min-h-11 px-5" disabled={!trimmed || busy !== "" || sent}>
-          {busy === "submit" ? (existing ? "Saving…" : "Sending…") : existing ? "Save changes" : "Send"}
-        </Button>
-      </div>
+    <form onSubmit={submit} aria-labelledby="answer-h" className="rounded-xl border border-border bg-card p-4 shadow-card sm:p-5">
+      <h2 id="answer-h" className="font-display text-lg font-semibold">
+        {existing ? <>Your answer · #{existing.publicCode}</> : "Your answer"}
+      </h2>
+      <p className="mt-0.5 text-sm text-muted-foreground">
+        3–5 sentences on how you&apos;d approach this{languages.length ? `, in ${languages.join(" or ")}` : ""}.
+      </p>
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-2xl px-4 py-3">
-          <button
-            type="button"
-            aria-expanded={showCard}
-            onClick={() => setShowCard((v) => !v)}
-            className="flex min-h-11 w-full items-center gap-2 rounded-lg bg-muted px-3 py-2 text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-          >
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-xs text-muted-foreground">Answering · {companyName}</span>
-              <span className={`block text-sm font-medium ${showCard ? "" : "truncate"}`}>{cardTitle}</span>
-            </span>
-            <ChevronDown className={`size-4 shrink-0 transition-transform ${showCard ? "rotate-180" : ""}`} aria-hidden="true" />
-          </button>
-
-          <RelatedSkills className="mt-3" skills={relatedSkills} />
-          <label htmlFor="answer" className="sr-only">How would you approach this?</label>
-          <Textarea
-            id="answer"
-            autoFocus
-            value={text}
-            onChange={(e) => onChange(e.target.value)}
-            placeholder="3–5 sentences on how you'd approach this, in one of the team's working languages."
-            aria-describedby="answer-count"
-            className="mt-3 min-h-48 resize-none border-0 bg-transparent px-1 text-lg leading-8 shadow-none focus-visible:ring-0"
-          />
-
-          <div aria-live="polite" className="space-y-3">
-            {clarityMsg && <p className="text-sm text-muted-foreground">{clarityMsg}</p>}
-            {error && <p role="alert" className="text-sm font-medium text-destructive">{error}</p>}
-
-            {suggestion && (
-              <div className="rounded-xl border border-border bg-card p-4">
-                <h3 className="text-sm font-semibold">Suggested edit</h3>
-                <p className="mt-2 whitespace-pre-wrap leading-7">
-                  {parts.map((p, i) =>
-                    p.added ? (
-                      <ins key={i} className="underline decoration-2 underline-offset-2">
-                        <span className="sr-only">[added: </span>{p.value}<span className="sr-only">]</span>
-                      </ins>
-                    ) : p.removed ? (
-                      <del key={i} className="text-muted-foreground line-through">
-                        <span className="sr-only">[removed: </span>{p.value}<span className="sr-only">]</span>
-                      </del>
-                    ) : (
-                      <span key={i}>{p.value}</span>
-                    ),
-                  )}
-                </p>
-                <p className="mt-2 text-xs text-muted-foreground">
-                  <del className="line-through">Struck through</del> = removed · <ins className="underline">underlined</ins> = added
-                </p>
-                <div className="mt-3 flex gap-3">
-                  <Button
-                    type="button"
-                    className={btn}
-                    onClick={() => {
-                      setText(suggestion);
-                      setSuggestion(null);
-                      setClarityAccepted(true);
-                    }}
-                  >
-                    Accept
-                  </Button>
-                  <Button type="button" variant="outline" className={btn} onClick={() => setSuggestion(null)}>
-                    Keep mine
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {aiAssisted && (
-              <p className="flex flex-wrap items-center gap-2 text-sm">
-                <AiLabel /> Shown to the company because AI helped with the wording.
-              </p>
-            )}
-          </div>
+      {recap && (
+        <div className="mt-3 rounded-lg border-l-3 border-primary bg-muted/60 px-3 py-2 text-sm lg:hidden">
+          <p className="font-medium">{recap.title}</p>
+          <p className="mt-1 text-muted-foreground">
+            <span className="font-medium text-foreground">The hard part: </span>
+            {recap.hardPart}
+          </p>
+          <a href="#problem" className="mt-1 inline-flex min-h-9 items-center text-xs font-medium text-primary underline underline-offset-4">
+            Read the whole problem
+          </a>
         </div>
+      )}
+
+      <RelatedSkills className="mt-3" skills={relatedSkills} />
+
+      <label htmlFor="answer" className="sr-only">How would you approach this?</label>
+      <Textarea
+        id="answer"
+        value={text}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Where would you start, what would you check first, and what have you done that's similar?"
+        aria-describedby="answer-count"
+        className="mt-3 min-h-44 resize-y text-base leading-7"
+      />
+      <div className="mt-1.5 flex flex-wrap items-center gap-2">
+        <Button type="button" variant="outline" size="sm" className="gap-1.5" disabled={!trimmed || busy !== ""} onClick={clarify}>
+          <Sparkles className="size-4" aria-hidden="true" />
+          {busy === "clarity" ? "Thinking…" : "Make this clearer"}
+        </Button>
+        <PreviewButton companyName={companyName} disabled={!trimmed} answer={{ text, originalLanguage: language, aiAssisted }} />
+        <p
+          id="answer-count"
+          aria-live="polite"
+          className={`ml-auto shrink-0 whitespace-nowrap text-xs ${over ? "font-medium text-destructive" : "text-muted-foreground"}`}
+        >
+          {text.length}/{SOFT_LIMIT}
+          {over && " · a bit long"}
+        </p>
       </div>
 
-      <div className="shrink-0 border-t bg-sidebar pb-[env(safe-area-inset-bottom)]">
-        <div className="mx-auto max-w-2xl px-3 pt-2">
-          <details className="group rounded-lg">
-            <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 px-1 text-sm font-medium outline-none focus-visible:ring-3 focus-visible:ring-ring/50 [&::-webkit-details-marker]:hidden">
-              What the company will see
-              <ChevronDown className="size-4 transition-transform group-open:rotate-180" aria-hidden="true" />
-            </summary>
-            <div className="px-1 pb-2 text-sm">
-              <ul className="list-disc space-y-0.5 pl-5">
-                <li>A response code (for example #A7)</li>
-                <li>Your answer</li>
-                <li>The AI-assisted label, if you used it</li>
-              </ul>
-              <p className="mt-1.5 text-muted-foreground">
-                Not your name, photo, nationality, age, school or CV. Your name is shared only if they invite you AND you accept.
-              </p>
+      <div aria-live="polite" className="mt-3 space-y-3 empty:mt-0">
+        {clarityMsg && <p className="text-sm text-muted-foreground">{clarityMsg}</p>}
+        {error && <p role="alert" className="text-sm font-medium text-destructive">{error}</p>}
+
+        {suggestion && (
+          <div className="rounded-xl border border-border bg-background p-4">
+            <h3 className="text-sm font-semibold">Suggested edit</h3>
+            <p className="mt-2 whitespace-pre-wrap leading-7">
+              {parts.map((p, i) =>
+                p.added ? (
+                  <ins key={i} className="underline decoration-2 underline-offset-2">
+                    <span className="sr-only">[added: </span>{p.value}<span className="sr-only">]</span>
+                  </ins>
+                ) : p.removed ? (
+                  <del key={i} className="text-muted-foreground line-through">
+                    <span className="sr-only">[removed: </span>{p.value}<span className="sr-only">]</span>
+                  </del>
+                ) : (
+                  <span key={i}>{p.value}</span>
+                ),
+              )}
+            </p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              <del className="line-through">Struck through</del> = removed · <ins className="underline">underlined</ins> = added
+            </p>
+            <div className="mt-3 flex gap-3">
+              <Button
+                type="button"
+                className={btn}
+                onClick={() => {
+                  setText(suggestion);
+                  setSuggestion(null);
+                  setClarityAccepted(true);
+                }}
+              >
+                Accept
+              </Button>
+              <Button type="button" variant="outline" className={btn} onClick={() => setSuggestion(null)}>
+                Keep mine
+              </Button>
             </div>
-          </details>
-        </div>
-        <div className="mx-auto flex max-w-2xl flex-wrap items-center gap-2 px-3 pb-2">
-          <Button type="button" variant="outline" className={`${btn} shrink-0 gap-1.5`} disabled={!trimmed || busy !== ""} onClick={clarify}>
-            <Sparkles className="size-4" aria-hidden="true" />
-            {busy === "clarity" ? "Thinking…" : "Clearer"}
-          </Button>
-          <PreviewButton
-            companyName={companyName}
-            disabled={!trimmed}
-            answer={{ text, originalLanguage: language, aiAssisted }}
-          />
-          <label htmlFor="lang" className="sr-only">Language you wrote in</label>
-          <select
-            id="lang"
-            value={language}
-            onChange={(e) => setLanguage(e.target.value)}
-            className="min-h-11 shrink-0 rounded-lg border border-input bg-card px-2 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-          >
-            {LANGS.map((l) => (
-              <option key={l}>{l}</option>
-            ))}
-          </select>
-          <p
-            id="answer-count"
-            aria-live="polite"
-            className={`ml-auto shrink-0 whitespace-nowrap text-xs ${over ? "font-medium text-destructive" : "text-muted-foreground"}`}
-          >
-            {text.length}/{SOFT_LIMIT}
-            {over && " · a bit long"}
+          </div>
+        )}
+
+        {aiAssisted && (
+          <p className="flex flex-wrap items-center gap-2 text-sm">
+            <AiLabel /> Shown to the company because AI helped with the wording.
+          </p>
+        )}
+      </div>
+
+      <details className="group mt-3 rounded-lg border border-border">
+        <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 px-3 text-sm font-medium outline-none focus-visible:ring-3 focus-visible:ring-ring/50 [&::-webkit-details-marker]:hidden">
+          What the company will see
+          <ChevronDown className="size-4 transition-transform group-open:rotate-180" aria-hidden="true" />
+        </summary>
+        <div className="px-3 pb-3 text-sm">
+          <ul className="list-disc space-y-0.5 pl-5">
+            <li>A response code (for example #A7)</li>
+            <li>Your answer</li>
+            <li>The AI-assisted label, if you used it</li>
+          </ul>
+          <p className="mt-1.5 text-muted-foreground">
+            Not your name, photo, nationality, age, school or CV. Your name is shared only if they invite you AND you accept.
           </p>
         </div>
+      </details>
+
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <Button type="submit" className="min-h-11 flex-1 px-5 sm:flex-none" disabled={!trimmed || !changed || busy !== "" || sent}>
+          {busy === "submit" ? (existing ? "Saving…" : "Sending…") : existing ? "Save changes" : "Send my answer"}
+        </Button>
+        {existing && (
+          <Link href="/talent/answers" className="inline-flex min-h-11 items-center px-2 text-sm font-medium text-primary underline-offset-4 hover:underline">
+            See its status
+          </Link>
+        )}
       </div>
     </form>
   );

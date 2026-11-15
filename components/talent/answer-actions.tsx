@@ -34,7 +34,7 @@ export function AnswerActions({ responseId, cardId, withdrawOnly = false }: { re
   return (
     <div className="mt-3 flex gap-2">
       {!withdrawOnly && <Link
-        href={`/talent/card/${cardId}/answer`}
+        href={`/talent/card/${cardId}#answer-h`}
         className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-input bg-card px-4 text-sm font-medium outline-none focus-visible:ring-3 focus-visible:ring-ring"
       >
         <Pencil className="size-4" aria-hidden="true" /> Edit
