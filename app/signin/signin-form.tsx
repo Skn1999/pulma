@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Building2, CalendarDays, Sprout } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SandboxStatus } from "@/components/sandbox-status";
 
 const DEMOS = [
   { name: "Kiertovolt", role: "Company", email: "hiring@kiertovolt.example", Icon: Building2 },
@@ -104,6 +105,9 @@ export function SigninForm() {
             </li>
           ))}
         </ul>
+        <div className="mt-5">
+          <SandboxStatus variant="pill" />
+        </div>
       </div>
     </section>
   );

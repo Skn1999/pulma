@@ -108,3 +108,13 @@ Close: "We didn't build a smarter matching algorithm. We took the algorithm out 
 - AI acts only as a writing and translation aid, it is always labelled, and a human accepts every suggestion.
 - Personal data is minimised and identities are revealed only by mutual consent. In a real deployment, data would be retained per event with automatic deletion afterwards.
 - Synthetic data is used throughout the prototype.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+## This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

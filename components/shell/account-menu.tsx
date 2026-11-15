@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { Lock, LogOut, UserRound, ChevronsUpDown } from "lucide-react";
+import { SandboxStatus } from "@/components/sandbox-status";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -70,6 +71,8 @@ export function AccountMenu({
           </p>
           <p className="mt-1.5 truncate text-xs text-muted-foreground">{email}</p>
         </div>
+        <DropdownMenuSeparator />
+        <SandboxStatus variant="menu" />
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => router.push("/profile")}>
           <UserRound aria-hidden="true" /> Profile

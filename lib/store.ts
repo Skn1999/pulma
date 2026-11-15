@@ -8,32 +8,67 @@ import { sweepDeadlines } from "./sweep";
 import { sweepFollowUps } from "./outcomes";
 import { after } from "next/server";
 import { pullRemote, pushRemote, remoteEnabled } from "./remote-store";
+import { activeSandboxId, enterSandbox, getRequestSandboxId } from "./sandbox";
 
 const FILE = path.join(process.cwd(), "data", "db.json");
 const memoryOnly = !!process.env.VERCEL;
 
-const g = globalThis as unknown as { __pulmaDB?: DB; __pulmaVer?: string; __pulmaPush?: Promise<void>; __pulmaPull?: Promise<void> };
+interface SandboxState {
+  db?: DB;
+  ver?: string;
+  pushPromise?: Promise<void>;
+  pullPromise?: Promise<void>;
+}
 
-function persist(db: DB) {
+const g = globalThis as unknown as {
+  __pulmaSandboxes?: Map<string, SandboxState>;
+  __pulmaDB?: DB;
+  __pulmaVer?: string;
+  __pulmaPush?: Promise<void>;
+  __pulmaPull?: Promise<void>;
+};
+
+function getSandboxes(): Map<string, SandboxState> {
+  if (!g.__pulmaSandboxes) g.__pulmaSandboxes = new Map<string, SandboxState>();
+  return g.__pulmaSandboxes;
+}
+
+function getSandboxState(sid: string): SandboxState {
+  const map = getSandboxes();
+  let state = map.get(sid);
+  if (!state) {
+    state = {};
+    map.set(sid, state);
+  }
+  return state;
+}
+
+function persist(db: DB, sandboxId?: string) {
+  const sid = sandboxId || activeSandboxId();
+  const state = getSandboxState(sid);
+  state.db = db;
+
   if (remoteEnabled()) {
-    // Hosted: share the copy with the app's other server instances (see lib/remote-store.ts).
+    // Hosted: share the copy with other instances for this sandbox (see lib/remote-store.ts).
     const ver = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-    g.__pulmaVer = ver;
-    const prev = g.__pulmaPush ?? Promise.resolve();
-    const push = prev.then(() => pushRemote(db, ver));
-    g.__pulmaPush = push;
+    state.ver = ver;
+    const prev = state.pushPromise ?? Promise.resolve();
+    const push = prev.then(() => pushRemote(db, ver, sid));
+    state.pushPromise = push;
     try {
       after(() => push); // keep the function alive until the write lands, without delaying the response
     } catch {
       // outside a request (tests, scripts): nothing to keep alive
     }
   }
+
   if (memoryOnly) return;
   try {
-    fs.mkdirSync(path.dirname(FILE), { recursive: true });
-    const tmp = `${FILE}.${process.pid}.tmp`;
+    const file = sid === "default" ? FILE : path.join(process.cwd(), "data", "sandboxes", `${sid}.json`);
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    const tmp = `${file}.${process.pid}.tmp`;
     fs.writeFileSync(tmp, JSON.stringify(db, null, 2));
-    fs.renameSync(tmp, FILE);
+    fs.renameSync(tmp, file);
   } catch {
     // Persistence failure must never break the demo; memory copy remains.
   }
@@ -45,72 +80,94 @@ function isCurrentShape(db: DB): boolean {
     [db.accounts, db.closures, db.activity, db.availability, db.events, db.participations].every(Array.isArray) &&
     db.events.length > 0 &&
     db.events.some((e) => e.id === "ev-0") &&
-    !!db.events.find((e) => e.id === "ev-old")?.report // v9 seed: the settling Autumn Talent Day and the closed Spring one (snapshot only)
+    !!db.events.find((e) => e.id === "ev-old")?.report
   );
 }
 
-export function getDB(): DB {
+export function getDB(sandboxId?: string): DB {
+  const sid = sandboxId || activeSandboxId();
+  const state = getSandboxState(sid);
+
   // The in-memory copy survives hot reloads, so check its shape too.
-  if (g.__pulmaDB && isCurrentShape(g.__pulmaDB)) return g.__pulmaDB;
+  if (state.db && isCurrentShape(state.db)) return state.db;
+
   let db: DB | undefined;
   if (!memoryOnly) {
     try {
-      db = JSON.parse(fs.readFileSync(FILE, "utf8")) as DB;
+      const file = sid === "default" ? FILE : path.join(process.cwd(), "data", "sandboxes", `${sid}.json`);
+      if (fs.existsSync(file)) {
+        db = JSON.parse(fs.readFileSync(file, "utf8")) as DB;
+      }
     } catch {
       db = undefined;
     }
   }
-  if (db && !isCurrentShape(db)) db = undefined; // older db.json: re-seed
+  if (db && !isCurrentShape(db)) db = undefined; // older db: re-seed
   if (!db) {
     db = freshDB();
-    persist(db);
+    persist(db, sid);
   }
-  g.__pulmaDB = db;
+  state.db = db;
   return db;
 }
 
 /**
- * Bring this instance's copy up to date with the shared one. Call it (await) at the start of every request that
- * reads the store before anything else does; getAccount() does it, so pages and routes behind sign-in are covered.
- * No-op without a configured Redis, and any failure keeps the local copy: the demo never breaks.
+ * Bring this instance's copy up to date with the shared copy for this sandbox.
+ * Call it (await) at the start of every request that reads the store before anything else does.
+ * getAccount() does it, so pages and routes behind sign-in are covered.
  */
-export async function syncDB(): Promise<void> {
+export async function syncDB(sandboxId?: string): Promise<void> {
+  let sid = sandboxId;
+  if (!sid) {
+    sid = await getRequestSandboxId();
+    enterSandbox(sid);
+  } else {
+    enterSandbox(sid);
+  }
+
   if (!remoteEnabled()) return;
-  if (g.__pulmaPush) await g.__pulmaPush; // our own last write lands first
-  if (!g.__pulmaPull) {
-    g.__pulmaPull = (async () => {
-      const got = await pullRemote(g.__pulmaVer);
+  const state = getSandboxState(sid);
+  if (state.pushPromise) await state.pushPromise; // our own last write lands first
+
+  if (!state.pullPromise) {
+    state.pullPromise = (async () => {
+      const got = await pullRemote(state.ver, sid);
       if (got === "same") return;
       if (got === "empty") {
-        persist(getDB()); // first instance ever: publish the fresh seed
+        persist(getDB(sid), sid); // first instance ever for this sandbox: publish the fresh seed
         return;
       }
       if (got && isCurrentShape(got.db)) {
-        g.__pulmaDB = got.db;
-        g.__pulmaVer = got.ver;
+        state.db = got.db;
+        state.ver = got.ver;
       }
     })().finally(() => {
-      g.__pulmaPull = undefined;
+      state.pullPromise = undefined;
     });
   }
-  await g.__pulmaPull;
+  await state.pullPromise;
 }
 
 /** getDB() after syncDB(): for pages and routes that read the store without signing in first. */
-export async function loadDB(): Promise<DB> {
-  await syncDB();
-  return getDB();
+export async function loadDB(sandboxId?: string): Promise<DB> {
+  const sid = sandboxId || (await getRequestSandboxId());
+  enterSandbox(sid);
+  await syncDB(sid);
+  return getDB(sid);
 }
 
 /** Wait until this instance's writes reached the shared copy (route handlers call it before replying). */
-export async function flushDB(): Promise<void> {
-  if (g.__pulmaPush) await g.__pulmaPush;
+export async function flushDB(sandboxId?: string): Promise<void> {
+  const sid = sandboxId || activeSandboxId();
+  const state = getSandboxState(sid);
+  if (state.pushPromise) await state.pushPromise;
 }
 
-export function mutate<T>(fn: (db: DB) => T): T {
-  const db = getDB();
+export function mutate<T>(fn: (db: DB) => T, sandboxId?: string): T {
+  const sid = sandboxId || activeSandboxId();
+  const db = getDB(sid);
   const result = fn(db);
-  persist(db);
+  persist(db, sid);
   return result;
 }
 
@@ -177,10 +234,12 @@ function freshDB(): DB {
   return db;
 }
 
-export function resetDB(): void {
+export function resetDB(sandboxId?: string): void {
+  const sid = sandboxId || activeSandboxId();
   const db = freshDB();
-  g.__pulmaDB = db;
-  persist(db);
+  const state = getSandboxState(sid);
+  state.db = db;
+  persist(db, sid);
 }
 
 export function newId(prefix: string): string {
