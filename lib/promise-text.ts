@@ -35,8 +35,14 @@ export function replyPromise(dueIso: string, now: number): { overdue: boolean; t
   return { overdue: false, text: `Reply by ${shortDate(dueIso)}` };
 }
 
-const slotFmt = new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "UTC" });
-/** Local Helsinki "YYYY-MM-DDTHH:MM:00" → "Tue 18 Nov, 14:00". Client-safe twin of formatLocalSlot in lib/activity.ts. */
+const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+/**
+ * Local Helsinki "YYYY-MM-DDTHH:MM:00" → "Tue 18 Nov, 14:00". Client-safe twin of formatLocalSlot in lib/activity.ts.
+ * Built by hand, not with Intl: Node and browsers punctuate en-GB dates differently ("Mon 16 Nov" vs "Mon, 16 Nov"),
+ * which broke hydration where this runs on both.
+ */
 export function localSlotLabel(local: string): string {
-  return slotFmt.format(new Date(`${local.slice(0, 16)}:00Z`));
+  const d = new Date(`${local.slice(0, 10)}T00:00:00Z`);
+  return `${WEEKDAYS[d.getUTCDay()]} ${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}, ${local.slice(11, 16)}`;
 }
